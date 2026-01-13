@@ -6,6 +6,8 @@ import QRCode from "qrcode";
 import { loadConfig } from "./config.js";
 import { calculateInvoiceTotals, createStore, type CreateInvoiceInput } from "./store.js";
 import { createInvoicePdf } from "./pdf.js";
+import { sendInvoiceEmail } from "./email.js";
+import { pollBankInbox } from "./imap.js";
 
 const formatAmount = (cents: number) => (cents / 100).toFixed(2);
 
@@ -254,6 +256,46 @@ const program = Effect.gen(function* (_) {
     }
   );
 
+  app.post(
+    "/invoices/:id/send",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const invoice = store.getInvoice(id);
+      if (!invoice) {
+        reply.code(404);
+        return { error: "Invoice not found" };
+      }
+      const client = store.getClient(invoice.clientId);
+      if (!client) {
+        reply.code(404);
+        return { error: "Client not found" };
+      }
+
+      const qrBuffer = invoice.qrPaymentCode
+        ? await QRCode.toBuffer(invoice.qrPaymentCode)
+        : undefined;
+
+      const pdf = await createInvoicePdf(invoice, client, qrBuffer, {
+        name: config.issuerName || undefined,
+        address: config.issuerAddress || undefined,
+        ico: config.issuerIco || undefined,
+        dic: config.issuerDic || undefined,
+        bankAccount: config.bankAccount || undefined
+      });
+
+      try {
+        await sendInvoiceEmail({ config, invoice, client, pdf });
+      } catch (error) {
+        reply.code(500);
+        return { error: (error as Error).message };
+      }
+
+      store.updateInvoice(invoice.id, { sentAt: new Date().toISOString() });
+      return { status: "sent" };
+    }
+  );
+
   app.get(
     "/invoices/:id/pdf",
     { preHandler: (app as any).authenticate },
@@ -289,6 +331,36 @@ const program = Effect.gen(function* (_) {
   );
 
   app.get(
+    "/payments",
+    { preHandler: (app as any).authenticate },
+    async () => store.listPayments()
+  );
+
+  app.post(
+    "/payments/match",
+    { preHandler: (app as any).authenticate },
+    async () => ({ matched: store.matchPaymentsToInvoices() })
+  );
+
+  app.post(
+    "/payments/manual-match",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const body = request.body as { paymentId?: string; invoiceId?: string };
+      if (!body?.paymentId || !body?.invoiceId) {
+        reply.code(400);
+        return { error: "paymentId and invoiceId are required" };
+      }
+      const matched = store.manualMatchPayment(body.paymentId, body.invoiceId);
+      if (!matched) {
+        reply.code(404);
+        return { error: "Payment or invoice not found" };
+      }
+      return matched;
+    }
+  );
+
+  app.get(
     "/dashboard/summary",
     { preHandler: (app as any).authenticate },
     async () => {
@@ -305,6 +377,19 @@ const program = Effect.gen(function* (_) {
       };
     }
   );
+
+  if (config.imapHost && config.imapUser && config.imapPassword) {
+    const poll = async () => {
+      try {
+        await pollBankInbox(config, store);
+        store.matchPaymentsToInvoices();
+      } catch (error) {
+        app.log.error({ error }, "IMAP poll failed");
+      }
+    };
+    poll();
+    setInterval(poll, config.imapPollIntervalMinutes * 60_000);
+  }
 
   await app.listen({ port: config.port, host: "0.0.0.0" });
 });

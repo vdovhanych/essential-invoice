@@ -15,6 +15,9 @@
     "@fastify/jwt": "^7.0.1",
     "effect": "^3.11.0",
     "fastify": "^4.26.2",
+    "imapflow": "^1.0.184",
+    "mailparser": "^3.6.7",
+    "nodemailer": "^6.9.12",
     "pdfkit": "^0.15.0",
     "qrcode": "^1.5.4"
   },

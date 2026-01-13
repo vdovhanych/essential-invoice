@@ -40,6 +40,18 @@ export type Invoice = {
   items: InvoiceItem[];
 };
 
+export type Payment = {
+  id: string;
+  amountCents: number;
+  currency: string;
+  variableSymbol?: string;
+  description?: string;
+  receivedAt: string;
+  source: string;
+  matchedInvoiceId?: string;
+  createdAt: string;
+};
+
 export type CreateClientInput = Omit<Client, "id" | "createdAt">;
 export type UpdateClientInput = Partial<CreateClientInput>;
 
@@ -97,6 +109,7 @@ export const calculateInvoiceTotals = (
 export const createStore = () => {
   const clients = new Map<string, Client>();
   const invoices = new Map<string, Invoice>();
+  const payments = new Map<string, Payment>();
 
   return {
     listClients: () => Array.from(clients.values()),
@@ -183,7 +196,52 @@ export const createStore = () => {
       invoices.set(id, updated);
       return updated;
     },
-    deleteInvoice: (id: string) => invoices.delete(id)
+    deleteInvoice: (id: string) => invoices.delete(id),
+    listPayments: () => Array.from(payments.values()),
+    getPayment: (id: string) => payments.get(id),
+    createPayment: (input: Omit<Payment, "id" | "createdAt" | "matchedInvoiceId">) => {
+      const payment: Payment = {
+        id: randomUUID(),
+        createdAt: new Date().toISOString(),
+        ...input
+      };
+      payments.set(payment.id, payment);
+      return payment;
+    },
+    matchPaymentsToInvoices: () => {
+      const matched: Array<{ paymentId: string; invoiceId: string }> = [];
+      payments.forEach((payment) => {
+        if (payment.matchedInvoiceId || !payment.variableSymbol) {
+          return;
+        }
+        const invoice = Array.from(invoices.values()).find(
+          (entry) =>
+            entry.invoiceNumber === payment.variableSymbol &&
+            entry.totalCents === payment.amountCents &&
+            entry.currency === payment.currency &&
+            entry.status !== "paid"
+        );
+        if (!invoice) {
+          return;
+        }
+        const updatedInvoice: Invoice = { ...invoice, status: "paid" };
+        invoices.set(invoice.id, updatedInvoice);
+        payments.set(payment.id, { ...payment, matchedInvoiceId: invoice.id });
+        matched.push({ paymentId: payment.id, invoiceId: invoice.id });
+      });
+      return matched;
+    },
+    manualMatchPayment: (paymentId: string, invoiceId: string) => {
+      const payment = payments.get(paymentId);
+      const invoice = invoices.get(invoiceId);
+      if (!payment || !invoice) {
+        return undefined;
+      }
+      const updatedInvoice: Invoice = { ...invoice, status: "paid" };
+      invoices.set(invoice.id, updatedInvoice);
+      payments.set(payment.id, { ...payment, matchedInvoiceId: invoice.id });
+      return { paymentId, invoiceId };
+    }
   };
 };
 
