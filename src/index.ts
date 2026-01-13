@@ -1,11 +1,45 @@
 import Fastify from "fastify";
 import { Effect } from "effect";
 import { NodeRuntime } from "@effect/platform-node";
+import jwt from "@fastify/jwt";
+import QRCode from "qrcode";
 import { loadConfig } from "./config.js";
+import { calculateInvoiceTotals, createStore, type CreateInvoiceInput } from "./store.js";
+import { createInvoicePdf } from "./pdf.js";
+
+const formatAmount = (cents: number) => (cents / 100).toFixed(2);
+
+const buildQrPaymentCode = (params: {
+  bankAccount: string;
+  amountCents: number;
+  variableSymbol: string;
+  message: string;
+  currency: string;
+}) => {
+  if (!params.bankAccount || params.currency !== "CZK") {
+    return undefined;
+  }
+  return `SPD*1.0*ACC:${params.bankAccount}*AM:${formatAmount(
+    params.amountCents
+  )}*CC:${params.currency}*X-VS:${params.variableSymbol}*MSG:${params.message}`;
+};
 
 const program = Effect.gen(function* (_) {
   const config = yield* _(loadConfig);
   const app = Fastify({ logger: true });
+  const store = createStore();
+
+  await app.register(jwt, {
+    secret: config.jwtSecret
+  });
+
+  app.decorate("authenticate", async (request: any, reply: any) => {
+    try {
+      await request.jwtVerify();
+    } catch (err) {
+      reply.send(err);
+    }
+  });
 
   app.get("/health", async () => ({ status: "ok" }));
 
@@ -14,6 +48,263 @@ const program = Effect.gen(function* (_) {
     bankType: config.bankType,
     imapPollIntervalMinutes: config.imapPollIntervalMinutes
   }));
+
+  app.post("/auth/login", async (request, reply) => {
+    const body = request.body as { email?: string; password?: string };
+    if (body?.email === config.adminEmail && body?.password === config.adminPassword) {
+      const token = app.jwt.sign({ sub: body.email });
+      return { token };
+    }
+    reply.code(401);
+    return { error: "Invalid credentials" };
+  });
+
+  app.post("/auth/logout", async () => ({ status: "ok" }));
+
+  app.post("/auth/refresh", async (request, reply) => {
+    try {
+      await (request as any).jwtVerify();
+      const token = app.jwt.sign({ sub: (request as any).user.sub });
+      return { token };
+    } catch (err) {
+      reply.code(401);
+      return { error: "Invalid token" };
+    }
+  });
+
+  app.get(
+    "/clients",
+    { preHandler: (app as any).authenticate },
+    async () => store.listClients()
+  );
+
+  app.post(
+    "/clients",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const body = request.body as any;
+      if (!body?.companyName || !body?.primaryEmail) {
+        reply.code(400);
+        return { error: "companyName and primaryEmail are required" };
+      }
+      return store.createClient(body);
+    }
+  );
+
+  app.get(
+    "/clients/:id",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const client = store.getClient(id);
+      if (!client) {
+        reply.code(404);
+        return { error: "Client not found" };
+      }
+      return client;
+    }
+  );
+
+  app.patch(
+    "/clients/:id",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const updated = store.updateClient(id, request.body as any);
+      if (!updated) {
+        reply.code(404);
+        return { error: "Client not found" };
+      }
+      return updated;
+    }
+  );
+
+  app.delete(
+    "/clients/:id",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const deleted = store.deleteClient(id);
+      if (!deleted) {
+        reply.code(404);
+        return { error: "Client not found" };
+      }
+      return { status: "deleted" };
+    }
+  );
+
+  app.get(
+    "/clients/:id/invoices",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const client = store.getClient(id);
+      if (!client) {
+        reply.code(404);
+        return { error: "Client not found" };
+      }
+      return store.listInvoicesByClient(id);
+    }
+  );
+
+  app.get(
+    "/invoices",
+    { preHandler: (app as any).authenticate },
+    async () => store.listInvoices()
+  );
+
+  app.post(
+    "/invoices",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const body = request.body as Partial<CreateInvoiceInput>;
+      if (!body?.clientId || !body?.invoiceNumber || !body?.issueDate || !body?.dueDate) {
+        reply.code(400);
+        return { error: "clientId, invoiceNumber, issueDate, and dueDate are required" };
+      }
+      if (!store.getClient(body.clientId)) {
+        reply.code(404);
+        return { error: "Client not found" };
+      }
+      if (!body.items?.length) {
+        reply.code(400);
+        return { error: "Invoice items are required" };
+      }
+
+      const invoiceInput: CreateInvoiceInput = {
+        clientId: body.clientId,
+        invoiceNumber: body.invoiceNumber,
+        status: body.status ?? "draft",
+        currency: body.currency ?? "CZK",
+        issueDate: body.issueDate,
+        dueDate: body.dueDate,
+        paymentTerms: body.paymentTerms,
+        sentAt: body.sentAt,
+        items: body.items
+      };
+
+      const totals = calculateInvoiceTotals(invoiceInput.items);
+      const qrPaymentCode = buildQrPaymentCode({
+        bankAccount: config.bankAccount,
+        amountCents: totals.totalCents,
+        variableSymbol: body.invoiceNumber,
+        message: `Invoice ${body.invoiceNumber}`,
+        currency: invoiceInput.currency
+      });
+
+      return store.createInvoice(invoiceInput, qrPaymentCode);
+    }
+  );
+
+  app.get(
+    "/invoices/:id",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const invoice = store.getInvoice(id);
+      if (!invoice) {
+        reply.code(404);
+        return { error: "Invoice not found" };
+      }
+      return invoice;
+    }
+  );
+
+  app.patch(
+    "/invoices/:id",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const body = request.body as any;
+      const existing = store.getInvoice(id);
+      if (!existing) {
+        reply.code(404);
+        return { error: "Invoice not found" };
+      }
+
+      const totals = body?.items ? calculateInvoiceTotals(body.items) : undefined;
+      const qrPaymentCode = buildQrPaymentCode({
+        bankAccount: config.bankAccount,
+        amountCents: totals?.totalCents ?? existing.totalCents,
+        variableSymbol: existing.invoiceNumber,
+        message: `Invoice ${existing.invoiceNumber}`,
+        currency: existing.currency
+      });
+
+      const updated = store.updateInvoice(id, body, qrPaymentCode);
+      if (!updated) {
+        reply.code(404);
+        return { error: "Invoice not found" };
+      }
+      return updated;
+    }
+  );
+
+  app.delete(
+    "/invoices/:id",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const deleted = store.deleteInvoice(id);
+      if (!deleted) {
+        reply.code(404);
+        return { error: "Invoice not found" };
+      }
+      return { status: "deleted" };
+    }
+  );
+
+  app.get(
+    "/invoices/:id/pdf",
+    { preHandler: (app as any).authenticate },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const invoice = store.getInvoice(id);
+      if (!invoice) {
+        reply.code(404);
+        return { error: "Invoice not found" };
+      }
+      const client = store.getClient(invoice.clientId);
+      if (!client) {
+        reply.code(404);
+        return { error: "Client not found" };
+      }
+
+      const qrBuffer = invoice.qrPaymentCode
+        ? await QRCode.toBuffer(invoice.qrPaymentCode)
+        : undefined;
+
+      const pdf = await createInvoicePdf(invoice, client, qrBuffer, {
+        name: config.issuerName || undefined,
+        address: config.issuerAddress || undefined,
+        ico: config.issuerIco || undefined,
+        dic: config.issuerDic || undefined,
+        bankAccount: config.bankAccount || undefined
+      });
+
+      reply.header("Content-Type", "application/pdf");
+      reply.header("Content-Disposition", `inline; filename=invoice-${invoice.invoiceNumber}.pdf`);
+      return reply.send(pdf);
+    }
+  );
+
+  app.get(
+    "/dashboard/summary",
+    { preHandler: (app as any).authenticate },
+    async () => {
+      const invoices = store.listInvoices();
+      const clients = store.listClients();
+      const totalOutstandingCents = invoices
+        .filter((invoice) => invoice.status !== "paid")
+        .reduce((sum, invoice) => sum + invoice.totalCents, 0);
+      return {
+        clients: clients.length,
+        invoices: invoices.length,
+        outstandingCents: totalOutstandingCents,
+        outstanding: formatAmount(totalOutstandingCents)
+      };
+    }
+  );
 
   await app.listen({ port: config.port, host: "0.0.0.0" });
 });
