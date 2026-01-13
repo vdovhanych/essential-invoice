@@ -29,12 +29,12 @@ export default function Register() {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Hesla se neshoduji');
+      setError('Hesla se neshodují');
       return;
     }
 
     if (formData.password.length < 8) {
-      setError('Heslo musi mit alespon 8 znaku');
+      setError('Heslo musí mít alespoň 8 znaků');
       return;
     }
 
@@ -58,7 +58,7 @@ export default function Register() {
             <FileText className="h-12 w-12 text-blue-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Essential Invoice</h1>
-          <p className="text-gray-600 mt-2">Vytvorte si ucet</p>
+          <p className="text-gray-600 mt-2">Vytvořte si účet</p>
         </div>
 
         <div className="card">
@@ -72,7 +72,7 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label htmlFor="name" className="label">Jmeno *</label>
+                <label htmlFor="name" className="label">Jméno *</label>
                 <input
                   type="text"
                   id="name"
@@ -112,7 +112,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="label">Potvrzeni hesla *</label>
+                <label htmlFor="confirmPassword" className="label">Potvrzení hesla *</label>
                 <input
                   type="password"
                   id="confirmPassword"
@@ -126,11 +126,11 @@ export default function Register() {
             </div>
 
             <hr className="my-6" />
-            <h3 className="font-medium text-gray-900">Firemni udaje (volitelne)</h3>
+            <h3 className="font-medium text-gray-900">Firemní údaje (volitelné)</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label htmlFor="companyName" className="label">Nazev firmy</label>
+                <label htmlFor="companyName" className="label">Název firmy</label>
                 <input
                   type="text"
                   id="companyName"
@@ -142,7 +142,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="companyIco" className="label">ICO</label>
+                <label htmlFor="companyIco" className="label">IČO</label>
                 <input
                   type="text"
                   id="companyIco"
@@ -155,7 +155,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="companyDic" className="label">DIC</label>
+                <label htmlFor="companyDic" className="label">DIČ</label>
                 <input
                   type="text"
                   id="companyDic"
@@ -179,7 +179,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="bankAccount" className="label">Cislo uctu</label>
+                <label htmlFor="bankAccount" className="label">Číslo účtu</label>
                 <input
                   type="text"
                   id="bankAccount"
@@ -192,7 +192,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="bankCode" className="label">Kod banky</label>
+                <label htmlFor="bankCode" className="label">Kód banky</label>
                 <input
                   type="text"
                   id="bankCode"
@@ -216,9 +216,9 @@ export default function Register() {
           </form>
 
           <p className="text-center text-gray-600 mt-4">
-            Uz mate ucet?{' '}
+            Již máte účet?{' '}
             <Link to="/login" className="text-blue-600 hover:underline">
-              Prihlasit se
+              Přihlásit se
             </Link>
           </p>
         </div>

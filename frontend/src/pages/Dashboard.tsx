@@ -70,7 +70,7 @@ export default function Dashboard() {
   }
 
   if (!data) {
-    return <div className="text-center text-gray-500">Nepodarilo se nacist data</div>;
+    return <div className="text-center text-gray-500">Nepodařilo se načíst data</div>;
   }
 
   const chartData = data.monthlyRevenue.map(item => ({
@@ -84,7 +84,7 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <Link to="/invoices/new" className="btn btn-primary flex items-center space-x-2">
           <Plus className="h-4 w-4" />
-          <span>Nova faktura</span>
+          <span>Nová faktura</span>
         </Link>
       </div>
 
@@ -93,7 +93,7 @@ export default function Dashboard() {
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">K uhrade</p>
+              <p className="text-sm text-gray-500">K úhradě</p>
               <p className="text-2xl font-bold text-gray-900">
                 {formatCurrency(data.stats.outstandingAmount)}
               </p>
@@ -103,14 +103,14 @@ export default function Dashboard() {
             </div>
           </div>
           <p className="text-sm text-gray-500 mt-2">
-            {data.stats.sentCount + data.stats.overdueCount} faktur ceka na platbu
+            {data.stats.sentCount + data.stats.overdueCount} faktur čeká na platbu
           </p>
         </div>
 
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Zaplaceno tento mesic</p>
+              <p className="text-sm text-gray-500">Zaplaceno tento měsíc</p>
               <p className="text-2xl font-bold text-gray-900">
                 {formatCurrency(data.stats.paidThisMonth)}
               </p>
@@ -120,7 +120,7 @@ export default function Dashboard() {
             </div>
           </div>
           <p className="text-sm text-gray-500 mt-2">
-            {data.stats.paidCount} zaplacenych faktur celkem
+            {data.stats.paidCount} zaplacených faktur celkem
           </p>
         </div>
 
@@ -165,7 +165,7 @@ export default function Dashboard() {
           <div className="flex items-center space-x-3">
             <CreditCard className="h-5 w-5 text-yellow-600" />
             <span className="text-yellow-800">
-              Mate {data.unmatchedPayments} nespárovaných plateb
+              Máte {data.unmatchedPayments} nespárovaných plateb
             </span>
           </div>
           <Link to="/payments" className="text-yellow-600 hover:underline font-medium">
@@ -177,7 +177,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly revenue chart */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Mesicni trzby</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Měsíční tržby</h2>
           {chartData.length > 0 ? (
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -187,7 +187,7 @@ export default function Dashboard() {
                   <YAxis />
                   <Tooltip
                     formatter={(value: number) => formatCurrency(value)}
-                    labelFormatter={(label) => `Mesic: ${label}`}
+                    labelFormatter={(label) => `Měsíc: ${label}`}
                   />
                   <Bar dataKey="revenue" fill="#2563eb" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -195,7 +195,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="h-64 flex items-center justify-center text-gray-500">
-              Zatim zadne trzby
+              Zatím žádné tržby
             </div>
           )}
         </div>
@@ -203,9 +203,9 @@ export default function Dashboard() {
         {/* Recent invoices */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Posledni faktury</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Poslední faktury</h2>
             <Link to="/invoices" className="text-blue-600 hover:underline text-sm">
-              Zobrazit vse
+              Zobrazit vše
             </Link>
           </div>
           <div className="space-y-3">
@@ -235,7 +235,7 @@ export default function Dashboard() {
               ))
             ) : (
               <div className="text-center text-gray-500 py-8">
-                Zatim zadne faktury
+                Zatím žádné faktury
               </div>
             )}
           </div>

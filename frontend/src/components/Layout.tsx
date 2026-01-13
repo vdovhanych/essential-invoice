@@ -19,7 +19,7 @@ const navItems = [
   { path: '/invoices', icon: FileText, label: 'Faktury' },
   { path: '/clients', icon: Users, label: 'Klienti' },
   { path: '/payments', icon: CreditCard, label: 'Platby' },
-  { path: '/settings', icon: Settings, label: 'Nastaveni' },
+  { path: '/settings', icon: Settings, label: 'Nastavení' },
 ];
 
 export default function Layout() {
@@ -142,7 +142,7 @@ export default function Layout() {
                       className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-gray-100 w-full"
                     >
                       <LogOut className="h-4 w-4" />
-                      <span>Odhlasit se</span>
+                      <span>Odhlásit se</span>
                     </button>
                   </div>
                 </>

@@ -78,7 +78,7 @@ export default function InvoiceDetail() {
     try {
       await api.download(`/invoices/${id}/pdf`, `faktura-${invoice.invoiceNumber}.pdf`);
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodarilo se stahnout PDF' });
+      setMessage({ type: 'error', text: 'Nepodařilo se stáhnout PDF' });
     }
   }
 
@@ -86,12 +86,12 @@ export default function InvoiceDetail() {
     setSending(true);
     try {
       await api.post(`/invoices/${id}/send`, { sendToSecondary });
-      setMessage({ type: 'success', text: 'Faktura byla uspesne odeslana' });
+      setMessage({ type: 'success', text: 'Faktura byla úspěšně odeslána' });
       setShowSendModal(false);
       loadInvoice();
     } catch (error: unknown) {
       const err = error as Error;
-      setMessage({ type: 'error', text: err.message || 'Nepodarilo se odeslat fakturu' });
+      setMessage({ type: 'error', text: err.message || 'Nepodařilo se odeslat fakturu' });
     } finally {
       setSending(false);
     }
@@ -100,21 +100,21 @@ export default function InvoiceDetail() {
   async function handleMarkPaid() {
     try {
       await api.post(`/invoices/${id}/mark-paid`);
-      setMessage({ type: 'success', text: 'Faktura byla oznacena jako zaplacena' });
+      setMessage({ type: 'success', text: 'Faktura byla označena jako zaplacená' });
       loadInvoice();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodarilo se oznacit fakturu jako zaplacenou' });
+      setMessage({ type: 'error', text: 'Nepodařilo se označit fakturu jako zaplacenou' });
     }
   }
 
   async function handleCancel() {
-    if (!confirm('Opravdu chcete zrusit tuto fakturu?')) return;
+    if (!confirm('Opravdu chcete zrušit tuto fakturu?')) return;
     try {
       await api.post(`/invoices/${id}/cancel`);
-      setMessage({ type: 'success', text: 'Faktura byla zrusena' });
+      setMessage({ type: 'success', text: 'Faktura byla zrušena' });
       loadInvoice();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodarilo se zrusit fakturu' });
+      setMessage({ type: 'error', text: 'Nepodařilo se zrušit fakturu' });
     }
   }
 
@@ -124,7 +124,7 @@ export default function InvoiceDetail() {
       await api.delete(`/invoices/${id}`);
       navigate('/invoices');
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodarilo se smazat fakturu' });
+      setMessage({ type: 'error', text: 'Nepodařilo se smazat fakturu' });
     }
   }
 
@@ -207,7 +207,7 @@ export default function InvoiceDetail() {
         <div className="lg:col-span-2 space-y-6">
           {/* Client info */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Odberatel</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Odběratel</h2>
             <div className="space-y-2">
               <p className="font-medium text-gray-900">{invoice.clientName}</p>
               {invoice.clientAddress && <p className="text-gray-600">{invoice.clientAddress}</p>}
@@ -215,20 +215,20 @@ export default function InvoiceDetail() {
               {invoice.clientDic && <p className="text-gray-600">DIC: {invoice.clientDic}</p>}
               <p className="text-gray-600">Email: {invoice.clientEmail}</p>
               {invoice.clientSecondaryEmail && (
-                <p className="text-gray-600">Sekundarni email: {invoice.clientSecondaryEmail}</p>
+                <p className="text-gray-600">Sekundární email: {invoice.clientSecondaryEmail}</p>
               )}
             </div>
           </div>
 
           {/* Items */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Polozky</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Položky</h2>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-2 font-medium text-gray-500">Popis</th>
-                    <th className="text-right py-2 font-medium text-gray-500">Mnozstvi</th>
+                    <th className="text-right py-2 font-medium text-gray-500">Množství</th>
                     <th className="text-right py-2 font-medium text-gray-500">Cena/ks</th>
                     <th className="text-right py-2 font-medium text-gray-500">Celkem</th>
                   </tr>
@@ -245,7 +245,7 @@ export default function InvoiceDetail() {
                 </tbody>
                 <tfoot>
                   <tr className="border-t border-gray-200">
-                    <td colSpan={3} className="py-2 text-right font-medium">Zaklad dane:</td>
+                    <td colSpan={3} className="py-2 text-right font-medium">Základ daně:</td>
                     <td className="py-2 text-right">{formatCurrency(invoice.subtotal, invoice.currency)}</td>
                   </tr>
                   <tr>
@@ -266,7 +266,7 @@ export default function InvoiceDetail() {
           {/* Notes */}
           {invoice.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznamky</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznámky</h2>
               <p className="text-gray-600 whitespace-pre-wrap">{invoice.notes}</p>
             </div>
           )}
@@ -276,14 +276,14 @@ export default function InvoiceDetail() {
         <div className="space-y-6">
           {/* Dates */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Udaje</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Údaje</h2>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-gray-500">Variabilni symbol:</dt>
+                <dt className="text-gray-500">Variabilní symbol:</dt>
                 <dd className="font-medium">{invoice.variableSymbol}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Datum vystaveni:</dt>
+                <dt className="text-gray-500">Datum vystavení:</dt>
                 <dd className="font-medium">{formatDate(invoice.issueDate)}</dd>
               </div>
               <div className="flex justify-between">
@@ -296,7 +296,7 @@ export default function InvoiceDetail() {
               </div>
               {invoice.sentAt && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">Odeslano:</dt>
+                  <dt className="text-gray-500">Odesláno:</dt>
                   <dd className="font-medium">{formatDate(invoice.sentAt)}</dd>
                 </div>
               )}
@@ -319,7 +319,7 @@ export default function InvoiceDetail() {
                   className="btn btn-secondary w-full flex items-center justify-center space-x-2"
                 >
                   <XCircle className="h-4 w-4" />
-                  <span>Zrusit fakturu</span>
+                  <span>Zrušit fakturu</span>
                 </button>
               )}
               {invoice.status === 'draft' && (
@@ -365,7 +365,7 @@ export default function InvoiceDetail() {
                 className="btn btn-secondary"
                 disabled={sending}
               >
-                Zrusit
+                Zrušit
               </button>
               <button
                 onClick={handleSendInvoice}
@@ -373,7 +373,7 @@ export default function InvoiceDetail() {
                 disabled={sending}
               >
                 <Send className="h-4 w-4" />
-                <span>{sending ? 'Odesilam...' : 'Odeslat'}</span>
+                <span>{sending ? 'Odesílám...' : 'Odeslat'}</span>
               </button>
             </div>
           </div>

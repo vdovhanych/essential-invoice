@@ -61,7 +61,7 @@ export default function Clients() {
 
   async function handleAresLookup() {
     if (!formData.ico || formData.ico.length !== 8) {
-      setMessage({ type: 'error', text: 'ICO musi mit 8 cislic' });
+      setMessage({ type: 'error', text: 'IČO musí mít 8 číslic' });
       return;
     }
 
@@ -74,10 +74,10 @@ export default function Clients() {
         address: result.address || prev.address,
         dic: result.dic || prev.dic,
       }));
-      setMessage({ type: 'success', text: 'Udaje nacteny z ARES' });
+      setMessage({ type: 'success', text: 'Údaje načteny z ARES' });
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodarilo se nacist udaje z ARES' });
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se načíst údaje z ARES' });
     } finally {
       setAresLoading(false);
     }
@@ -122,10 +122,10 @@ export default function Clients() {
     try {
       if (editingClient) {
         await api.put(`/clients/${editingClient.id}`, formData);
-        setMessage({ type: 'success', text: 'Klient byl aktualizovan' });
+        setMessage({ type: 'success', text: 'Klient byl aktualizován' });
       } else {
         await api.post('/clients', formData);
-        setMessage({ type: 'success', text: 'Klient byl vytvoren' });
+        setMessage({ type: 'success', text: 'Klient byl vytvořen' });
       }
       setShowModal(false);
       loadClients();
@@ -140,11 +140,11 @@ export default function Clients() {
 
     try {
       await api.delete(`/clients/${client.id}`);
-      setMessage({ type: 'success', text: 'Klient byl smazan' });
+      setMessage({ type: 'success', text: 'Klient byl smazán' });
       loadClients();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodarilo se smazat klienta' });
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se smazat klienta' });
     }
   }
 
@@ -168,7 +168,7 @@ export default function Clients() {
         <h1 className="text-2xl font-bold text-gray-900">Klienti</h1>
         <button onClick={openCreateModal} className="btn btn-primary flex items-center space-x-2">
           <Plus className="h-4 w-4" />
-          <span>Novy klient</span>
+          <span>Nový klient</span>
         </button>
       </div>
 
@@ -247,10 +247,10 @@ export default function Clients() {
       ) : (
         <div className="card text-center py-12">
           <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Zadni klienti nenalezeni</p>
+          <p className="text-gray-500">Žádní klienti nenalezeni</p>
           <button onClick={openCreateModal} className="btn btn-primary mt-4 inline-flex items-center space-x-2">
             <Plus className="h-4 w-4" />
-            <span>Pridat prvniho klienta</span>
+            <span>Přidat prvního klienta</span>
           </button>
         </div>
       )}
@@ -261,7 +261,7 @@ export default function Clients() {
           <div className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
-                {editingClient ? 'Upravit klienta' : 'Novy klient'}
+                {editingClient ? 'Upravit klienta' : 'Nový klient'}
               </h2>
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
                 <X className="h-5 w-5" />
@@ -288,13 +288,13 @@ export default function Clients() {
                     disabled={aresLoading || formData.ico.length !== 8}
                     className="btn btn-secondary whitespace-nowrap"
                   >
-                    {aresLoading ? 'Nacitam...' : 'Nacist z ARES'}
+                    {aresLoading ? 'Načítám...' : 'Načíst z ARES'}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="label">Nazev firmy *</label>
+                <label className="label">Název firmy *</label>
                 <input
                   type="text"
                   name="companyName"
@@ -306,7 +306,7 @@ export default function Clients() {
               </div>
 
               <div>
-                <label className="label">Primarni email *</label>
+                <label className="label">Primární email *</label>
                 <input
                   type="email"
                   name="primaryEmail"
@@ -318,7 +318,7 @@ export default function Clients() {
               </div>
 
               <div>
-                <label className="label">Sekundarni email</label>
+                <label className="label">Sekundární email</label>
                 <input
                   type="email"
                   name="secondaryEmail"
@@ -353,7 +353,7 @@ export default function Clients() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">Kontaktni osoba</label>
+                  <label className="label">Kontaktní osoba</label>
                   <input
                     type="text"
                     name="contactPerson"
@@ -375,7 +375,7 @@ export default function Clients() {
               </div>
 
               <div>
-                <label className="label">Poznamky</label>
+                <label className="label">Poznámky</label>
                 <textarea
                   name="notes"
                   value={formData.notes}
@@ -387,10 +387,10 @@ export default function Clients() {
 
               <div className="flex justify-end space-x-2 pt-4">
                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">
-                  Zrusit
+                  Zrušit
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  {editingClient ? 'Ulozit zmeny' : 'Vytvorit klienta'}
+                  {editingClient ? 'Uložit změny' : 'Vytvořit klienta'}
                 </button>
               </div>
             </form>
