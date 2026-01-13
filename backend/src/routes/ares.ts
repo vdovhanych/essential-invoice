@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { AuthRequest } from '../middleware/auth.js';
 
-export const aresRouter = Router();
+export const aresRouter: ReturnType<typeof Router> = Router();
 
 interface AresResponse {
   ico: string;
@@ -42,7 +42,7 @@ aresRouter.get('/lookup/:ico', async (req: AuthRequest, res: Response) => {
       throw new Error(`ARES API error: ${response.status}`);
     }
 
-    const data: AresResponse = await response.json();
+    const data = await response.json() as AresResponse;
 
     // Format address
     let address = '';

@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { query } from '../db/init.js';
 import { AuthRequest } from '../middleware/auth.js';
 
-export const paymentRouter = Router();
+export const paymentRouter: ReturnType<typeof Router> = Router();
 
 // Get all payments
 paymentRouter.get('/', async (req: AuthRequest, res: Response) => {

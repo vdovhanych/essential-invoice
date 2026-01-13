@@ -3,7 +3,7 @@ import { body, param, validationResult } from 'express-validator';
 import { query } from '../db/init.js';
 import { AuthRequest } from '../middleware/auth.js';
 
-export const clientRouter = Router();
+export const clientRouter: ReturnType<typeof Router> = Router();
 
 // Get all clients
 clientRouter.get('/', async (req: AuthRequest, res: Response) => {
