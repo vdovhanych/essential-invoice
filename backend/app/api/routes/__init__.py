@@ -1,3 +1,3 @@
-from app.api.routes import ares, clients, invoices
+from app.api.routes import ares, auth, clients, dashboard, invoices, notifications, payments, ui, users
 
-__all__ = ["ares", "clients", "invoices"]
+__all__ = ["ares", "auth", "clients", "dashboard", "invoices", "notifications", "payments", "ui", "users"]

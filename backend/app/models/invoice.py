@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, func
+from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, UniqueConstraint, func
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -14,9 +14,11 @@ class InvoiceStatus(str, Enum):
 
 class Invoice(Base):
     __tablename__ = "invoices"
+    __table_args__ = (UniqueConstraint("user_id", "invoice_number", name="uq_invoice_number_user"),)
 
     id = Column(Integer, primary_key=True)
-    invoice_number = Column(String(32), unique=True, nullable=False, index=True)
+    invoice_number = Column(String(32), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     status = Column(String(20), nullable=False, default=InvoiceStatus.DRAFT)
     currency = Column(String(3), nullable=False, default="CZK")
@@ -31,4 +33,11 @@ class Invoice(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     client = relationship("Client")
+    user = relationship("User", back_populates="invoices")
     items = relationship("InvoiceItem", cascade="all, delete-orphan", back_populates="invoice")
+
+    @property
+    def client_name(self) -> str:
+        if self.client:
+            return self.client.company_name
+        return ""

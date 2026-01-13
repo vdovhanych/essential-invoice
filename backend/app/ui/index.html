@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Essential Invoice — Dashboard</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f4f6fb;
+        --card: #ffffff;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --accent: #2563eb;
+        --danger: #dc2626;
+        --border: #e5e7eb;
+      }
+      body {
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px 32px;
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+      }
+      header h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+      main {
+        max-width: 1100px;
+        margin: 32px auto;
+        padding: 0 24px 60px;
+        display: grid;
+        gap: 24px;
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+      .grid.cols-3 {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+      .card {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid var(--border);
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+      }
+      .card h2 {
+        margin: 0 0 12px;
+        font-size: 16px;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #e0e7ff;
+        color: #3730a3;
+        font-size: 12px;
+        margin-right: 6px;
+      }
+      .danger {
+        color: var(--danger);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+      }
+      button.danger {
+        background: var(--danger);
+        color: white;
+      }
+      form {
+        display: grid;
+        gap: 12px;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+      }
+      .row > * {
+        flex: 1;
+      }
+      #auth-section {
+        max-width: 420px;
+        margin: 60px auto 0;
+      }
+      #dashboard {
+        display: none;
+      }
+      .hidden {
+        display: none;
+      }
+      .status {
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <section id="auth-section" class="card">
+      <h2>Sign in</h2>
+      <p class="muted">Use your account to access invoices and payments.</p>
+      <form id="login-form">
+        <input type="email" name="email" placeholder="Email" required />
+        <input type="password" name="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+      <hr />
+      <h3>Create account</h3>
+      <form id="register-form">
+        <input type="email" name="email" placeholder="Email" required />
+        <input type="password" name="password" placeholder="Password (min 8 chars)" required />
+        <button type="submit" class="secondary">Register</button>
+      </form>
+      <p id="auth-error" class="muted danger"></p>
+    </section>
+
+    <div id="dashboard">
+      <header>
+        <h1>Essential Invoice</h1>
+        <div>
+          <span id="user-email" class="muted"></span>
+          <button id="logout" class="secondary">Logout</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="grid cols-3">
+          <div class="card">
+            <h2>Total invoices</h2>
+            <div id="total-invoices" class="status">0</div>
+            <div class="muted">Across all statuses</div>
+          </div>
+          <div class="card">
+            <h2>Outstanding total</h2>
+            <div id="total-outstanding" class="status">0</div>
+            <div class="muted">Unpaid amount</div>
+          </div>
+          <div class="card">
+            <h2>Open payment alerts</h2>
+            <div id="open-notifications" class="status danger">0</div>
+            <div class="muted">Missing VS requires review</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Status breakdown</h2>
+          <div id="status-breakdown"></div>
+        </section>
+
+        <section class="card">
+          <h2>Invoices</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Client</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>PDF</th>
+              </tr>
+            </thead>
+            <tbody id="invoice-list"></tbody>
+          </table>
+        </section>
+
+        <section class="card">
+          <h2>Payment notifications</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="notification-list"></tbody>
+          </table>
+        </section>
+
+        <section class="card">
+          <h2>Preferences</h2>
+          <form id="prefs-form">
+            <div class="row">
+              <input type="number" min="1" name="invoice_sequence_start" placeholder="Sequence start" />
+              <input type="number" min="1" max="6" name="invoice_sequence_padding" placeholder="Padding" />
+            </div>
+            <select name="secondary_email_mode">
+              <option value="">Secondary email mode</option>
+              <option value="cc">CC</option>
+              <option value="bcc">BCC</option>
+            </select>
+            <button type="submit">Save preferences</button>
+          </form>
+          <p id="prefs-status" class="muted"></p>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const authSection = document.getElementById("auth-section");
+      const dashboard = document.getElementById("dashboard");
+      const authError = document.getElementById("auth-error");
+      const tokenKey = "ei_token";
+
+      const setToken = (token) => localStorage.setItem(tokenKey, token);
+      const getToken = () => localStorage.getItem(tokenKey);
+      const clearToken = () => localStorage.removeItem(tokenKey);
+
+      const apiFetch = async (url, options = {}) => {
+        const token = getToken();
+        const headers = options.headers || {};
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+        if (!headers["Content-Type"] && options.body) {
+          headers["Content-Type"] = "application/json";
+        }
+        const response = await fetch(url, { ...options, headers });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || response.statusText);
+        }
+        if (response.status === 204) {
+          return null;
+        }
+        return response.json();
+      };
+
+      const showDashboard = () => {
+        authSection.style.display = "none";
+        dashboard.style.display = "block";
+      };
+
+      const showAuth = () => {
+        authSection.style.display = "block";
+        dashboard.style.display = "none";
+      };
+
+      document.getElementById("login-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        authError.textContent = "";
+        const form = event.target;
+        const data = new URLSearchParams();
+        data.append("username", form.email.value);
+        data.append("password", form.password.value);
+        try {
+          const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: data,
+          });
+          if (!response.ok) {
+            throw new Error("Login failed");
+          }
+          const payload = await response.json();
+          setToken(payload.access_token);
+          await loadDashboard();
+        } catch (error) {
+          authError.textContent = error.message;
+        }
+      });
+
+      document.getElementById("register-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        authError.textContent = "";
+        const form = event.target;
+        try {
+          await apiFetch("/api/auth/register", {
+            method: "POST",
+            body: JSON.stringify({
+              email: form.email.value,
+              password: form.password.value,
+            }),
+          });
+          authError.textContent = "Registered. Please login.";
+        } catch (error) {
+          authError.textContent = error.message;
+        }
+      });
+
+      document.getElementById("logout").addEventListener("click", () => {
+        clearToken();
+        showAuth();
+      });
+
+      document.getElementById("prefs-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {};
+        if (form.invoice_sequence_start.value) {
+          payload.invoice_sequence_start = Number(form.invoice_sequence_start.value);
+        }
+        if (form.invoice_sequence_padding.value) {
+          payload.invoice_sequence_padding = Number(form.invoice_sequence_padding.value);
+        }
+        if (form.secondary_email_mode.value) {
+          payload.secondary_email_mode = form.secondary_email_mode.value;
+        }
+        try {
+          await apiFetch("/api/users/me", { method: "PATCH", body: JSON.stringify(payload) });
+          document.getElementById("prefs-status").textContent = "Preferences updated.";
+        } catch (error) {
+          document.getElementById("prefs-status").textContent = "Unable to update preferences.";
+        }
+      });
+
+      const loadDashboard = async () => {
+        showDashboard();
+        const me = await apiFetch("/api/users/me");
+        document.getElementById("user-email").textContent = me.email;
+
+        const summary = await apiFetch("/api/dashboard");
+        document.getElementById("total-invoices").textContent = summary.total_invoices;
+        document.getElementById("total-outstanding").textContent = summary.total_outstanding.toFixed(2);
+        document.getElementById("open-notifications").textContent = summary.open_payment_notifications;
+        const statusBreakdown = document.getElementById("status-breakdown");
+        statusBreakdown.innerHTML = "";
+        Object.entries(summary.by_status).forEach(([status, count]) => {
+          const pill = document.createElement("span");
+          pill.className = "pill";
+          pill.textContent = `${status}: ${count}`;
+          statusBreakdown.appendChild(pill);
+        });
+
+        const invoices = await apiFetch("/api/invoices");
+        const invoiceList = document.getElementById("invoice-list");
+        invoiceList.innerHTML = "";
+        invoices.forEach((invoice) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${invoice.invoice_number}</td>
+            <td>${invoice.client_name || "Client " + invoice.client_id}</td>
+            <td>${invoice.status}</td>
+            <td>${invoice.total}</td>
+            <td><button class="secondary" data-id="${invoice.id}">Download</button></td>
+          `;
+          row.querySelector("button").addEventListener("click", () => downloadPdf(invoice.id));
+          invoiceList.appendChild(row);
+        });
+
+        const notifications = await apiFetch("/api/notifications");
+        const notificationList = document.getElementById("notification-list");
+        notificationList.innerHTML = "";
+        notifications.forEach((notification) => {
+          const row = document.createElement("tr");
+          const isResolved = notification.status !== "open";
+          row.innerHTML = `
+            <td>${notification.id}</td>
+            <td>${notification.payment_id}</td>
+            <td>${notification.status}</td>
+            <td><button class="secondary" data-id="${notification.id}" ${
+              isResolved ? "disabled" : ""
+            }>${isResolved ? "Resolved" : "Resolve"}</button></td>
+          `;
+          row.querySelector("button").addEventListener("click", () => {
+            if (!isResolved) {
+              resolveNotification(notification.id);
+            }
+          });
+          notificationList.appendChild(row);
+        });
+      };
+
+      const downloadPdf = async (invoiceId) => {
+        const token = getToken();
+        const response = await fetch(`/api/invoices/${invoiceId}/pdf`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) {
+          return;
+        }
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `invoice-${invoiceId}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      };
+
+      const resolveNotification = async (notificationId) => {
+        await apiFetch(`/api/notifications/${notificationId}/resolve`, { method: "POST" });
+        await loadDashboard();
+      };
+
+      if (getToken()) {
+        loadDashboard().catch(() => showAuth());
+      }
+    </script>
+  </body>
+</html>

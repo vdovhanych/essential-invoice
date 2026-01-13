@@ -18,22 +18,27 @@ A lightweight, self-hosted invoicing application focused on Czech invoicing work
 ## Implementation Phases
 
 ### Phase 1 — Foundation (current repository)
-- Dockerized FastAPI backend with PostgreSQL. 
+- Dockerized FastAPI backend with PostgreSQL.
 - Base data models for users, clients, invoices, invoice items, payments, and email logs.
 - Basic API routes for clients/invoices and ARES lookup.
 
-### Phase 2 — Core features
+### Phase 2 — Multi-user core
+- Authentication with JWT and per-user scoping for all core entities.
+- Roles/permissions for admin vs. standard users.
+- User preferences (invoice numbering sequence, secondary email CC/BCC setting).
+
+### Phase 3 — Core invoicing
 - Invoice PDF generation with Czech template.
 - Dashboard endpoints and UI.
-- Authentication and basic RBAC.
+- Invoice numbering strategy (`YYYY####`) aligned with variable symbols.
 
-### Phase 3 — Email integration
-- SMTP sending of invoice PDFs.
+### Phase 4 — Email + payments
+- SMTP sending of invoice PDFs (log every send attempt in `email_logs`).
 - IMAP polling to parse Air Bank notifications.
-- Payment matching + manual disambiguation UI.
+- Payment matching by VS only; if VS is missing, surface a manual resolution notification.
 
-### Phase 4 — Polish & deploy
-- Hardening, migrations, and backup docs.
+### Phase 5 — Polish & deploy
+- Hardening, migrations, and backup docs (Docker volume snapshots as baseline).
 - Documentation, monitoring, and admin tools.
 
 ## Quick Start (Docker)
@@ -48,21 +53,26 @@ API available at `http://localhost:8000`.
 ## API Overview
 
 - `GET /health` — health check
+- `POST /api/auth/register` — create a user
+- `POST /api/auth/login` — get JWT token
+- `GET /api/users/me` — current user profile
+- `PATCH /api/users/me` — update user preferences
 - `POST /api/clients` — create client
 - `GET /api/clients` — list clients
 - `GET /api/clients/{id}` — get client
 - `POST /api/invoices` — create invoice
 - `GET /api/invoices` — list invoices
 - `GET /api/invoices/{id}` — get invoice
+- `GET /api/invoices/{id}/pdf` — download invoice PDF
+- `POST /api/payments/ingest` — ingest payment notification
+- `GET /api/notifications` — list payment resolution notifications
+- `POST /api/notifications/{id}/resolve` — resolve notification
 - `GET /api/ares/{ico}` — ARES lookup by IČO
+- `GET /api/dashboard` — dashboard summary
+- `GET /ui` — lightweight dashboard UI
 
 ## Suggested Endpoints (future scope)
-
-- Auth: `POST /api/auth/login`, `POST /api/auth/register`
-- Invoice PDF: `GET /api/invoices/{id}/pdf`
 - Email send: `POST /api/invoices/{id}/send`
-- Payment ingest: `POST /api/payments/ingest`
-- Dashboard: `GET /api/dashboard`
 
 ## Database Schema
 
@@ -90,13 +100,13 @@ SPD*1.0*ACC:<account>*AM:<amount>*CC:CZK*X-VS:<vs>*MSG:<message>
 
 ## Questions / Decisions
 
-1. **Invoice number format**: Suggested `YYYY####` to align with variable symbol usage (e.g., `20240001`).
-2. **Single vs. multi-user**: Current scope supports a single default user; can be expanded to multi-user with JWT roles.
+1. **Invoice number format**: `YYYY####` aligned with variable symbol usage (e.g., `20240001`).
+2. **Single vs. multi-user**: prioritize multi-user support with JWT roles and per-user data isolation.
 3. **ARES failures**: fallback to manual entry and cache responses for reliability.
 4. **Email logging**: store all send attempts + timestamps in `email_logs`.
-5. **Payment conflicts**: if multiple invoices match, surface manual matching UI.
-6. **Secondary email**: send as CC by default or separate send depending on user preference.
-7. **Backup strategy**: use PostgreSQL dumps + Docker volume snapshots, document in README.
+5. **Payment conflicts**: match only via VS; if missing, surface an in-app notification for manual resolution.
+6. **Secondary email**: send as CC or BCC based on user preference.
+7. **Backup strategy**: start with Docker volume snapshots (optionally add PostgreSQL dumps later).
 
 ## Development
 
