@@ -111,7 +111,7 @@ clientRouter.get('/:id/invoices', async (req: AuthRequest, res: Response) => {
 clientRouter.post('/',
   body('companyName').trim().notEmpty(),
   body('primaryEmail').isEmail().normalizeEmail(),
-  body('secondaryEmail').optional({ nullable: true }).isEmail().normalizeEmail(),
+  body('secondaryEmail').optional({ nullable: true, checkFalsy: true }).isEmail().normalizeEmail(),
   async (req: AuthRequest, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -154,7 +154,7 @@ clientRouter.post('/',
 clientRouter.put('/:id',
   body('companyName').optional().trim().notEmpty(),
   body('primaryEmail').optional().isEmail().normalizeEmail(),
-  body('secondaryEmail').optional({ nullable: true }).isEmail().normalizeEmail(),
+  body('secondaryEmail').optional({ nullable: true, checkFalsy: true }).isEmail().normalizeEmail(),
   async (req: AuthRequest, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
