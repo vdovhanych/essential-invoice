@@ -12,11 +12,15 @@
   "dependencies": {
     "@effect/platform": "^0.69.0",
     "@effect/platform-node": "^0.69.0",
+    "@fastify/jwt": "^7.0.1",
     "effect": "^3.11.0",
-    "fastify": "^4.26.2"
+    "fastify": "^4.26.2",
+    "pdfkit": "^0.15.0",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@types/node": "^20.11.10",
+    "@types/pdfkit": "^0.13.3",
     "eslint": "^8.56.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
