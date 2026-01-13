@@ -5,7 +5,7 @@ import { AuthRequest } from '../middleware/auth.js';
 import { generateInvoicePDF } from '../services/pdfGenerator.js';
 import { sendInvoiceEmail } from '../services/emailSender.js';
 
-export const invoiceRouter = Router();
+export const invoiceRouter: ReturnType<typeof Router> = Router();
 
 // Generate invoice number
 async function generateInvoiceNumber(userId: string): Promise<{ invoiceNumber: string; variableSymbol: string }> {

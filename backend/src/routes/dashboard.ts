@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { query } from '../db/init.js';
 import { AuthRequest } from '../middleware/auth.js';
 
-export const dashboardRouter = Router();
+export const dashboardRouter: ReturnType<typeof Router> = Router();
 
 // Get dashboard statistics
 dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {

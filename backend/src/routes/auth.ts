@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import { query } from '../db/init.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 
-export const authRouter = Router();
+export const authRouter: ReturnType<typeof Router> = Router();
 
 // Register
 authRouter.post('/register',

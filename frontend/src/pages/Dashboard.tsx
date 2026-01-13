@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
-import { formatCurrency, formatDate, getStatusLabel, getStatusColor } from '../utils/format';
+import { formatCurrency, getStatusLabel, getStatusColor } from '../utils/format';
 import {
   FileText,
   Clock,

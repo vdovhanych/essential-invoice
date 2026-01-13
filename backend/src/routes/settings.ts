@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { query } from '../db/init.js';
 import { AuthRequest } from '../middleware/auth.js';
 
-export const settingsRouter = Router();
+export const settingsRouter: ReturnType<typeof Router> = Router();
 
 // Get settings
 settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
