@@ -38,6 +38,7 @@ class InvoiceRead(InvoiceBase):
     id: int
     invoice_number: str
     status: str
+    client_name: str
     subtotal: float
     tax: float
     total: float
