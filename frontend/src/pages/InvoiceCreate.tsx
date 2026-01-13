@@ -122,7 +122,7 @@ export default function InvoiceCreate() {
     }
 
     if (items.some(item => !item.description || item.unitPrice <= 0)) {
-      setError('Vyplnte vsechny polozky');
+      setError('Vyplňte všechny položky');
       return;
     }
 
@@ -148,7 +148,7 @@ export default function InvoiceCreate() {
       navigate('/invoices');
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Nepodarilo se ulozit fakturu');
+      setError(error.message || 'Nepodařilo se uložit fakturu');
     } finally {
       setSaving(false);
     }
@@ -177,7 +177,7 @@ export default function InvoiceCreate() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-2xl font-bold text-gray-900">
-          {isEdit ? 'Upravit fakturu' : 'Nova faktura'}
+          {isEdit ? 'Upravit fakturu' : 'Nová faktura'}
         </h1>
       </div>
 
@@ -211,8 +211,8 @@ export default function InvoiceCreate() {
             </select>
             {clients.length === 0 && (
               <p className="text-sm text-gray-500 mt-2">
-                Zatim nemate zadne klienty.{' '}
-                <a href="/clients" className="text-blue-600 hover:underline">Pridat klienta</a>
+                Zatím nemáte žádné klienty.{' '}
+                <a href="/clients" className="text-blue-600 hover:underline">Přidat klienta</a>
               </p>
             )}
           </div>
@@ -220,10 +220,10 @@ export default function InvoiceCreate() {
 
         {/* Invoice details */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Udaje faktury</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Údaje faktury</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label htmlFor="issueDate" className="label">Datum vystaveni *</label>
+              <label htmlFor="issueDate" className="label">Datum vystavení *</label>
               <input
                 type="date"
                 id="issueDate"
@@ -258,7 +258,7 @@ export default function InvoiceCreate() {
               />
             </div>
             <div>
-              <label htmlFor="currency" className="label">Mena</label>
+              <label htmlFor="currency" className="label">Měna</label>
               <select
                 id="currency"
                 name="currency"
@@ -276,14 +276,14 @@ export default function InvoiceCreate() {
         {/* Items */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Polozky</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Položky</h2>
             <button
               type="button"
               onClick={addItem}
               className="btn btn-secondary flex items-center space-x-2"
             >
               <Plus className="h-4 w-4" />
-              <span>Pridat polozku</span>
+              <span>Přidat položku</span>
             </button>
           </div>
 
@@ -297,12 +297,12 @@ export default function InvoiceCreate() {
                     value={item.description}
                     onChange={(e) => handleItemChange(index, 'description', e.target.value)}
                     className="input"
-                    placeholder="Popis polozky"
+                    placeholder="Popis položky"
                     required
                   />
                 </div>
                 <div className="col-span-4 md:col-span-2">
-                  <label className="label">Mnozstvi</label>
+                  <label className="label">Množství</label>
                   <input
                     type="number"
                     value={item.quantity}
@@ -353,7 +353,7 @@ export default function InvoiceCreate() {
           <div className="mt-6 pt-6 border-t border-gray-200">
             <div className="flex flex-col items-end space-y-2">
               <div className="flex justify-between w-full max-w-xs">
-                <span className="text-gray-600">Zaklad dane:</span>
+                <span className="text-gray-600">Základ daně:</span>
                 <span className="font-medium">{formatCurrency(calculateSubtotal())}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs items-center">
@@ -382,14 +382,14 @@ export default function InvoiceCreate() {
 
         {/* Notes */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznamky</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznámky</h2>
           <textarea
             name="notes"
             value={formData.notes}
             onChange={handleChange}
             className="input"
             rows={3}
-            placeholder="Volitelne poznamky k fakture..."
+            placeholder="Volitelné poznámky k faktuře..."
           />
         </div>
 
@@ -400,14 +400,14 @@ export default function InvoiceCreate() {
             onClick={() => navigate('/invoices')}
             className="btn btn-secondary"
           >
-            Zrusit
+            Zrušit
           </button>
           <button
             type="submit"
             disabled={saving}
             className="btn btn-primary"
           >
-            {saving ? 'Ukladam...' : (isEdit ? 'Ulozit zmeny' : 'Vytvorit fakturu')}
+            {saving ? 'Ukládám...' : (isEdit ? 'Uložit změny' : 'Vytvořit fakturu')}
           </button>
         </div>
       </form>

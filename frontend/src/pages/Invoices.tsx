@@ -70,7 +70,7 @@ export default function Invoices() {
         <h1 className="text-2xl font-bold text-gray-900">Faktury</h1>
         <Link to="/invoices/new" className="btn btn-primary flex items-center space-x-2">
           <Plus className="h-4 w-4" />
-          <span>Nova faktura</span>
+          <span>Nová faktura</span>
         </Link>
       </div>
 
@@ -93,12 +93,12 @@ export default function Invoices() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="input w-auto"
           >
-            <option value="">Vsechny stavy</option>
+            <option value="">Všechny stavy</option>
             <option value="draft">Koncept</option>
-            <option value="sent">Odeslano</option>
+            <option value="sent">Odesláno</option>
             <option value="paid">Zaplaceno</option>
             <option value="overdue">Po splatnosti</option>
-            <option value="cancelled">Zruseno</option>
+            <option value="cancelled">Zrušeno</option>
           </select>
         </div>
       </div>
@@ -110,11 +110,11 @@ export default function Invoices() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Cislo</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Číslo</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Klient</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Datum vystaveni</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Datum vystavení</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Splatnost</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500">Castka</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500">Částka</th>
                   <th className="text-center py-3 px-4 font-medium text-gray-500">Stav</th>
                   <th className="text-right py-3 px-4 font-medium text-gray-500">Akce</th>
                 </tr>
@@ -152,7 +152,7 @@ export default function Invoices() {
                       <button
                         onClick={() => handleDownloadPDF(invoice.id, invoice.invoiceNumber)}
                         className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                        title="Stahnout PDF"
+                        title="Stáhnout PDF"
                       >
                         <Download className="h-4 w-4" />
                       </button>
@@ -165,10 +165,10 @@ export default function Invoices() {
         ) : (
           <div className="text-center py-12">
             <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Zadne faktury nenalezeny</p>
+            <p className="text-gray-500">Žádné faktury nenalezeny</p>
             <Link to="/invoices/new" className="btn btn-primary mt-4 inline-flex items-center space-x-2">
               <Plus className="h-4 w-4" />
-              <span>Vytvorit prvni fakturu</span>
+              <span>Vytvořit první fakturu</span>
             </Link>
           </div>
         )}

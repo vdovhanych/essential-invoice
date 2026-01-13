@@ -100,7 +100,7 @@ export default function ClientDetail() {
           className="btn btn-primary flex items-center space-x-2"
         >
           <Plus className="h-4 w-4" />
-          <span>Nova faktura</span>
+          <span>Nová faktura</span>
         </Link>
       </div>
 
@@ -108,12 +108,12 @@ export default function ClientDetail() {
         {/* Client details */}
         <div className="lg:col-span-1 space-y-6">
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Kontaktni udaje</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Kontaktní údaje</h2>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Primarni email</p>
+                  <p className="text-sm text-gray-500">Primární email</p>
                   <a href={`mailto:${client.primaryEmail}`} className="text-blue-600 hover:underline">
                     {client.primaryEmail}
                   </a>
@@ -124,7 +124,7 @@ export default function ClientDetail() {
                 <div className="flex items-start space-x-3">
                   <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">Sekundarni email</p>
+                    <p className="text-sm text-gray-500">Sekundární email</p>
                     <a href={`mailto:${client.secondaryEmail}`} className="text-blue-600 hover:underline">
                       {client.secondaryEmail}
                     </a>
@@ -136,7 +136,7 @@ export default function ClientDetail() {
                 <div className="flex items-start space-x-3">
                   <Building className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">Kontaktni osoba</p>
+                    <p className="text-sm text-gray-500">Kontaktní osoba</p>
                     <p className="text-gray-900">{client.contactPerson}</p>
                   </div>
                 </div>
@@ -168,7 +168,7 @@ export default function ClientDetail() {
 
           {client.dic && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Danove udaje</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Daňové údaje</h2>
               <div className="space-y-2">
                 {client.ico && (
                   <div className="flex justify-between">
@@ -186,7 +186,7 @@ export default function ClientDetail() {
 
           {client.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznamky</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznámky</h2>
               <p className="text-gray-600 whitespace-pre-wrap">{client.notes}</p>
             </div>
           )}
@@ -197,11 +197,11 @@ export default function ClientDetail() {
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4">
             <div className="card">
-              <p className="text-sm text-gray-500">Celkove trzby</p>
+              <p className="text-sm text-gray-500">Celkové tržby</p>
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
             </div>
             <div className="card">
-              <p className="text-sm text-gray-500">K uhrade</p>
+              <p className="text-sm text-gray-500">K úhradě</p>
               <p className="text-2xl font-bold text-yellow-600">{formatCurrency(pendingAmount)}</p>
             </div>
           </div>
@@ -214,9 +214,9 @@ export default function ClientDetail() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-2 font-medium text-gray-500">Cislo</th>
+                      <th className="text-left py-2 font-medium text-gray-500">Číslo</th>
                       <th className="text-left py-2 font-medium text-gray-500">Datum</th>
-                      <th className="text-right py-2 font-medium text-gray-500">Castka</th>
+                      <th className="text-right py-2 font-medium text-gray-500">Částka</th>
                       <th className="text-center py-2 font-medium text-gray-500">Stav</th>
                     </tr>
                   </thead>
@@ -248,7 +248,7 @@ export default function ClientDetail() {
             ) : (
               <div className="text-center py-8">
                 <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">Zadne faktury pro tohoto klienta</p>
+                <p className="text-gray-500">Žádné faktury pro tohoto klienta</p>
               </div>
             )}
           </div>

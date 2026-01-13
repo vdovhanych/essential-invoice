@@ -19,7 +19,7 @@ export default function Login() {
       await login(email, password);
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Prihlaseni selhalo');
+      setError(error.message || 'Přihlášení selhalo');
     } finally {
       setLoading(false);
     }
@@ -33,7 +33,7 @@ export default function Login() {
             <FileText className="h-12 w-12 text-blue-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Essential Invoice</h1>
-          <p className="text-gray-600 mt-2">Prihlaste se ke svemu uctu</p>
+          <p className="text-gray-600 mt-2">Přihlaste se ke svému účtu</p>
         </div>
 
         <div className="card">
@@ -74,12 +74,12 @@ export default function Login() {
               disabled={loading}
               className="btn btn-primary w-full"
             >
-              {loading ? 'Prihlasuji...' : 'Prihlasit se'}
+              {loading ? 'Přihlašuji...' : 'Přihlásit se'}
             </button>
           </form>
 
           <p className="text-center text-gray-600 mt-4">
-            Nemate ucet?{' '}
+            Nemáte účet?{' '}
             <Link to="/register" className="text-blue-600 hover:underline">
               Registrovat se
             </Link>

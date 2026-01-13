@@ -40,10 +40,10 @@ export default function Profile() {
 
     try {
       await updateProfile(formData);
-      setMessage({ type: 'success', text: 'Profil byl aktualizovan' });
+      setMessage({ type: 'success', text: 'Profil byl aktualizován' });
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodarilo se aktualizovat profil' });
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se aktualizovat profil' });
     } finally {
       setSaving(false);
     }
@@ -54,12 +54,12 @@ export default function Profile() {
     setMessage(null);
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setMessage({ type: 'error', text: 'Hesla se neshoduji' });
+      setMessage({ type: 'error', text: 'Hesla se neshodují' });
       return;
     }
 
     if (passwordData.newPassword.length < 8) {
-      setMessage({ type: 'error', text: 'Heslo musi mit alespon 8 znaku' });
+      setMessage({ type: 'error', text: 'Heslo musí mít alespoň 8 znaků' });
       return;
     }
 
@@ -70,11 +70,11 @@ export default function Profile() {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
-      setMessage({ type: 'success', text: 'Heslo bylo zmeneno' });
+      setMessage({ type: 'success', text: 'Heslo bylo změněno' });
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodarilo se zmenit heslo' });
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se změnit heslo' });
     } finally {
       setChangingPassword(false);
     }
@@ -82,7 +82,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Muj profil</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Můj profil</h1>
 
       {/* Message */}
       {message && (
@@ -100,11 +100,11 @@ export default function Profile() {
           <div className="p-2 bg-blue-100 rounded-lg">
             <User className="h-5 w-5 text-blue-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Osobni udaje</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Osobní údaje</h2>
         </div>
 
         <div>
-          <label className="label">Jmeno *</label>
+          <label className="label">Jméno *</label>
           <input
             type="text"
             name="name"
@@ -123,7 +123,7 @@ export default function Profile() {
             className="input bg-gray-50"
             disabled
           />
-          <p className="text-xs text-gray-500 mt-1">Email nelze zmenit</p>
+          <p className="text-xs text-gray-500 mt-1">Email nelze změnit</p>
         </div>
 
         <hr />
@@ -132,15 +132,15 @@ export default function Profile() {
           <div className="p-2 bg-green-100 rounded-lg">
             <Building className="h-5 w-5 text-green-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Firemni udaje</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Firemní údaje</h2>
         </div>
 
         <p className="text-sm text-gray-500">
-          Tyto udaje se budou zobrazovat na vasich fakturach.
+          Tyto údaje se budou zobrazovat na vašich fakturách.
         </p>
 
         <div>
-          <label className="label">Nazev firmy</label>
+          <label className="label">Název firmy</label>
           <input
             type="text"
             name="companyName"
@@ -187,7 +187,7 @@ export default function Profile() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="label">Cislo uctu</label>
+            <label className="label">Číslo účtu</label>
             <input
               type="text"
               name="bankAccount"
@@ -213,17 +213,17 @@ export default function Profile() {
 
         <div className="flex justify-end">
           <button type="submit" disabled={saving} className="btn btn-primary">
-            {saving ? 'Ukladam...' : 'Ulozit zmeny'}
+            {saving ? 'Ukládám...' : 'Uložit změny'}
           </button>
         </div>
       </form>
 
       {/* Password change */}
       <form onSubmit={handlePasswordSubmit} className="card space-y-6">
-        <h2 className="text-lg font-semibold text-gray-900">Zmena hesla</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Změna hesla</h2>
 
         <div>
-          <label className="label">Soucasne heslo</label>
+          <label className="label">Současné heslo</label>
           <input
             type="password"
             name="currentPassword"
@@ -235,7 +235,7 @@ export default function Profile() {
         </div>
 
         <div>
-          <label className="label">Nove heslo</label>
+          <label className="label">Nové heslo</label>
           <input
             type="password"
             name="newPassword"
@@ -248,7 +248,7 @@ export default function Profile() {
         </div>
 
         <div>
-          <label className="label">Potvrzeni noveho hesla</label>
+          <label className="label">Potvrzení nového hesla</label>
           <input
             type="password"
             name="confirmPassword"
@@ -261,7 +261,7 @@ export default function Profile() {
 
         <div className="flex justify-end">
           <button type="submit" disabled={changingPassword} className="btn btn-primary">
-            {changingPassword ? 'Menim heslo...' : 'Zmenit heslo'}
+            {changingPassword ? 'Měním heslo...' : 'Změnit heslo'}
           </button>
         </div>
       </form>

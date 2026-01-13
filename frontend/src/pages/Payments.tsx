@@ -85,25 +85,25 @@ export default function Payments() {
 
     try {
       await api.post(`/payments/${selectedPayment.id}/match`, { invoiceId });
-      setMessage({ type: 'success', text: 'Platba byla sparovana' });
+      setMessage({ type: 'success', text: 'Platba byla spárována' });
       setShowMatchModal(false);
       loadPayments();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodarilo se sparovat platbu' });
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se spárovat platbu' });
     }
   }
 
   async function handleUnmatch(payment: Payment) {
-    if (!confirm('Opravdu chcete zrusit sparovani teto platby?')) return;
+    if (!confirm('Opravdu chcete zrušit spárování této platby?')) return;
 
     try {
       await api.post(`/payments/${payment.id}/unmatch`);
-      setMessage({ type: 'success', text: 'Sparovani bylo zruseno' });
+      setMessage({ type: 'success', text: 'Spárování bylo zrušeno' });
       loadPayments();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodarilo se zrusit sparovani' });
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se zrušit spárování' });
     }
   }
 
@@ -154,19 +154,19 @@ export default function Payments() {
             onClick={() => setFilter('all')}
             className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
           >
-            Vsechny
+            Všechny
           </button>
           <button
             onClick={() => setFilter('unmatched')}
             className={`btn ${filter === 'unmatched' ? 'btn-primary' : 'btn-secondary'}`}
           >
-            Nesparovane
+            Nespárované
           </button>
           <button
             onClick={() => setFilter('matched')}
             className={`btn ${filter === 'matched' ? 'btn-primary' : 'btn-secondary'}`}
           >
-            Sparovane
+            Spárované
           </button>
         </div>
       </div>
@@ -179,9 +179,9 @@ export default function Payments() {
               <thead>
                 <tr className="border-b border-gray-200">
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Datum</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Odesilatel</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Odesílatel</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">VS</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500">Castka</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500">Částka</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Faktura</th>
                   <th className="text-right py-3 px-4 font-medium text-gray-500">Akce</th>
                 </tr>
@@ -224,7 +224,7 @@ export default function Payments() {
                         <button
                           onClick={() => handleUnmatch(payment)}
                           className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                          title="Zrusit sparovani"
+                          title="Zrušit spárování"
                         >
                           <Unlink className="h-4 w-4" />
                         </button>
@@ -245,9 +245,9 @@ export default function Payments() {
         ) : (
           <div className="text-center py-12">
             <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Zadne platby nenalezeny</p>
+            <p className="text-gray-500">Žádné platby nenalezeny</p>
             <p className="text-sm text-gray-400 mt-2">
-              Platby se automaticky nacitaji z vaseho emailu
+              Platby se automaticky načítají z vašeho emailu
             </p>
           </div>
         )}
@@ -258,7 +258,7 @@ export default function Payments() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Sparovat platbu</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Spárovat platbu</h2>
               <button onClick={() => setShowMatchModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
                 <X className="h-5 w-5" />
               </button>
@@ -268,7 +268,7 @@ export default function Payments() {
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">Castka:</span>
+                  <span className="text-gray-500">Částka:</span>
                   <span className="ml-2 font-medium text-green-600">
                     {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
                   </span>
@@ -278,7 +278,7 @@ export default function Payments() {
                   <span className="ml-2 font-mono">{selectedPayment.variableSymbol || '-'}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Odesilatel:</span>
+                  <span className="text-gray-500">Odesílatel:</span>
                   <span className="ml-2">{selectedPayment.senderName || '-'}</span>
                 </div>
                 <div>
@@ -289,7 +289,7 @@ export default function Payments() {
             </div>
 
             {/* Potential matches */}
-            <h3 className="font-medium text-gray-900 mb-3">Mozne shody</h3>
+            <h3 className="font-medium text-gray-900 mb-3">Možné shody</h3>
             {matchLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -321,14 +321,14 @@ export default function Payments() {
                       onClick={() => handleMatch(match.id)}
                       className="btn btn-primary"
                     >
-                      Sparovat
+                      Spárovat
                     </button>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                Nebyly nalezeny zadne odpovidajici faktury
+                Nebyly nalezeny žádné odpovídající faktury
               </div>
             )}
           </div>

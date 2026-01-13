@@ -90,10 +90,12 @@ export default function Settings() {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value, type } = e.target;
+    const numericFields = ['smtpPort', 'imapPort', 'emailPollingInterval', 'defaultVatRate', 'defaultPaymentTerms'];
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked :
-              type === 'number' ? parseInt(value) || 0 : value
+              (type === 'number' || numericFields.includes(name)) ? parseInt(value) || 0 : value
     }));
   }
 
@@ -104,11 +106,11 @@ export default function Settings() {
 
     try {
       await api.put('/settings', formData);
-      setMessage({ type: 'success', text: 'Nastaveni bylo ulozeno' });
+      setMessage({ type: 'success', text: 'Nastavení bylo uloženo' });
       loadSettings();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodarilo se ulozit nastaveni' });
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se uložit nastavení' });
     } finally {
       setSaving(false);
     }
@@ -120,7 +122,7 @@ export default function Settings() {
 
     try {
       await api.post(`/settings/test-${type}`);
-      setMessage({ type: 'success', text: `${type.toUpperCase()} pripojeni je funkcni` });
+      setMessage({ type: 'success', text: `${type.toUpperCase()} připojení je funkční` });
     } catch (err: unknown) {
       const error = err as Error;
       setMessage({ type: 'error', text: error.message || `Test ${type.toUpperCase()} selhal` });
@@ -139,7 +141,7 @@ export default function Settings() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Nastaveni</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Nastavení</h1>
 
       {/* Message */}
       {message && (
@@ -158,7 +160,7 @@ export default function Settings() {
             <div className="p-2 bg-blue-100 rounded-lg">
               <Mail className="h-5 w-5 text-blue-600" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Odesilani emailu (SMTP)</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Odesílání emailů (SMTP)</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -184,7 +186,7 @@ export default function Settings() {
               />
             </div>
             <div>
-              <label className="label">Uzivatel</label>
+              <label className="label">Uživatel</label>
               <input
                 type="text"
                 name="smtpUser"
@@ -246,7 +248,7 @@ export default function Settings() {
                 onChange={handleChange}
                 className="rounded border-gray-300 text-blue-600"
               />
-              <span className="text-sm text-gray-600">Pouzit TLS/SSL</span>
+              <span className="text-sm text-gray-600">Použít TLS/SSL</span>
             </label>
             <button
               type="button"
@@ -254,7 +256,7 @@ export default function Settings() {
               disabled={testing === 'smtp' || !formData.smtpHost}
               className="btn btn-secondary"
             >
-              {testing === 'smtp' ? 'Testuji...' : 'Otestovat pripojeni'}
+              {testing === 'smtp' ? 'Testuji...' : 'Otestovat připojení'}
             </button>
           </div>
         </div>
@@ -265,11 +267,11 @@ export default function Settings() {
             <div className="p-2 bg-green-100 rounded-lg">
               <Server className="h-5 w-5 text-green-600" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Prijimani emailu (IMAP)</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Přijímání emailů (IMAP)</h2>
           </div>
 
           <p className="text-sm text-gray-500 mb-4">
-            Nastavte IMAP pro automaticke nacitani bankovnich notifikaci o platbach.
+            Nastavte IMAP pro automatické načítání bankovních notifikací o platbách.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -295,7 +297,7 @@ export default function Settings() {
               />
             </div>
             <div>
-              <label className="label">Uzivatel</label>
+              <label className="label">Uživatel</label>
               <input
                 type="text"
                 name="imapUser"
@@ -325,7 +327,7 @@ export default function Settings() {
               </div>
             </div>
             <div className="md:col-span-2">
-              <label className="label">Email bankovnich notifikaci (volitelne)</label>
+              <label className="label">Email bankovních notifikací (volitelné)</label>
               <input
                 type="email"
                 name="bankNotificationEmail"
@@ -335,7 +337,7 @@ export default function Settings() {
                 placeholder="noreply@airbank.cz"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Pokud vyplnite, budou se nacitat pouze emaily od teto adresy
+                Pokud vyplníte, budou se načítat pouze emaily od této adresy
               </p>
             </div>
           </div>
@@ -349,7 +351,7 @@ export default function Settings() {
                 onChange={handleChange}
                 className="rounded border-gray-300 text-blue-600"
               />
-              <span className="text-sm text-gray-600">Pouzit TLS</span>
+              <span className="text-sm text-gray-600">Použít TLS</span>
             </label>
             <button
               type="button"
@@ -357,18 +359,18 @@ export default function Settings() {
               disabled={testing === 'imap' || !formData.imapHost}
               className="btn btn-secondary"
             >
-              {testing === 'imap' ? 'Testuji...' : 'Otestovat pripojeni'}
+              {testing === 'imap' ? 'Testuji...' : 'Otestovat připojení'}
             </button>
           </div>
         </div>
 
         {/* Invoice defaults */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Vychozi hodnoty faktur</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Výchozí hodnoty faktur</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">Vychozi sazba DPH (%)</label>
+              <label className="label">Výchozí sazba DPH (%)</label>
               <select
                 name="defaultVatRate"
                 value={formData.defaultVatRate}
@@ -381,7 +383,7 @@ export default function Settings() {
               </select>
             </div>
             <div>
-              <label className="label">Vychozi splatnost (dny)</label>
+              <label className="label">Výchozí splatnost (dny)</label>
               <input
                 type="number"
                 name="defaultPaymentTerms"
@@ -392,14 +394,14 @@ export default function Settings() {
               />
             </div>
             <div className="md:col-span-2">
-              <label className="label">Prefix cisla faktury</label>
+              <label className="label">Prefix čísla faktury</label>
               <input
                 type="text"
                 name="invoiceNumberPrefix"
                 value={formData.invoiceNumberPrefix}
                 onChange={handleChange}
                 className="input"
-                placeholder="Napr. FV, INV"
+                placeholder="Např. FV, INV"
               />
             </div>
           </div>
@@ -407,9 +409,9 @@ export default function Settings() {
 
         {/* Email template */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Sablona emailu</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Šablona emailu</h2>
           <p className="text-sm text-gray-500 mb-4">
-            Pouzijte promenne: {'{{invoiceNumber}}'}, {'{{total}}'}, {'{{dueDate}}'}, {'{{clientName}}'}, {'{{senderName}}'}
+            Použijte proměnné: {'{{invoiceNumber}}'}, {'{{total}}'}, {'{{dueDate}}'}, {'{{clientName}}'}, {'{{senderName}}'}
           </p>
           <textarea
             name="emailTemplate"
@@ -417,13 +419,13 @@ export default function Settings() {
             onChange={handleChange}
             className="input"
             rows={6}
-            placeholder={`Dobry den,
+            placeholder={`Dobrý den,
 
-v priloze zasilame fakturu c. {{invoiceNumber}} na castku {{total}}.
+v příloze zasíláme fakturu č. {{invoiceNumber}} na částku {{total}}.
 
 Datum splatnosti: {{dueDate}}
 
-Dekujeme za spolupraci.
+Děkujeme za spolupráci.
 
 S pozdravem,
 {{senderName}}`}
@@ -433,7 +435,7 @@ S pozdravem,
         {/* Submit */}
         <div className="flex justify-end">
           <button type="submit" disabled={saving} className="btn btn-primary">
-            {saving ? 'Ukladam...' : 'Ulozit nastaveni'}
+            {saving ? 'Ukládám...' : 'Uložit nastavení'}
           </button>
         </div>
       </form>
