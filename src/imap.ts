@@ -36,7 +36,8 @@ export const pollBankInbox = async (config: AppConfig, store: Store) => {
   await client.connect();
   try {
     await client.mailboxOpen("INBOX");
-    const messages = await client.search({ seen: false });
+    const searchResult = await client.search({ seen: false });
+    const messages = Array.isArray(searchResult) ? searchResult : [];
     for await (const message of client.fetch(messages, { envelope: true, source: true })) {
       const fromAddress = message.envelope?.from?.[0]?.address;
       if (!matchesSender(fromAddress, config.bankEmailSenderPattern)) {

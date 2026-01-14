@@ -9,7 +9,7 @@ const program = Effect.gen(function* (_) {
   const store = createStore();
   const app = createApp({ config, store });
 
-  await app.listen({ port: config.port, host: "0.0.0.0" });
+  yield* _(Effect.tryPromise(() => app.listen({ port: config.port, host: "0.0.0.0" })));
 });
 
 NodeRuntime.runMain(program);
