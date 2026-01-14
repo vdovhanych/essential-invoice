@@ -193,18 +193,45 @@ docker-compose up -d db
 2. Backend:
 ```bash
 cd backend
-npm install
+pnpm install
 cp ../.env.example .env
 # Edit .env with local settings
-npm run dev
+pnpm run dev
 ```
 
 3. Frontend:
 ```bash
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
+
+### Running Tests
+
+Both backend and frontend include comprehensive test suites using Vitest.
+
+**Backend tests:**
+```bash
+cd backend
+pnpm test              # Run all tests
+pnpm test:watch        # Watch mode
+pnpm test:coverage     # With coverage report
+```
+
+**Frontend tests:**
+```bash
+cd frontend
+pnpm test              # Run all tests
+pnpm test:watch        # Watch mode
+pnpm test:coverage     # With coverage report
+```
+
+**Test coverage includes:**
+- Air Bank email parsing (incoming payment detection, field extraction)
+- Bank parser factory (bank detection, payment parsing)
+- Validation utilities (IČO checksum, email, currency formatting, SPAYD)
+- API routes (authentication, authorization, validation)
+- Frontend utilities (date/currency formatting, status labels)
 
 ### Project Structure
 
