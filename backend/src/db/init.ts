@@ -155,9 +155,18 @@ export async function initializeDatabase() {
         default_vat_rate DECIMAL(5, 2) DEFAULT 21,
         default_payment_terms INTEGER DEFAULT 14,
         email_template TEXT,
+        calculator_enabled BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+
+      -- Add calculator_enabled column if it doesn't exist (migration for existing databases)
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='calculator_enabled') THEN
+          ALTER TABLE settings ADD COLUMN calculator_enabled BOOLEAN DEFAULT false;
+        END IF;
+      END $$;
 
       -- Create indexes
       CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);

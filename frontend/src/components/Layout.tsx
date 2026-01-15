@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../utils/api';
 import {
   LayoutDashboard,
   FileText,
@@ -11,15 +12,15 @@ import {
   Menu,
   X,
   User,
-  ChevronDown
+  ChevronDown,
+  Calculator
 } from 'lucide-react';
 
-const navItems = [
+const baseNavItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/invoices', icon: FileText, label: 'Faktury' },
   { path: '/clients', icon: Users, label: 'Klienti' },
   { path: '/payments', icon: CreditCard, label: 'Platby' },
-  { path: '/settings', icon: Settings, label: 'Nastavení' },
 ];
 
 export default function Layout() {
@@ -27,6 +28,26 @@ export default function Layout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [calculatorEnabled, setCalculatorEnabled] = useState(false);
+
+  useEffect(() => {
+    async function checkCalculatorEnabled() {
+      try {
+        const settings = await api.get('/settings');
+        setCalculatorEnabled(settings.calculatorEnabled ?? false);
+      } catch (error) {
+        console.error('Failed to check calculator setting:', error);
+      }
+    }
+    checkCalculatorEnabled();
+  }, []);
+
+  // Build nav items dynamically based on calculator setting
+  const navItems = [
+    ...baseNavItems,
+    ...(calculatorEnabled ? [{ path: '/calculator', icon: Calculator, label: 'Kalkulacka' }] : []),
+    { path: '/settings', icon: Settings, label: 'Nastaveni' },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">

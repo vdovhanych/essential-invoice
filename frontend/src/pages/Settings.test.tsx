@@ -21,7 +21,8 @@ vi.mock('lucide-react', () => ({
   AlertCircle: () => <span data-testid="alert-icon" />,
   CheckCircle: () => <span data-testid="check-icon" />,
   Eye: () => <span data-testid="eye-icon" />,
-  EyeOff: () => <span data-testid="eye-off-icon" />
+  EyeOff: () => <span data-testid="eye-off-icon" />,
+  Calculator: () => <span data-testid="calculator-icon" />
 }));
 
 const getVatSelect = () => document.querySelector('select[name="defaultVatRate"]') as HTMLSelectElement;
@@ -51,7 +52,8 @@ describe('Settings Component', () => {
       invoiceNumberFormat: 'YYYYMM##',
       defaultVatRate: 0, // VAT rate is 0
       defaultPaymentTerms: 14,
-      emailTemplate: null
+      emailTemplate: null,
+      calculatorEnabled: false
     });
 
     render(<Settings />);
@@ -84,7 +86,8 @@ describe('Settings Component', () => {
       invoiceNumberFormat: 'YYYYMM##',
       defaultVatRate: 21,
       defaultPaymentTerms: 14,
-      emailTemplate: null
+      emailTemplate: null,
+      calculatorEnabled: false
     });
 
     mockPut.mockResolvedValueOnce({ message: 'Settings updated successfully' });
@@ -109,7 +112,8 @@ describe('Settings Component', () => {
       invoiceNumberFormat: 'YYYYMM##',
       defaultVatRate: 0, // Now 0 after save
       defaultPaymentTerms: 14,
-      emailTemplate: null
+      emailTemplate: null,
+      calculatorEnabled: false
     });
 
     render(<Settings />);
