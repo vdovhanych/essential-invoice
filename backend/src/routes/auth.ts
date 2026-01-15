@@ -2,8 +2,40 @@ import { Router, Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { query } from '../db/init.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+
+// Configure multer for logo uploads
+const uploadsDir = path.join(process.cwd(), 'uploads/logos');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req: AuthRequest, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${req.userId}${ext}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PNG, JPG, and SVG are allowed.'));
+    }
+  }
+});
 
 export const authRouter: ReturnType<typeof Router> = Router();
 
@@ -108,7 +140,7 @@ authRouter.post('/login',
 authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const result = await query(
-      `SELECT id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, created_at
+      `SELECT id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, logo_url, created_at
        FROM users WHERE id = $1`,
       [req.userId]
     );
@@ -128,6 +160,7 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
       companyAddress: user.company_address,
       bankAccount: user.bank_account,
       bankCode: user.bank_code,
+      logoUrl: user.logo_url,
       createdAt: user.created_at
     });
   } catch (error) {
@@ -212,3 +245,57 @@ authRouter.post('/change-password', authenticateToken,
     }
   }
 );
+
+// Upload logo
+authRouter.post('/me/logo', authenticateToken, upload.single('logo'), async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Delete old logo if exists (different extension)
+    const oldLogoResult = await query('SELECT logo_url FROM users WHERE id = $1', [req.userId]);
+    if (oldLogoResult.rows[0]?.logo_url) {
+      const oldPath = path.join(process.cwd(), 'uploads/logos', path.basename(oldLogoResult.rows[0].logo_url));
+      if (fs.existsSync(oldPath) && oldPath !== path.join(uploadsDir, req.file.filename)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    const logoUrl = `/uploads/logos/${req.file.filename}`;
+
+    await query(
+      'UPDATE users SET logo_url = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [logoUrl, req.userId]
+    );
+
+    res.json({ logoUrl });
+  } catch (error) {
+    console.error('Upload logo error:', error);
+    res.status(500).json({ error: 'Failed to upload logo' });
+  }
+});
+
+// Delete logo
+authRouter.delete('/me/logo', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await query('SELECT logo_url FROM users WHERE id = $1', [req.userId]);
+
+    if (result.rows[0]?.logo_url) {
+      const logoPath = path.join(process.cwd(), 'uploads/logos', path.basename(result.rows[0].logo_url));
+      if (fs.existsSync(logoPath)) {
+        fs.unlinkSync(logoPath);
+      }
+    }
+
+    await query(
+      'UPDATE users SET logo_url = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+      [req.userId]
+    );
+
+    res.json({ message: 'Logo deleted successfully' });
+  } catch (error) {
+    console.error('Delete logo error:', error);
+    res.status(500).json({ error: 'Failed to delete logo' });
+  }
+});

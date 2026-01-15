@@ -63,22 +63,22 @@ export default function Settings() {
       setSettings(result);
       setFormData({
         smtpHost: result.smtpHost || '',
-        smtpPort: result.smtpPort || 587,
+        smtpPort: result.smtpPort ?? 587,
         smtpUser: result.smtpUser || '',
         smtpPassword: '',
         smtpSecure: result.smtpSecure ?? true,
         smtpFromEmail: result.smtpFromEmail || '',
         smtpFromName: result.smtpFromName || '',
         imapHost: result.imapHost || '',
-        imapPort: result.imapPort || 993,
+        imapPort: result.imapPort ?? 993,
         imapUser: result.imapUser || '',
         imapPassword: '',
         imapTls: result.imapTls ?? true,
         bankNotificationEmail: result.bankNotificationEmail || '',
-        emailPollingInterval: result.emailPollingInterval || 300,
+        emailPollingInterval: result.emailPollingInterval ?? 300,
         invoiceNumberPrefix: result.invoiceNumberPrefix || '',
-        defaultVatRate: result.defaultVatRate || 21,
-        defaultPaymentTerms: result.defaultPaymentTerms || 14,
+        defaultVatRate: result.defaultVatRate ?? 21,
+        defaultPaymentTerms: result.defaultPaymentTerms ?? 14,
         emailTemplate: result.emailTemplate || '',
       });
     } catch (error) {

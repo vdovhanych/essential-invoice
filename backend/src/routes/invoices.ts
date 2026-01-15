@@ -12,20 +12,30 @@ async function generateInvoiceNumber(userId: string): Promise<{ invoiceNumber: s
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
-  const prefix = `${year}${month}`;
+  const datePrefix = `${year}${month}`;
 
-  // Get count of invoices this month
+  // Get user's invoice number prefix from settings
+  const settingsResult = await query(
+    'SELECT invoice_number_prefix FROM settings WHERE user_id = $1',
+    [userId]
+  );
+  const userPrefix = settingsResult.rows[0]?.invoice_number_prefix || '';
+
+  // Get count of invoices this month (match with or without user prefix)
   const result = await query(
     `SELECT COUNT(*) FROM invoices
      WHERE user_id = $1
      AND invoice_number LIKE $2`,
-    [userId, `${prefix}%`]
+    [userId, `%${datePrefix}%`]
   );
 
   const count = parseInt(result.rows[0].count) + 1;
-  const invoiceNumber = `${prefix}${String(count).padStart(2, '0')}`;
+  const invoiceNumber = `${userPrefix}${datePrefix}${String(count).padStart(2, '0')}`;
 
-  return { invoiceNumber, variableSymbol: invoiceNumber };
+  // Variable symbol should be numeric only for bank payments
+  const variableSymbol = `${datePrefix}${String(count).padStart(2, '0')}`;
+
+  return { invoiceNumber, variableSymbol };
 }
 
 // Get all invoices
@@ -356,10 +366,6 @@ invoiceRouter.delete('/:id', async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Invoice not found' });
     }
 
-    if (invoiceCheck.rows[0].status !== 'draft') {
-      return res.status(400).json({ error: 'Can only delete draft invoices' });
-    }
-
     await query('DELETE FROM invoice_items WHERE invoice_id = $1', [req.params.id]);
     await query('DELETE FROM invoices WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
 
@@ -384,9 +390,91 @@ invoiceRouter.get('/:id/pdf', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Preview invoice email before sending
+invoiceRouter.get('/:id/preview', async (req: AuthRequest, res: Response) => {
+  try {
+    // Get invoice with client details
+    const invoiceResult = await query(
+      `SELECT i.invoice_number, i.total, i.currency, i.due_date, i.status,
+              c.company_name as client_name, c.primary_email, c.secondary_email
+       FROM invoices i
+       JOIN clients c ON i.client_id = c.id
+       WHERE i.id = $1 AND i.user_id = $2`,
+      [req.params.id, req.userId]
+    );
+
+    if (invoiceResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    const invoice = invoiceResult.rows[0];
+
+    if (invoice.status === 'cancelled') {
+      return res.status(400).json({ error: 'Cannot preview cancelled invoice' });
+    }
+
+    // Get user settings for email template
+    const settingsResult = await query(
+      'SELECT smtp_from_name, email_template FROM settings WHERE user_id = $1',
+      [req.userId]
+    );
+
+    const settings = settingsResult.rows[0] || {};
+
+    // Format helpers
+    const formatCurrency = (amount: number, currency: string) => {
+      if (currency === 'CZK') {
+        return `${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })} Kč`;
+      }
+      return `€${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })}`;
+    };
+
+    const formatDate = (date: Date) => new Date(date).toLocaleDateString('cs-CZ');
+
+    // Default email template
+    const defaultTemplate = `Dobrý den,
+
+v příloze zasíláme fakturu č. {{invoiceNumber}} na částku {{total}}.
+
+Datum splatnosti: {{dueDate}}
+
+Děkujeme za spolupráci.
+
+S pozdravem,
+{{senderName}}`;
+
+    const template = settings.email_template || defaultTemplate;
+    const emailBody = template
+      .replace(/\{\{invoiceNumber\}\}/g, invoice.invoice_number)
+      .replace(/\{\{total\}\}/g, formatCurrency(parseFloat(invoice.total), invoice.currency))
+      .replace(/\{\{dueDate\}\}/g, formatDate(invoice.due_date))
+      .replace(/\{\{clientName\}\}/g, invoice.client_name)
+      .replace(/\{\{senderName\}\}/g, settings.smtp_from_name || 'Dodavatel');
+
+    const subject = `Faktura č. ${invoice.invoice_number}`;
+
+    // Generate PDF as base64
+    const pdfBuffer = await generateInvoicePDF(req.params.id, req.userId!);
+    const pdfBase64 = pdfBuffer.toString('base64');
+
+    res.json({
+      subject,
+      emailBody,
+      pdfBase64,
+      recipients: {
+        primary: invoice.primary_email,
+        secondary: invoice.secondary_email
+      }
+    });
+  } catch (error) {
+    console.error('Preview invoice error:', error);
+    res.status(500).json({ error: 'Failed to generate preview' });
+  }
+});
+
 // Send invoice via email
 invoiceRouter.post('/:id/send', async (req: AuthRequest, res: Response) => {
-  const { sendToSecondary = false, customMessage } = req.body;
+  const { sendToSecondary = false, secondaryEmail, customMessage } = req.body;
 
   try {
     // Check invoice exists and is not draft
@@ -408,12 +496,17 @@ invoiceRouter.post('/:id/send', async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Cannot send cancelled invoice' });
     }
 
+    // Use provided secondary email or fall back to client's secondary email
+    const effectiveSecondaryEmail = sendToSecondary
+      ? (secondaryEmail || invoice.secondary_email)
+      : null;
+
     // Send email
     const result = await sendInvoiceEmail(
       req.params.id,
       req.userId!,
       invoice.primary_email,
-      sendToSecondary ? invoice.secondary_email : null,
+      effectiveSecondaryEmail,
       customMessage
     );
 
@@ -427,7 +520,7 @@ invoiceRouter.post('/:id/send', async (req: AuthRequest, res: Response) => {
           secondary_email_sent_at = CASE WHEN $1 THEN CURRENT_TIMESTAMP ELSE secondary_email_sent_at END,
           updated_at = CURRENT_TIMESTAMP
          WHERE id = $2`,
-        [sendToSecondary && invoice.secondary_email, req.params.id]
+        [!!effectiveSecondaryEmail, req.params.id]
       );
 
       res.json({ message: 'Invoice sent successfully', sentTo: result.sentTo });

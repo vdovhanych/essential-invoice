@@ -28,9 +28,18 @@ export async function initializeDatabase() {
         company_address TEXT,
         bank_account VARCHAR(50),
         bank_code VARCHAR(10),
+        logo_url VARCHAR(500),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+
+      -- Add logo_url column if it doesn't exist (migration for existing databases)
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='logo_url') THEN
+          ALTER TABLE users ADD COLUMN logo_url VARCHAR(500);
+        END IF;
+      END $$;
 
       -- Clients table
       CREATE TABLE IF NOT EXISTS clients (
