@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
-import { User, Building, AlertCircle, CheckCircle } from 'lucide-react';
+import { User, Building, AlertCircle, CheckCircle, Upload, Trash2, Image } from 'lucide-react';
 
 export default function Profile() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, refreshUser } = useAuth();
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -77,6 +79,59 @@ export default function Profile() {
       setMessage({ type: 'error', text: error.message || 'Nepodařilo se změnit heslo' });
     } finally {
       setChangingPassword(false);
+    }
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    if (!allowedTypes.includes(file.type)) {
+      setMessage({ type: 'error', text: 'Pouze PNG, JPG a SVG soubory jsou povoleny' });
+      return;
+    }
+
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Maximální velikost souboru je 2 MB' });
+      return;
+    }
+
+    setUploadingLogo(true);
+    setMessage(null);
+
+    try {
+      await api.uploadFile('/auth/me/logo', file, 'logo');
+      await refreshUser();
+      setMessage({ type: 'success', text: 'Logo bylo nahráno' });
+    } catch (err: unknown) {
+      const error = err as Error;
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se nahrát logo' });
+    } finally {
+      setUploadingLogo(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }
+
+  async function handleLogoDelete() {
+    if (!confirm('Opravdu chcete smazat logo?')) return;
+
+    setUploadingLogo(true);
+    setMessage(null);
+
+    try {
+      await api.delete('/auth/me/logo');
+      await refreshUser();
+      setMessage({ type: 'success', text: 'Logo bylo smazáno' });
+    } catch (err: unknown) {
+      const error = err as Error;
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se smazat logo' });
+    } finally {
+      setUploadingLogo(false);
     }
   }
 
@@ -217,6 +272,74 @@ export default function Profile() {
           </button>
         </div>
       </form>
+
+      {/* Logo upload */}
+      <div className="card space-y-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-purple-100 rounded-lg">
+            <Image className="h-5 w-5 text-purple-600" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900">Logo firmy</h2>
+        </div>
+
+        <p className="text-sm text-gray-500">
+          Logo se zobrazí na vašich fakturách místo firemních údajů v záhlaví. Podporované formáty: PNG, JPG, SVG. Max. velikost: 2 MB.
+        </p>
+
+        <div className="flex items-start space-x-6">
+          {/* Logo preview */}
+          <div className="flex-shrink-0">
+            {user?.logoUrl ? (
+              <div className="relative">
+                <img
+                  src={`/api${user.logoUrl}`}
+                  alt="Logo firmy"
+                  className="w-48 h-24 object-contain border border-gray-200 rounded-lg bg-white p-2"
+                />
+              </div>
+            ) : (
+              <div className="w-48 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+                <span className="text-gray-400 text-sm">Žádné logo</span>
+              </div>
+            )}
+          </div>
+
+          {/* Upload controls */}
+          <div className="flex-1 space-y-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+              onChange={handleLogoUpload}
+              className="hidden"
+              id="logo-upload"
+            />
+            <div className="flex space-x-2">
+              <label
+                htmlFor="logo-upload"
+                className={`btn btn-secondary flex items-center space-x-2 cursor-pointer ${uploadingLogo ? 'opacity-50 pointer-events-none' : ''}`}
+              >
+                <Upload className="h-4 w-4" />
+                <span>{uploadingLogo ? 'Nahrávám...' : user?.logoUrl ? 'Změnit logo' : 'Nahrát logo'}</span>
+              </label>
+              {user?.logoUrl && (
+                <button
+                  type="button"
+                  onClick={handleLogoDelete}
+                  disabled={uploadingLogo}
+                  className="btn btn-danger flex items-center space-x-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Smazat</span>
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-500">
+              Doporučená velikost: 200x80 pixelů
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Password change */}
       <form onSubmit={handlePasswordSubmit} className="card space-y-6">

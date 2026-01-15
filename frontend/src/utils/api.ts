@@ -76,6 +76,26 @@ export const api = {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   },
+
+  // Special method for uploading files
+  uploadFile: async (endpoint: string, file: File, fieldName: string = 'file') => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append(fieldName, file);
+
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+      throw new ApiError(error.error || 'Upload failed', response.status);
+    }
+
+    return response.json();
+  },
 };
 
 export { ApiError };

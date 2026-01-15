@@ -50,7 +50,11 @@ export default function InvoiceCreate() {
 
   async function loadData() {
     try {
-      const clientsData = await api.get('/clients');
+      // Load clients and settings in parallel
+      const [clientsData, settings] = await Promise.all([
+        api.get('/clients'),
+        api.get('/settings')
+      ]);
       setClients(clientsData);
 
       if (isEdit) {
@@ -70,6 +74,15 @@ export default function InvoiceCreate() {
           unit: item.unit,
           unitPrice: item.unitPrice,
         })));
+      } else {
+        // Apply default settings for new invoices
+        const paymentTerms = settings.defaultPaymentTerms ?? 14;
+        const dueDate = new Date(Date.now() + paymentTerms * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        setFormData(prev => ({
+          ...prev,
+          vatRate: settings.defaultVatRate ?? 21,
+          dueDate,
+        }));
       }
     } catch (err) {
       console.error('Failed to load data:', err);

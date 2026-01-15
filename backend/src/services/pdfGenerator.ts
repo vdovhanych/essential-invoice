@@ -1,5 +1,7 @@
 import puppeteer from 'puppeteer';
 import QRCode from 'qrcode';
+import fs from 'fs';
+import path from 'path';
 import { query } from '../db/init.js';
 
 interface InvoiceData {
@@ -30,6 +32,7 @@ interface InvoiceData {
   userDic: string;
   userBankAccount: string;
   userBankCode: string;
+  userLogoDataUrl: string | null;
   // Items
   items: Array<{
     description: string;
@@ -61,6 +64,30 @@ async function generateQRCodeDataURL(data: string): Promise<string> {
   } catch (error) {
     console.error('QR code generation error:', error);
     return '';
+  }
+}
+
+function getLogoDataUrl(logoUrl: string | null): string | null {
+  if (!logoUrl) return null;
+
+  try {
+    // Logo URL is like /uploads/logos/uuid.png
+    const logoPath = path.join(process.cwd(), logoUrl);
+    if (!fs.existsSync(logoPath)) {
+      console.error('Logo file not found:', logoPath);
+      return null;
+    }
+
+    const logoBuffer = fs.readFileSync(logoPath);
+    const ext = path.extname(logoUrl).toLowerCase();
+    let mimeType = 'image/png';
+    if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+    else if (ext === '.svg') mimeType = 'image/svg+xml';
+
+    return `data:${mimeType};base64,${logoBuffer.toString('base64')}`;
+  } catch (error) {
+    console.error('Error reading logo file:', error);
+    return null;
   }
 }
 
@@ -264,6 +291,11 @@ function generateInvoiceHTML(invoice: InvoiceData, qrCodeDataUrl: string): strin
       <div class="invoice-title">FAKTURA</div>
       <div class="invoice-number">č. ${invoice.invoiceNumber}</div>
     </div>
+    ${invoice.userLogoDataUrl ? `
+    <div style="text-align: right;">
+      <img src="${invoice.userLogoDataUrl}" alt="Logo" style="max-width: 200px; max-height: 80px; object-fit: contain;">
+    </div>
+    ` : `
     <div style="text-align: right;">
       <div class="party-name">${invoice.userCompanyName || invoice.userName}</div>
       <div class="party-details">
@@ -272,6 +304,7 @@ function generateInvoiceHTML(invoice: InvoiceData, qrCodeDataUrl: string): strin
         ${invoice.userDic ? `DIČ: ${invoice.userDic}` : ''}
       </div>
     </div>
+    `}
   </div>
 
   <div class="parties">
@@ -389,7 +422,7 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
       u.name as user_name, u.company_name as user_company_name,
       u.company_address as user_address, u.company_ico as user_ico,
       u.company_dic as user_dic, u.bank_account as user_bank_account,
-      u.bank_code as user_bank_code
+      u.bank_code as user_bank_code, u.logo_url as user_logo_url
     FROM invoices i
     JOIN clients c ON i.client_id = c.id
     JOIN users u ON i.user_id = u.id
@@ -407,6 +440,9 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
     'SELECT * FROM invoice_items WHERE invoice_id = $1 ORDER BY sort_order ASC',
     [invoiceId]
   );
+
+  // Get logo as data URL if exists
+  const userLogoDataUrl = getLogoDataUrl(row.user_logo_url);
 
   const invoiceData: InvoiceData = {
     id: row.id,
@@ -434,6 +470,7 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
     userDic: row.user_dic,
     userBankAccount: row.user_bank_account,
     userBankCode: row.user_bank_code,
+    userLogoDataUrl,
     items: itemsResult.rows.map(item => ({
       description: item.description,
       quantity: parseFloat(item.quantity),

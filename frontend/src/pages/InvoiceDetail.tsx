@@ -57,10 +57,43 @@ export default function InvoiceDetail() {
   const [sendToSecondary, setSendToSecondary] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewData, setPreviewData] = useState<{
+    subject: string;
+    emailBody: string;
+    pdfBase64: string;
+    recipients: { primary: string; secondary: string | null };
+  } | null>(null);
+  const [customMessage, setCustomMessage] = useState('');
+  const [secondaryEmail, setSecondaryEmail] = useState('');
 
   useEffect(() => {
     loadInvoice();
   }, [id]);
+
+  useEffect(() => {
+    if (showSendModal && id) {
+      loadPreview();
+    }
+  }, [showSendModal, id]);
+
+  async function loadPreview() {
+    setPreviewLoading(true);
+    setPreviewData(null);
+    try {
+      const result = await api.get(`/invoices/${id}/preview`);
+      setPreviewData(result);
+      setCustomMessage(result.emailBody);
+      setSecondaryEmail(result.recipients.secondary || '');
+      setSendToSecondary(!!result.recipients.secondary);
+    } catch (error) {
+      console.error('Failed to load preview:', error);
+      setMessage({ type: 'error', text: 'Nepodařilo se načíst náhled' });
+      setShowSendModal(false);
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
 
   async function loadInvoice() {
     try {
@@ -85,9 +118,14 @@ export default function InvoiceDetail() {
   async function handleSendInvoice() {
     setSending(true);
     try {
-      await api.post(`/invoices/${id}/send`, { sendToSecondary });
+      await api.post(`/invoices/${id}/send`, {
+        sendToSecondary: sendToSecondary && secondaryEmail.trim() !== '',
+        secondaryEmail: sendToSecondary && secondaryEmail.trim() !== '' ? secondaryEmail.trim() : undefined,
+        customMessage: customMessage !== previewData?.emailBody ? customMessage : undefined
+      });
       setMessage({ type: 'success', text: 'Faktura byla úspěšně odeslána' });
       setShowSendModal(false);
+      setPreviewData(null);
       loadInvoice();
     } catch (error: unknown) {
       const err = error as Error;
@@ -322,60 +360,138 @@ export default function InvoiceDetail() {
                   <span>Zrušit fakturu</span>
                 </button>
               )}
-              {invoice.status === 'draft' && (
-                <button
-                  onClick={handleDelete}
-                  className="btn btn-danger w-full flex items-center justify-center space-x-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span>Smazat fakturu</span>
-                </button>
-              )}
+              <button
+                onClick={handleDelete}
+                className="btn btn-danger w-full flex items-center justify-center space-x-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Smazat fakturu</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Send modal */}
+      {/* Send preview modal */}
       {showSendModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Odeslat fakturu</h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-gray-600">Odeslat na: <strong>{invoice.clientEmail}</strong></p>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-6xl max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Náhled a odeslání faktury
+              </h2>
+              <button
+                onClick={() => { setShowSendModal(false); setPreviewData(null); }}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={sending}
+              >
+                <XCircle className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            {previewLoading ? (
+              <div className="flex-1 flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               </div>
-              {invoice.clientSecondaryEmail && (
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={sendToSecondary}
-                    onChange={(e) => setSendToSecondary(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-600">
-                    Odeslat take na: {invoice.clientSecondaryEmail}
-                  </span>
-                </label>
-              )}
-            </div>
-            <div className="flex justify-end space-x-2 mt-6">
-              <button
-                onClick={() => setShowSendModal(false)}
-                className="btn btn-secondary"
-                disabled={sending}
-              >
-                Zrušit
-              </button>
-              <button
-                onClick={handleSendInvoice}
-                className="btn btn-primary flex items-center space-x-2"
-                disabled={sending}
-              >
-                <Send className="h-4 w-4" />
-                <span>{sending ? 'Odesílám...' : 'Odeslat'}</span>
-              </button>
-            </div>
+            ) : previewData ? (
+              <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                {/* PDF Preview */}
+                <div className="lg:w-1/2 p-4 border-b lg:border-b-0 lg:border-r border-gray-200 overflow-auto">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Náhled PDF</h3>
+                  <object
+                    data={`data:application/pdf;base64,${previewData.pdfBase64}`}
+                    type="application/pdf"
+                    className="w-full h-[400px] lg:h-[calc(100%-2rem)] rounded border border-gray-200"
+                  >
+                    <p className="p-4 text-gray-500 text-center">
+                      Váš prohlížeč nepodporuje zobrazení PDF.{' '}
+                      <a
+                        href={`data:application/pdf;base64,${previewData.pdfBase64}`}
+                        download={`faktura-${invoice.invoiceNumber}.pdf`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Stáhnout PDF
+                      </a>
+                    </p>
+                  </object>
+                </div>
+
+                {/* Email Editor */}
+                <div className="lg:w-1/2 p-4 flex flex-col overflow-auto">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">E-mail</h3>
+
+                  {/* Subject */}
+                  <div className="mb-4">
+                    <label className="block text-sm text-gray-500 mb-1">Předmět</label>
+                    <div className="px-3 py-2 bg-gray-50 rounded border border-gray-200 text-gray-700">
+                      {previewData.subject}
+                    </div>
+                  </div>
+
+                  {/* Recipients */}
+                  <div className="mb-4">
+                    <label className="block text-sm text-gray-500 mb-1">Primární e-mail</label>
+                    <div className="px-3 py-2 bg-gray-50 rounded border border-gray-200 text-gray-700">
+                      {previewData.recipients.primary}
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm text-gray-500">Sekundární e-mail</label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={sendToSecondary}
+                          onChange={(e) => setSendToSecondary(e.target.checked)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-600">Odeslat</span>
+                      </label>
+                    </div>
+                    <input
+                      type="email"
+                      value={secondaryEmail}
+                      onChange={(e) => setSecondaryEmail(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="sekundarni@email.cz"
+                    />
+                  </div>
+
+                  {/* Message */}
+                  <div className="flex-1 flex flex-col mb-4">
+                    <label className="block text-sm text-gray-500 mb-1">Zpráva</label>
+                    <textarea
+                      value={customMessage}
+                      onChange={(e) => setCustomMessage(e.target.value)}
+                      className="flex-1 min-h-[200px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      placeholder="Text e-mailu..."
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => { setShowSendModal(false); setPreviewData(null); }}
+                      className="btn btn-secondary"
+                      disabled={sending}
+                    >
+                      Zrušit
+                    </button>
+                    <button
+                      onClick={handleSendInvoice}
+                      className="btn btn-primary flex items-center space-x-2"
+                      disabled={sending}
+                    >
+                      <Send className="h-4 w-4" />
+                      <span>{sending ? 'Odesílám...' : 'Odeslat'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       )}
