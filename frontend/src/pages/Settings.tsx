@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
-import { Mail, Server, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Mail, Server, AlertCircle, CheckCircle, Eye, EyeOff, Calculator } from 'lucide-react';
 
 interface Settings {
   smtpHost: string | null;
@@ -22,6 +22,7 @@ interface Settings {
   defaultVatRate: number;
   defaultPaymentTerms: number;
   emailTemplate: string | null;
+  calculatorEnabled: boolean;
 }
 
 export default function Settings() {
@@ -51,6 +52,7 @@ export default function Settings() {
     defaultVatRate: 21,
     defaultPaymentTerms: 14,
     emailTemplate: '',
+    calculatorEnabled: false,
   });
 
   useEffect(() => {
@@ -80,6 +82,7 @@ export default function Settings() {
         defaultVatRate: result.defaultVatRate ?? 21,
         defaultPaymentTerms: result.defaultPaymentTerms ?? 14,
         emailTemplate: result.emailTemplate || '',
+        calculatorEnabled: result.calculatorEnabled ?? false,
       });
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -405,6 +408,31 @@ export default function Settings() {
               />
             </div>
           </div>
+        </div>
+
+        {/* Calculator Settings */}
+        <div className="card">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Calculator className="h-5 w-5 text-purple-600" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">Kalkulacka</h2>
+          </div>
+
+          <p className="text-sm text-gray-500 mb-4">
+            Povolit kalkulacku pro vypocet fakturovane castky na zaklade hodinove sazby a KPI bonusu.
+          </p>
+
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              name="calculatorEnabled"
+              checked={formData.calculatorEnabled}
+              onChange={handleChange}
+              className="rounded border-gray-300 text-blue-600"
+            />
+            <span className="text-sm text-gray-600">Povolit kalkulacku</span>
+          </label>
         </div>
 
         {/* Email template */}

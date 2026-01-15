@@ -10,6 +10,7 @@ import InvoiceCreate from './pages/InvoiceCreate';
 import Clients from './pages/Clients';
 import ClientDetail from './pages/ClientDetail';
 import Payments from './pages/Payments';
+import Calculator from './pages/Calculator';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="clients" element={<Clients />} />
         <Route path="clients/:id" element={<ClientDetail />} />
         <Route path="payments" element={<Payments />} />
+        <Route path="calculator" element={<Calculator />} />
         <Route path="settings" element={<Settings />} />
         <Route path="profile" element={<Profile />} />
       </Route>

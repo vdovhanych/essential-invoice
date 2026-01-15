@@ -32,7 +32,8 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
         invoiceNumberFormat: 'YYYYMM##',
         defaultVatRate: 21,
         defaultPaymentTerms: 14,
-        emailTemplate: null
+        emailTemplate: null,
+        calculatorEnabled: false
       });
     }
 
@@ -56,7 +57,8 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
       invoiceNumberFormat: settings.invoice_number_format,
       defaultVatRate: parseFloat(settings.default_vat_rate),
       defaultPaymentTerms: settings.default_payment_terms,
-      emailTemplate: settings.email_template
+      emailTemplate: settings.email_template,
+      calculatorEnabled: settings.calculator_enabled ?? false
     });
   } catch (error) {
     console.error('Get settings error:', error);
@@ -72,7 +74,8 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     bankNotificationEmail, emailPollingInterval,
     invoiceNumberPrefix, invoiceNumberFormat,
     defaultVatRate, defaultPaymentTerms,
-    emailTemplate
+    emailTemplate,
+    calculatorEnabled
   } = req.body;
 
   try {
@@ -107,6 +110,7 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     addUpdate('default_vat_rate', defaultVatRate);
     addUpdate('default_payment_terms', defaultPaymentTerms);
     addUpdate('email_template', emailTemplate);
+    addUpdate('calculator_enabled', calculatorEnabled);
 
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No settings to update' });
