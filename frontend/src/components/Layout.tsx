@@ -45,7 +45,7 @@ export default function Layout() {
   // Build nav items dynamically based on calculator setting
   const navItems = [
     ...baseNavItems,
-    ...(calculatorEnabled ? [{ path: '/calculator', icon: Calculator, label: 'Kalkulacka' }] : []),
+    ...(calculatorEnabled ? [{ path: '/calculator', icon: Calculator, label: 'Kalkulačka' }] : []),
     { path: '/settings', icon: Settings, label: 'Nastaveni' },
   ];
 

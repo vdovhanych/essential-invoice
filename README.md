@@ -11,7 +11,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 - **Bank Payment Matching**: Automatic matching of Air Bank payment notifications to invoices
 - **Dashboard**: Overview of revenue, outstanding payments, and recent activity
 - **Multi-currency**: Support for CZK and EUR
-- **Docker Ready**: Single command deployment with docker-compose
+- **Docker Ready**: Single command deployment with docker compose
 
 ## Quick Start
 
@@ -45,7 +45,7 @@ DB_PASSWORD=your_secure_database_password
 
 4. Start the application:
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 5. Access the application at `http://localhost`
@@ -187,7 +187,7 @@ Payments can be matched in two ways:
 
 1. Start database:
 ```bash
-docker-compose up -d db
+docker compose up -d db
 ```
 
 2. Backend:
@@ -257,7 +257,7 @@ essential-invoice/
 │   │   └── utils/        # Utilities
 │   ├── Dockerfile
 │   └── package.json
-├── docker-compose.yml
+├── docker compose.yml
 ├── .env.example
 └── README.md
 ```
@@ -288,7 +288,7 @@ The bank parsing system is designed to be extensible. To add support for another
 
 **PDF generation fails:**
 - Ensure Chromium is installed in the Docker container
-- Check logs: `docker-compose logs backend`
+- Check logs: `docker compose logs backend`
 
 **Email sending fails:**
 - Verify SMTP settings in Settings page
@@ -302,19 +302,19 @@ The bank parsing system is designed to be extensible. To add support for another
 
 **Database connection errors:**
 - Wait for database to be healthy before backend starts
-- Check `docker-compose logs db`
+- Check `docker compose logs db`
 
 ### Logs
 
 ```bash
 # All logs
-docker-compose logs
+docker compose logs
 
 # Backend logs
-docker-compose logs backend
+docker compose logs backend
 
 # Database logs
-docker-compose logs db
+docker compose logs db
 ```
 
 ## Backup
@@ -323,17 +323,17 @@ docker-compose logs db
 
 ```bash
 # Create backup
-docker-compose exec db pg_dump -U postgres essential_invoice > backup.sql
+docker compose exec db pg_dump -U postgres essential_invoice > backup.sql
 
 # Restore backup
-docker-compose exec -T db psql -U postgres essential_invoice < backup.sql
+docker compose exec -T db psql -U postgres essential_invoice < backup.sql
 ```
 
 ### Volume Backup
 
 ```bash
 # Stop containers
-docker-compose down
+docker compose down
 
 # Backup volume
 docker run --rm -v essential-invoice_postgres_data:/data -v $(pwd):/backup alpine tar czf /backup/db-backup.tar.gz -C /data .
