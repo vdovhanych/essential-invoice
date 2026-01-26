@@ -434,11 +434,11 @@ invoiceRouter.get('/:id/preview', async (req: AuthRequest, res: Response) => {
     // Default email template
     const defaultTemplate = `Dobrý den,
 
-v příloze zasíláme fakturu č. {{invoiceNumber}} na částku {{total}}.
+v příloze Vám zasílám fakturu č. {{invoiceNumber}} na částku {{total}}.
 
 Datum splatnosti: {{dueDate}}
 
-Děkujeme za spolupráci.
+Děkuji za spolupráci.
 
 S pozdravem,
 {{senderName}}`;

@@ -9,7 +9,8 @@ import {
   AlertTriangle,
   TrendingUp,
   Plus,
-  CreditCard
+  CreditCard,
+  Landmark
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -40,6 +41,13 @@ interface DashboardData {
     invoiceCount: number;
   }>;
   unmatchedPayments: number;
+  pausalniDan: {
+    enabled: boolean;
+    tier: number;
+    limit: number;
+    invoicedThisYear: number;
+    remaining: number;
+  };
 }
 
 export default function Dashboard() {
@@ -171,6 +179,80 @@ export default function Dashboard() {
           <Link to="/payments" className="text-yellow-600 hover:underline font-medium">
             Zobrazit platby
           </Link>
+        </div>
+      )}
+
+      {/* Paušální daň widget */}
+      {data.pausalniDan?.enabled && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-emerald-100 rounded-lg">
+                <Landmark className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Paušální daň - {data.pausalniDan.tier}. pásmo</h2>
+                <p className="text-sm text-gray-500">
+                  Limit {formatCurrency(data.pausalniDan.limit)} / rok
+                </p>
+              </div>
+            </div>
+            <Link to="/settings" className="text-sm text-blue-600 hover:underline">
+              Nastavení
+            </Link>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mb-4">
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-gray-600">Vyfakturováno letos</span>
+              <span className="font-medium text-gray-900">
+                {formatCurrency(data.pausalniDan.invoicedThisYear)} z {formatCurrency(data.pausalniDan.limit)}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className={`h-3 rounded-full transition-all ${
+                  (data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) >= 0.9
+                    ? 'bg-red-500'
+                    : (data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) >= 0.75
+                    ? 'bg-yellow-500'
+                    : 'bg-emerald-500'
+                }`}
+                style={{
+                  width: `${Math.min(100, (data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) * 100)}%`
+                }}
+              />
+            </div>
+            <div className="flex justify-between text-xs mt-1">
+              <span className="text-gray-500">
+                {((data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) * 100).toFixed(1)}% využito
+              </span>
+              <span className={`font-medium ${
+                data.pausalniDan.remaining <= 0
+                  ? 'text-red-600'
+                  : (data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) >= 0.9
+                  ? 'text-red-600'
+                  : 'text-emerald-600'
+              }`}>
+                Zbývá: {formatCurrency(data.pausalniDan.remaining)}
+              </span>
+            </div>
+          </div>
+
+          {/* Warning if close to limit */}
+          {(data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) >= 0.9 && (
+            <div className={`flex items-center space-x-2 p-3 rounded-lg ${
+              data.pausalniDan.remaining <= 0 ? 'bg-red-50 text-red-700' : 'bg-yellow-50 text-yellow-700'
+            }`}>
+              <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+              <span className="text-sm">
+                {data.pausalniDan.remaining <= 0
+                  ? 'Dosáhli jste limitu pro paušální daň. Další příjmy mohou vést k vyřazení z režimu.'
+                  : 'Blížíte se k limitu paušální daně. Zvažte přechod do vyššího pásma.'}
+              </span>
+            </div>
+          )}
         </div>
       )}
 

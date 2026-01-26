@@ -279,7 +279,7 @@ export default function InvoiceCreate() {
                 onChange={handleChange}
                 className="input"
               >
-                <option value="CZK">CZK (Kc)</option>
+                <option value="CZK">CZK</option>
                 <option value="EUR">EUR</option>
               </select>
             </div>

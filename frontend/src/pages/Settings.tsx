@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
-import { Mail, Server, AlertCircle, CheckCircle, Eye, EyeOff, Calculator } from 'lucide-react';
+import { Mail, Server, AlertCircle, CheckCircle, Eye, EyeOff, Calculator, Landmark } from 'lucide-react';
 
 interface Settings {
   smtpHost: string | null;
@@ -23,6 +23,9 @@ interface Settings {
   defaultPaymentTerms: number;
   emailTemplate: string | null;
   calculatorEnabled: boolean;
+  pausalniDanEnabled: boolean;
+  pausalniDanTier: number;
+  pausalniDanLimit: number;
 }
 
 export default function Settings() {
@@ -53,6 +56,9 @@ export default function Settings() {
     defaultPaymentTerms: 14,
     emailTemplate: '',
     calculatorEnabled: false,
+    pausalniDanEnabled: false,
+    pausalniDanTier: 1,
+    pausalniDanLimit: 1000000,
   });
 
   useEffect(() => {
@@ -83,6 +89,9 @@ export default function Settings() {
         defaultPaymentTerms: result.defaultPaymentTerms ?? 14,
         emailTemplate: result.emailTemplate || '',
         calculatorEnabled: result.calculatorEnabled ?? false,
+        pausalniDanEnabled: result.pausalniDanEnabled ?? false,
+        pausalniDanTier: result.pausalniDanTier ?? 1,
+        pausalniDanLimit: result.pausalniDanLimit ?? 1000000,
       });
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -416,11 +425,11 @@ export default function Settings() {
             <div className="p-2 bg-purple-100 rounded-lg">
               <Calculator className="h-5 w-5 text-purple-600" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Kalkulacka</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Kalkulačka</h2>
           </div>
 
           <p className="text-sm text-gray-500 mb-4">
-            Povolit kalkulacku pro vypocet fakturovane castky na zaklade hodinove sazby a KPI bonusu.
+            Povolit kalkulačku pro výpočet fakturované částky na základě hodinové sazby a KPI bonusu.
           </p>
 
           <label className="flex items-center space-x-2">
@@ -431,8 +440,97 @@ export default function Settings() {
               onChange={handleChange}
               className="rounded border-gray-300 text-blue-600"
             />
-            <span className="text-sm text-gray-600">Povolit kalkulacku</span>
+            <span className="text-sm text-gray-600">Zapnout kalkulačku</span>
           </label>
+        </div>
+
+        {/* Paušální daň Settings */}
+        <div className="card">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-emerald-100 rounded-lg">
+              <Landmark className="h-5 w-5 text-emerald-600" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">Paušální daň</h2>
+          </div>
+
+          <p className="text-sm text-gray-500 mb-4">
+            Sledujte, kolik můžete ještě fakturovat v rámci limitu paušální daně.
+            Limit závisí na pásmu a typu příjmů (výdajový paušál).
+          </p>
+
+          <div className="space-y-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                name="pausalniDanEnabled"
+                checked={formData.pausalniDanEnabled}
+                onChange={handleChange}
+                className="rounded border-gray-300 text-blue-600"
+              />
+              <span className="text-sm text-gray-600">Používám paušální daň</span>
+            </label>
+
+            {formData.pausalniDanEnabled && (
+              <>
+                <div>
+                  <label className="label">Pásmo paušální daně</label>
+                  <select
+                    name="pausalniDanTier"
+                    value={formData.pausalniDanTier}
+                    onChange={(e) => {
+                      const tier = parseInt(e.target.value);
+                      // Set default limit for each tier
+                      const defaultLimits: { [key: number]: number } = { 1: 1000000, 2: 1500000, 3: 2000000 };
+                      setFormData(prev => ({
+                        ...prev,
+                        pausalniDanTier: tier,
+                        pausalniDanLimit: defaultLimits[tier]
+                      }));
+                    }}
+                    className="input"
+                  >
+                    <option value={1}>1. pásmo (9 984 Kč/měsíc)</option>
+                    <option value={2}>2. pásmo (16 745 Kč/měsíc)</option>
+                    <option value={3}>3. pásmo (27 139 Kč/měsíc)</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Měsíční platba zahrnuje daň z příjmu, sociální a zdravotní pojištění.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="label">Limit příjmů</label>
+                  <select
+                    name="pausalniDanLimit"
+                    value={formData.pausalniDanLimit}
+                    onChange={handleChange}
+                    className="input"
+                  >
+                    {formData.pausalniDanTier === 1 && (
+                      <>
+                        <option value={1000000}>1 000 000 Kč (základní)</option>
+                        <option value={1500000}>1 500 000 Kč (75% OSVČ, paušál 60%/80%)</option>
+                        <option value={2000000}>2 000 000 Kč (75% OSVČ, paušál 80%)</option>
+                      </>
+                    )}
+                    {formData.pausalniDanTier === 2 && (
+                      <>
+                        <option value={1500000}>1 500 000 Kč (základní)</option>
+                        <option value={2000000}>2 000 000 Kč (75% OSVČ s paušálem)</option>
+                      </>
+                    )}
+                    {formData.pausalniDanTier === 3 && (
+                      <option value={2000000}>2 000 000 Kč</option>
+                    )}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Vyšší limity platí, pokud alespoň 75% příjmů pochází ze samostatné výdělečné činnosti
+                    s příslušným výdajovým paušálem.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Email template */}
@@ -449,11 +547,11 @@ export default function Settings() {
             rows={6}
             placeholder={`Dobrý den,
 
-v příloze zasíláme fakturu č. {{invoiceNumber}} na částku {{total}}.
+v příloze Vám zasílám fakturu č. {{invoiceNumber}} na částku {{total}}.
 
 Datum splatnosti: {{dueDate}}
 
-Děkujeme za spolupráci.
+Děkuji za spolupráci.
 
 S pozdravem,
 {{senderName}}`}

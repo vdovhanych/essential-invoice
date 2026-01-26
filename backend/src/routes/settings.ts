@@ -33,7 +33,10 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
         defaultVatRate: 21,
         defaultPaymentTerms: 14,
         emailTemplate: null,
-        calculatorEnabled: false
+        calculatorEnabled: false,
+        pausalniDanEnabled: false,
+        pausalniDanTier: 1,
+        pausalniDanLimit: 1000000
       });
     }
 
@@ -58,7 +61,10 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
       defaultVatRate: parseFloat(settings.default_vat_rate),
       defaultPaymentTerms: settings.default_payment_terms,
       emailTemplate: settings.email_template,
-      calculatorEnabled: settings.calculator_enabled ?? false
+      calculatorEnabled: settings.calculator_enabled ?? false,
+      pausalniDanEnabled: settings.pausalni_dan_enabled ?? false,
+      pausalniDanTier: settings.pausalni_dan_tier ?? 1,
+      pausalniDanLimit: settings.pausalni_dan_limit ?? 1000000
     });
   } catch (error) {
     console.error('Get settings error:', error);
@@ -75,7 +81,8 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     invoiceNumberPrefix, invoiceNumberFormat,
     defaultVatRate, defaultPaymentTerms,
     emailTemplate,
-    calculatorEnabled
+    calculatorEnabled,
+    pausalniDanEnabled, pausalniDanTier, pausalniDanLimit
   } = req.body;
 
   try {
@@ -111,6 +118,9 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     addUpdate('default_payment_terms', defaultPaymentTerms);
     addUpdate('email_template', emailTemplate);
     addUpdate('calculator_enabled', calculatorEnabled);
+    addUpdate('pausalni_dan_enabled', pausalniDanEnabled);
+    addUpdate('pausalni_dan_tier', pausalniDanTier);
+    addUpdate('pausalni_dan_limit', pausalniDanLimit);
 
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No settings to update' });

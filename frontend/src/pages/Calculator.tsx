@@ -90,15 +90,15 @@ export default function Calculator() {
         <div className="p-2 bg-purple-100 rounded-lg">
           <CalculatorIcon className="h-6 w-6 text-purple-600" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Kalkulacka castky faktury</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Kalkulačka fakturace</h1>
       </div>
 
       {/* Input Section */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Vstupni hodnoty</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Vstupní hodnoty</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="label">Hodinova sazba (Kc)</label>
+            <label className="label">Hodinová sazba</label>
             <input
               type="number"
               value={hourlyRate || ''}
@@ -110,7 +110,7 @@ export default function Calculator() {
             />
           </div>
           <div>
-            <label className="label">Odpracovane hodiny</label>
+            <label className="label">Odpracované hodiny</label>
             <input
               type="number"
               value={hoursWorked || ''}
@@ -139,7 +139,7 @@ export default function Calculator() {
 
       {/* Results Section */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Vypoctene hodnoty</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Vypočtené hodnoty</h2>
         <div className="space-y-3">
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-gray-600">KPI bonus (hodiny)</span>
@@ -151,15 +151,15 @@ export default function Calculator() {
             </span>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-gray-600">KPI bonus (castka)</span>
+            <span className="text-gray-600">KPI bonus (částka)</span>
             <span className="font-medium">{formatCurrency(calculations.kpiBonusAmount)}</span>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-gray-600">Hodiny celkem (castka)</span>
+            <span className="text-gray-600">Hodiny celkem (částka)</span>
             <span className="font-medium">{formatCurrency(calculations.hoursTotal)}</span>
           </div>
           <div className="flex justify-between items-center py-3 bg-blue-50 rounded-lg px-3 -mx-3">
-            <span className="font-bold text-gray-900">Celkova castka</span>
+            <span className="font-bold text-gray-900">Celková částka</span>
             <span className="font-bold text-xl text-blue-600">
               {formatCurrency(calculations.grandTotal)}
             </span>
@@ -173,10 +173,10 @@ export default function Calculator() {
         <div className="text-sm text-gray-600">
           <p className="font-medium mb-1">Vzorce pro vypocet:</p>
           <ul className="list-disc list-inside space-y-1">
-            <li>KPI bonus (hodiny) = Odpracovane hodiny x KPI bonus % / 100</li>
-            <li>KPI bonus (castka) = Hodinova sazba x KPI bonus (hodiny)</li>
-            <li>Hodiny celkem (castka) = Hodinova sazba x Odpracovane hodiny</li>
-            <li>Celkova castka = Hodiny celkem + KPI bonus (castka)</li>
+            <li>KPI bonus (hodiny) = Odpracované hodiny x KPI bonus % / 100</li>
+            <li>KPI bonus (částka) = Hodinová sazba x KPI bonus (hodiny)</li>
+            <li>Hodiny celkem (částka) = Hodinová sazba x Odpracované hodiny</li>
+            <li>Celková částka = Hodiny celkem + KPI bonus (částka)</li>
           </ul>
         </div>
       </div>

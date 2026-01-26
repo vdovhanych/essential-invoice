@@ -63,6 +63,28 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
       WHERE user_id = $1 AND invoice_id IS NULL
     `, [req.userId]);
 
+    // Get paušální daň settings and calculate yearly invoiced amount
+    const settingsResult = await query(`
+      SELECT pausalni_dan_enabled, pausalni_dan_tier, pausalni_dan_limit
+      FROM settings
+      WHERE user_id = $1
+    `, [req.userId]);
+
+    // Get total invoiced this year (paid invoices in CZK only)
+    const yearlyInvoicedResult = await query(`
+      SELECT COALESCE(SUM(total), 0) as total_invoiced
+      FROM invoices
+      WHERE user_id = $1
+        AND status = 'paid'
+        AND currency = 'CZK'
+        AND paid_at >= date_trunc('year', CURRENT_DATE)
+    `, [req.userId]);
+
+    const pausalniDanSettings = settingsResult.rows[0] || { pausalni_dan_enabled: false, pausalni_dan_tier: 1, pausalni_dan_limit: 1000000 };
+    const tier = pausalniDanSettings.pausalni_dan_tier || 1;
+    const limit = pausalniDanSettings.pausalni_dan_limit || 1000000;
+    const invoicedThisYear = parseFloat(yearlyInvoicedResult.rows[0].total_invoiced);
+
     res.json({
       stats: {
         draftCount: parseInt(stats.draft_count),
@@ -89,7 +111,14 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
         revenue: parseFloat(row.revenue),
         invoiceCount: parseInt(row.invoice_count)
       })),
-      unmatchedPayments: parseInt(unmatchedPaymentsResult.rows[0].count)
+      unmatchedPayments: parseInt(unmatchedPaymentsResult.rows[0].count),
+      pausalniDan: {
+        enabled: pausalniDanSettings.pausalni_dan_enabled ?? false,
+        tier: tier,
+        limit: limit,
+        invoicedThisYear: invoicedThisYear,
+        remaining: Math.max(0, limit - invoicedThisYear)
+      }
     });
   } catch (error) {
     console.error('Dashboard error:', error);

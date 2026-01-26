@@ -168,6 +168,20 @@ export async function initializeDatabase() {
         END IF;
       END $$;
 
+      -- Add paušální daň columns if they don't exist (migration for existing databases)
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='pausalni_dan_enabled') THEN
+          ALTER TABLE settings ADD COLUMN pausalni_dan_enabled BOOLEAN DEFAULT false;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='pausalni_dan_tier') THEN
+          ALTER TABLE settings ADD COLUMN pausalni_dan_tier INTEGER DEFAULT 1;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='pausalni_dan_limit') THEN
+          ALTER TABLE settings ADD COLUMN pausalni_dan_limit INTEGER DEFAULT 1000000;
+        END IF;
+      END $$;
+
       -- Create indexes
       CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
       CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);
