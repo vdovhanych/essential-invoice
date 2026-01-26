@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import path from 'path';
 import dotenv from 'dotenv';
 import { authRouter } from './routes/auth.js';
 import { clientRouter } from './routes/clients.js';
@@ -33,9 +32,6 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(limiter);
-
-// Serve static files (uploaded logos)
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Health check
 app.get('/api/health', (req, res) => {

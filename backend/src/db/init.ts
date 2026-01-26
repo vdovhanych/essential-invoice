@@ -28,16 +28,24 @@ export async function initializeDatabase() {
         company_address TEXT,
         bank_account VARCHAR(50),
         bank_code VARCHAR(10),
-        logo_url VARCHAR(500),
+        logo_data TEXT,
+        logo_mime_type VARCHAR(50),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      -- Add logo_url column if it doesn't exist (migration for existing databases)
+      -- Migration: Add logo_data and logo_mime_type columns if they don't exist
       DO $$
       BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='logo_url') THEN
-          ALTER TABLE users ADD COLUMN logo_url VARCHAR(500);
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='logo_data') THEN
+          ALTER TABLE users ADD COLUMN logo_data TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='logo_mime_type') THEN
+          ALTER TABLE users ADD COLUMN logo_mime_type VARCHAR(50);
+        END IF;
+        -- Drop old logo_url column if it exists
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='logo_url') THEN
+          ALTER TABLE users DROP COLUMN logo_url;
         END IF;
       END $$;
 
