@@ -10,7 +10,7 @@ export default function Profile() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [logoKey, setLogoKey] = useState(0); // For cache busting after upload
+  const [logoKey, setLogoKey] = useState(() => Date.now()); // For cache busting after upload
 
   // Build logo URL with token for authentication
   const logoUrl = useMemo(() => {
@@ -112,7 +112,7 @@ export default function Profile() {
     try {
       await api.uploadFile('/auth/me/logo', file, 'logo');
       await refreshUser();
-      setLogoKey(prev => prev + 1); // Bust cache to show new logo
+      setLogoKey(Date.now()); // Bust cache to show new logo
       setMessage({ type: 'success', text: 'Logo bylo nahráno' });
     } catch (err: unknown) {
       const error = err as Error;
@@ -134,6 +134,7 @@ export default function Profile() {
     try {
       await api.delete('/auth/me/logo');
       await refreshUser();
+      setLogoKey(Date.now()); // Bust cache for future uploads
       setMessage({ type: 'success', text: 'Logo bylo smazáno' });
     } catch (err: unknown) {
       const error = err as Error;
