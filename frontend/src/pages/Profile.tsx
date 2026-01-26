@@ -1,15 +1,22 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { User, Building, AlertCircle, CheckCircle, Upload, Trash2, Image } from 'lucide-react';
 
 export default function Profile() {
-  const { user, updateProfile, refreshUser } = useAuth();
+  const { user, token, updateProfile, refreshUser } = useAuth();
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [logoKey, setLogoKey] = useState(0); // For cache busting after upload
+
+  // Build logo URL with token for authentication
+  const logoUrl = useMemo(() => {
+    if (!token) return '';
+    return `/api/auth/me/logo?token=${encodeURIComponent(token)}&v=${logoKey}`;
+  }, [token, logoKey]);
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -105,6 +112,7 @@ export default function Profile() {
     try {
       await api.uploadFile('/auth/me/logo', file, 'logo');
       await refreshUser();
+      setLogoKey(prev => prev + 1); // Bust cache to show new logo
       setMessage({ type: 'success', text: 'Logo bylo nahráno' });
     } catch (err: unknown) {
       const error = err as Error;
@@ -289,10 +297,10 @@ export default function Profile() {
         <div className="flex items-start space-x-6">
           {/* Logo preview */}
           <div className="flex-shrink-0">
-            {user?.logoUrl ? (
+            {user?.hasLogo ? (
               <div className="relative">
                 <img
-                  src={`/api${user.logoUrl}`}
+                  src={logoUrl}
                   alt="Logo firmy"
                   className="w-48 h-24 object-contain border border-gray-200 rounded-lg bg-white p-2"
                 />
@@ -320,9 +328,9 @@ export default function Profile() {
                 className={`btn btn-secondary flex items-center space-x-2 cursor-pointer ${uploadingLogo ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 <Upload className="h-4 w-4" />
-                <span>{uploadingLogo ? 'Nahrávám...' : user?.logoUrl ? 'Změnit logo' : 'Nahrát logo'}</span>
+                <span>{uploadingLogo ? 'Nahrávám...' : user?.hasLogo ? 'Změnit logo' : 'Nahrát logo'}</span>
               </label>
-              {user?.logoUrl && (
+              {user?.hasLogo && (
                 <button
                   type="button"
                   onClick={handleLogoDelete}

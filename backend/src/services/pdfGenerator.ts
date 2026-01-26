@@ -1,7 +1,5 @@
 import puppeteer from 'puppeteer';
 import QRCode from 'qrcode';
-import fs from 'fs';
-import path from 'path';
 import { query } from '../db/init.js';
 
 interface InvoiceData {
@@ -67,28 +65,9 @@ async function generateQRCodeDataURL(data: string): Promise<string> {
   }
 }
 
-function getLogoDataUrl(logoUrl: string | null): string | null {
-  if (!logoUrl) return null;
-
-  try {
-    // Logo URL is like /uploads/logos/uuid.png
-    const logoPath = path.join(process.cwd(), logoUrl);
-    if (!fs.existsSync(logoPath)) {
-      console.error('Logo file not found:', logoPath);
-      return null;
-    }
-
-    const logoBuffer = fs.readFileSync(logoPath);
-    const ext = path.extname(logoUrl).toLowerCase();
-    let mimeType = 'image/png';
-    if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
-    else if (ext === '.svg') mimeType = 'image/svg+xml';
-
-    return `data:${mimeType};base64,${logoBuffer.toString('base64')}`;
-  } catch (error) {
-    console.error('Error reading logo file:', error);
-    return null;
-  }
+function getLogoDataUrl(logoData: string | null, logoMimeType: string | null): string | null {
+  if (!logoData || !logoMimeType) return null;
+  return `data:${logoMimeType};base64,${logoData}`;
 }
 
 function generateInvoiceHTML(invoice: InvoiceData, qrCodeDataUrl: string): string {
@@ -422,7 +401,8 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
       u.name as user_name, u.company_name as user_company_name,
       u.company_address as user_address, u.company_ico as user_ico,
       u.company_dic as user_dic, u.bank_account as user_bank_account,
-      u.bank_code as user_bank_code, u.logo_url as user_logo_url
+      u.bank_code as user_bank_code, u.logo_data as user_logo_data,
+      u.logo_mime_type as user_logo_mime_type
     FROM invoices i
     JOIN clients c ON i.client_id = c.id
     JOIN users u ON i.user_id = u.id
@@ -442,7 +422,7 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
   );
 
   // Get logo as data URL if exists
-  const userLogoDataUrl = getLogoDataUrl(row.user_logo_url);
+  const userLogoDataUrl = getLogoDataUrl(row.user_logo_data, row.user_logo_mime_type);
 
   const invoiceData: InvoiceData = {
     id: row.id,

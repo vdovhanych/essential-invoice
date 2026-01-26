@@ -3,29 +3,12 @@ import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 import { query } from '../db/init.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 
-// Configure multer for logo uploads
-const uploadsDir = path.join(process.cwd(), 'uploads/logos');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req: AuthRequest, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `${req.userId}${ext}`);
-  }
-});
-
+// Configure multer for logo uploads (memory storage for base64 conversion)
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
   fileFilter: (_req, file, cb) => {
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
@@ -140,7 +123,7 @@ authRouter.post('/login',
 authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const result = await query(
-      `SELECT id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, logo_url, created_at
+      `SELECT id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, logo_data IS NOT NULL as has_logo, created_at
        FROM users WHERE id = $1`,
       [req.userId]
     );
@@ -160,7 +143,7 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
       companyAddress: user.company_address,
       bankAccount: user.bank_account,
       bankCode: user.bank_code,
-      logoUrl: user.logo_url,
+      hasLogo: user.has_logo,
       createdAt: user.created_at
     });
   } catch (error) {
@@ -246,6 +229,48 @@ authRouter.post('/change-password', authenticateToken,
   }
 );
 
+// Get logo image (supports token via query param for img src usage)
+authRouter.get('/me/logo', async (req: Request, res: Response) => {
+  try {
+    // Accept token from header or query parameter
+    const authHeader = req.headers.authorization;
+    const queryToken = req.query.token as string;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : queryToken;
+
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    let userId: string;
+    try {
+      const decoded = jwt.verify(token, secret) as { userId: string };
+      userId = decoded.userId;
+    } catch {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const result = await query(
+      'SELECT logo_data, logo_mime_type FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (result.rows.length === 0 || !result.rows[0].logo_data) {
+      return res.status(404).json({ error: 'Logo not found' });
+    }
+
+    const { logo_data, logo_mime_type } = result.rows[0];
+    const logoBuffer = Buffer.from(logo_data, 'base64');
+
+    res.set('Content-Type', logo_mime_type);
+    res.set('Cache-Control', 'private, max-age=3600');
+    res.send(logoBuffer);
+  } catch (error) {
+    console.error('Get logo error:', error);
+    res.status(500).json({ error: 'Failed to get logo' });
+  }
+});
+
 // Upload logo
 authRouter.post('/me/logo', authenticateToken, upload.single('logo'), async (req: AuthRequest, res: Response) => {
   try {
@@ -253,23 +278,15 @@ authRouter.post('/me/logo', authenticateToken, upload.single('logo'), async (req
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Delete old logo if exists (different extension)
-    const oldLogoResult = await query('SELECT logo_url FROM users WHERE id = $1', [req.userId]);
-    if (oldLogoResult.rows[0]?.logo_url) {
-      const oldPath = path.join(process.cwd(), 'uploads/logos', path.basename(oldLogoResult.rows[0].logo_url));
-      if (fs.existsSync(oldPath) && oldPath !== path.join(uploadsDir, req.file.filename)) {
-        fs.unlinkSync(oldPath);
-      }
-    }
-
-    const logoUrl = `/uploads/logos/${req.file.filename}`;
+    const logoData = req.file.buffer.toString('base64');
+    const logoMimeType = req.file.mimetype;
 
     await query(
-      'UPDATE users SET logo_url = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-      [logoUrl, req.userId]
+      'UPDATE users SET logo_data = $1, logo_mime_type = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+      [logoData, logoMimeType, req.userId]
     );
 
-    res.json({ logoUrl });
+    res.json({ success: true });
   } catch (error) {
     console.error('Upload logo error:', error);
     res.status(500).json({ error: 'Failed to upload logo' });
@@ -279,17 +296,8 @@ authRouter.post('/me/logo', authenticateToken, upload.single('logo'), async (req
 // Delete logo
 authRouter.delete('/me/logo', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const result = await query('SELECT logo_url FROM users WHERE id = $1', [req.userId]);
-
-    if (result.rows[0]?.logo_url) {
-      const logoPath = path.join(process.cwd(), 'uploads/logos', path.basename(result.rows[0].logo_url));
-      if (fs.existsSync(logoPath)) {
-        fs.unlinkSync(logoPath);
-      }
-    }
-
     await query(
-      'UPDATE users SET logo_url = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+      'UPDATE users SET logo_data = NULL, logo_mime_type = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1',
       [req.userId]
     );
 

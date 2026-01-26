@@ -11,7 +11,7 @@ interface User {
   companyAddress?: string;
   bankAccount?: string;
   bankCode?: string;
-  logoUrl?: string;
+  hasLogo?: boolean;
 }
 
 interface AuthContextType {
