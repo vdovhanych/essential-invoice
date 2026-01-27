@@ -7,11 +7,11 @@ import { sendInvoiceEmail } from '../services/emailSender.js';
 
 export const invoiceRouter: ReturnType<typeof Router> = Router();
 
-// Generate invoice number
-async function generateInvoiceNumber(userId: string): Promise<{ invoiceNumber: string; variableSymbol: string }> {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
+// Generate invoice number based on issue date
+async function generateInvoiceNumber(userId: string, issueDate: string): Promise<{ invoiceNumber: string; variableSymbol: string }> {
+  const date = new Date(issueDate);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
   const datePrefix = `${year}${month}`;
 
   // Get user's invoice number prefix from settings
@@ -201,8 +201,8 @@ invoiceRouter.post('/',
         return res.status(400).json({ error: 'Invalid client' });
       }
 
-      // Generate invoice number
-      const { invoiceNumber, variableSymbol } = await generateInvoiceNumber(req.userId!);
+      // Generate invoice number based on issue date
+      const { invoiceNumber, variableSymbol } = await generateInvoiceNumber(req.userId!, issueDate);
 
       // Calculate totals
       let subtotal = 0;
