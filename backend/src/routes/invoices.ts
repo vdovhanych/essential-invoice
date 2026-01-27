@@ -182,6 +182,8 @@ invoiceRouter.post('/',
   body('issueDate').isISO8601(),
   body('dueDate').isISO8601(),
   body('items').isArray({ min: 1 }),
+  body('items.*.description').isLength({ max: 150 }).withMessage('Popis položky může mít maximálně 150 znaků'),
+  body('notes').optional().isLength({ max: 300 }).withMessage('Poznámka může mít maximálně 300 znaků'),
   async (req: AuthRequest, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -264,7 +266,14 @@ invoiceRouter.post('/',
 // Update invoice
 invoiceRouter.put('/:id',
   body('items').optional().isArray({ min: 1 }),
+  body('items.*.description').optional().isLength({ max: 150 }).withMessage('Popis položky může mít maximálně 150 znaků'),
+  body('notes').optional().isLength({ max: 300 }).withMessage('Poznámka může mít maximálně 300 znaků'),
   async (req: AuthRequest, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { clientId, issueDate, dueDate, deliveryDate, items, notes, currency, vatRate, status } = req.body;
 
     try {

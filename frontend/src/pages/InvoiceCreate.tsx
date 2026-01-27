@@ -304,13 +304,14 @@ export default function InvoiceCreate() {
             {items.map((item, index) => (
               <div key={index} className="grid grid-cols-12 gap-4 items-end">
                 <div className="col-span-12 md:col-span-5">
-                  <label className="label">Popis *</label>
+                  <label className="label">Popis * <span className="text-gray-400 font-normal">({item.description.length}/150)</span></label>
                   <input
                     type="text"
                     value={item.description}
                     onChange={(e) => handleItemChange(index, 'description', e.target.value)}
                     className="input"
                     placeholder="Popis položky"
+                    maxLength={150}
                     required
                   />
                 </div>
@@ -402,8 +403,12 @@ export default function InvoiceCreate() {
             onChange={handleChange}
             className="input"
             rows={3}
+            maxLength={300}
             placeholder="Volitelné poznámky k faktuře..."
           />
+          <p className="text-sm text-gray-500 mt-1">
+            {formData.notes.length}/300 znaků
+          </p>
         </div>
 
         {/* Submit */}

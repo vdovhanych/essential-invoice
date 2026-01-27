@@ -95,31 +95,31 @@ function generateInvoiceHTML(invoice: InvoiceData, qrCodeDataUrl: string): strin
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       font-size: 12px;
-      line-height: 1.5;
+      line-height: 1.45;
       color: #333;
-      padding: 40px;
+      padding: 35px;
     }
     .header {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 40px;
-      padding-bottom: 20px;
+      margin-bottom: 30px;
+      padding-bottom: 18px;
       border-bottom: 2px solid #2563eb;
     }
     .invoice-title {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: bold;
       color: #2563eb;
     }
     .invoice-number {
-      font-size: 14px;
+      font-size: 13px;
       color: #666;
-      margin-top: 5px;
+      margin-top: 4px;
     }
     .parties {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 30px;
+      margin-bottom: 22px;
     }
     .party {
       width: 45%;
@@ -128,13 +128,13 @@ function generateInvoiceHTML(invoice: InvoiceData, qrCodeDataUrl: string): strin
       font-size: 11px;
       text-transform: uppercase;
       color: #666;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       font-weight: bold;
     }
     .party-name {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
     .party-details {
       color: #555;
@@ -142,8 +142,8 @@ function generateInvoiceHTML(invoice: InvoiceData, qrCodeDataUrl: string): strin
     .dates {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 30px;
-      padding: 15px;
+      margin-bottom: 22px;
+      padding: 12px;
       background: #f8fafc;
       border-radius: 8px;
     }
@@ -156,18 +156,18 @@ function generateInvoiceHTML(invoice: InvoiceData, qrCodeDataUrl: string): strin
       color: #666;
     }
     .date-value {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
+      margin-bottom: 22px;
     }
     th {
       background: #2563eb;
       color: white;
-      padding: 12px;
+      padding: 10px;
       text-align: left;
       font-size: 11px;
       text-transform: uppercase;
@@ -176,37 +176,44 @@ function generateInvoiceHTML(invoice: InvoiceData, qrCodeDataUrl: string): strin
       text-align: right;
     }
     td {
-      padding: 12px;
+      padding: 10px;
       border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+    td:first-child {
+      max-width: 300px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
     .text-right {
       text-align: right;
+      white-space: nowrap;
     }
     .totals {
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
     .totals-box {
-      width: 300px;
+      width: 290px;
     }
     .totals-row {
       display: flex;
       justify-content: space-between;
-      padding: 8px 0;
+      padding: 6px 0;
       border-bottom: 1px solid #e5e7eb;
     }
     .totals-row.total {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: bold;
       border-bottom: none;
-      padding-top: 15px;
+      padding-top: 12px;
       color: #2563eb;
     }
     .payment-info {
       display: flex;
       justify-content: space-between;
-      padding: 20px;
+      padding: 15px;
       background: #f0f9ff;
       border-radius: 8px;
       border: 1px solid #bae6fd;
@@ -215,17 +222,17 @@ function generateInvoiceHTML(invoice: InvoiceData, qrCodeDataUrl: string): strin
       flex: 1;
     }
     .payment-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       color: #0369a1;
     }
     .payment-row {
       display: flex;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .payment-label {
-      width: 120px;
+      width: 115px;
       color: #666;
     }
     .payment-value {
@@ -235,28 +242,30 @@ function generateInvoiceHTML(invoice: InvoiceData, qrCodeDataUrl: string): strin
       text-align: center;
     }
     .qr-code img {
-      width: 120px;
-      height: 120px;
+      width: 110px;
+      height: 110px;
     }
     .qr-code-label {
       font-size: 10px;
       color: #666;
-      margin-top: 5px;
+      margin-top: 4px;
     }
     .notes {
-      margin-top: 30px;
-      padding: 15px;
+      margin-top: 20px;
+      padding: 12px 15px;
       background: #fefce8;
       border-radius: 8px;
       border: 1px solid #fde047;
+      max-height: 85px;
+      overflow: hidden;
     }
     .notes-title {
       font-weight: bold;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
     .footer {
-      margin-top: 40px;
-      padding-top: 20px;
+      margin-top: 25px;
+      padding-top: 15px;
       border-top: 1px solid #e5e7eb;
       text-align: center;
       color: #666;
