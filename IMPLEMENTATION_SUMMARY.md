@@ -28,11 +28,6 @@ After analyzing your codebase and considering Czech freelancer needs, I identifi
    - Reduces manual work by 80%
    - Solves a real pain point in your existing bank notification system
 
-3. **Invoice Categorization** ⭐⭐⭐⭐
-   - Auto-categorizes invoice line items for expense tracking
-   - Helps with tax deductions and financial reporting
-   - Saves time during tax season and accounting
-
 ## What Was Implemented
 
 ### Backend (Node.js/Express/TypeScript)
@@ -40,19 +35,17 @@ After analyzing your codebase and considering Czech freelancer needs, I identifi
 **New Files Created:**
 1. `backend/src/services/perplexityAI.ts` - Core AI service
    - `callPerplexity()` - Main API interface
-   - `categorizeInvoiceItems()` - Invoice categorization
    - `matchPaymentToInvoice()` - Smart payment matching
    - `getCzechTaxAdvice()` - Tax advisor
    - `isPerplexityConfigured()` - Status check
 
 2. `backend/src/routes/ai.ts` - API endpoints
    - `GET /api/ai/status` - Check if AI is available
-   - `POST /api/ai/categorize-invoice` - Categorize invoice items
    - `POST /api/ai/match-payment` - Match payment to invoice
    - `POST /api/ai/tax-advisor` - Ask tax questions
 
 3. `backend/src/services/perplexityAI.test.ts` - Comprehensive tests
-   - 82 total tests (all passing ✅)
+   - 81 total tests (all passing ✅)
    - Mocked API calls for reliability
    - Full coverage of AI functions
 
@@ -154,10 +147,7 @@ curl -X POST http://localhost:3001/api/ai/match-payment \
 
 **Invoice Categorization:**
 ```bash
-curl -X POST http://localhost:3001/api/ai/categorize-invoice \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"invoiceId": "uuid-here"}'
+# Removed - feature not integrated in UI
 ```
 
 ## Cost Analysis
@@ -168,17 +158,15 @@ curl -X POST http://localhost:3001/api/ai/categorize-invoice \
 
 **Usage Estimates (per active user/month):**
 - Tax questions: 50-100 questions × 500 tokens = 25,000-50,000 tokens
-- Invoice categorization: 10-50 invoices × 300 tokens = 3,000-15,000 tokens
 - Payment matching: 5-20 payments × 400 tokens = 2,000-8,000 tokens
-- Financial insights: 10-20 loads × 500 tokens = 5,000-10,000 tokens
 
-**Total: 35,000-83,000 tokens/user/month (~$0.70-1.66/user)**
+**Total: 27,000-58,000 tokens/user/month (~$0.54-1.16/user)**
 
-💡 For 10 active users: ~$7-17/month (well within free tier if you have a single API key)
+💡 For 10 active users: ~$5-12/month (well within free tier initially)
 
 ## Testing Status
 
-✅ **All tests passing (76/76)**
+✅ **All tests passing (81/81)**
 
 ```bash
 Test Files  6 passed (6)

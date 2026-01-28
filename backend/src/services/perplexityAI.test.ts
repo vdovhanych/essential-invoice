@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { 
   callPerplexity, 
   extractResponseText, 
-  categorizeInvoiceItems,
   matchPaymentToInvoice,
   getCzechTaxAdvice,
   isPerplexityConfigured 
@@ -147,45 +146,6 @@ describe('Perplexity AI Service', () => {
       };
 
       expect(() => extractResponseText(response)).toThrow('No response from Perplexity AI');
-    });
-  });
-
-  describe('categorizeInvoiceItems', () => {
-    it('should return categorized items', async () => {
-      const mockResponse = {
-        id: 'test',
-        model: 'test',
-        object: 'test',
-        created: 0,
-        choices: [
-          {
-            index: 0,
-            finish_reason: 'stop',
-            message: {
-              role: 'assistant',
-              content: JSON.stringify([
-                { description: 'Web development', category: 'Web Development', confidence: 0.95 },
-                { description: 'Logo design', category: 'Design', confidence: 0.9 },
-              ]),
-            },
-          },
-        ],
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
-
-      const items = [
-        { description: 'Web development', total: 10000 },
-        { description: 'Logo design', total: 5000 },
-      ];
-
-      const result = await categorizeInvoiceItems(testUserId, items);
-      expect(result).toHaveLength(2);
-      expect(result[0]).toHaveProperty('category');
-      expect(result[0]).toHaveProperty('confidence');
     });
   });
 

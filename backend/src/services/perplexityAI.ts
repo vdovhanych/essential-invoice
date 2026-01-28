@@ -103,46 +103,6 @@ export function extractResponseText(response: PerplexityResponse): string {
 }
 
 /**
- * Categorize invoice items using AI
- * Returns suggested categories for invoice line items
- * @param userId - User ID to get API key for
- * @param items - Invoice items to categorize
- */
-export async function categorizeInvoiceItems(
-  userId: string,
-  items: Array<{ description: string; total: number }>
-): Promise<Array<{ description: string; category: string; confidence: number }>> {
-  const apiKey = await getUserApiKey(userId);
-  if (!apiKey) {
-    throw new Error('Perplexity API key not configured. Please add your API key in Settings.');
-  }
-
-  const itemsList = items.map((item, idx) => `${idx + 1}. ${item.description} (${item.total} CZK)`).join('\n');
-  
-  const messages: PerplexityMessage[] = [
-    {
-      role: 'system',
-      content: 'You are an AI assistant helping with invoice categorization for Czech freelancers. Categorize invoice line items into common business expense categories. Return only a JSON array with objects containing: description, category, and confidence (0-1).',
-    },
-    {
-      role: 'user',
-      content: `Categorize these invoice items into business expense categories (e.g., "Web Development", "Consulting", "Design", "Marketing", "Software", "Maintenance", etc.):\n\n${itemsList}\n\nReturn ONLY a JSON array, no other text.`,
-    },
-  ];
-
-  const response = await callPerplexity(apiKey, messages, 'sonar', 0.1);
-  const text = extractResponseText(response);
-  
-  // Extract JSON from response
-  const jsonMatch = text.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) {
-    throw new Error('Failed to parse categorization response');
-  }
-  
-  return JSON.parse(jsonMatch[0]);
-}
-
-/**
  * Match a payment to invoices using AI
  * Analyzes payment details and suggests the best matching invoice
  * @param userId - User ID to get API key for

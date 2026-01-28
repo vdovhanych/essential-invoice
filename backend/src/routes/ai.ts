@@ -3,7 +3,6 @@ import { query } from '../db/init.js';
 import { AuthRequest } from '../middleware/auth.js';
 import {
   isPerplexityConfigured,
-  categorizeInvoiceItems,
   matchPaymentToInvoice,
   getCzechTaxAdvice,
 } from '../services/perplexityAI.js';
@@ -16,52 +15,10 @@ aiRouter.get('/status', async (req: AuthRequest, res: Response) => {
   res.json({
     available: configured,
     features: {
-      invoiceCategorization: true,
       paymentMatching: true,
       taxAdvisor: true,
     },
   });
-});
-
-// Categorize invoice items
-aiRouter.post('/categorize-invoice', async (req: AuthRequest, res: Response) => {
-  try {
-    const configured = await isPerplexityConfigured(req.userId!);
-    if (!configured) {
-      return res.status(503).json({ error: 'AI features not configured. Please add your Perplexity API key in Settings.' });
-    }
-
-    const { invoiceId } = req.body;
-
-    if (!invoiceId) {
-      return res.status(400).json({ error: 'Invoice ID is required' });
-    }
-
-    // Get invoice items
-    const itemsResult = await query(
-      `SELECT ii.description, ii.total 
-       FROM invoice_items ii
-       JOIN invoices i ON i.id = ii.invoice_id
-       WHERE ii.invoice_id = $1 AND i.user_id = $2
-       ORDER BY ii.sort_order`,
-      [invoiceId, req.userId]
-    );
-
-    if (itemsResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Invoice not found or has no items' });
-    }
-
-    const items = itemsResult.rows.map(row => ({
-      description: row.description,
-      total: parseFloat(row.total),
-    }));
-
-    const categories = await categorizeInvoiceItems(req.userId!, items);
-    res.json({ categories });
-  } catch (error) {
-    console.error('AI categorization error:', error);
-    res.status(500).json({ error: 'Failed to categorize invoice items' });
-  }
 });
 
 // AI-powered payment matching

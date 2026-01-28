@@ -24,30 +24,7 @@ A conversational AI assistant that helps you with Czech-specific tax and account
 - Available in both Czech and English
 - Context-aware responses
 
-### 2. Smart Invoice Categorization
-**Location**: Invoice detail pages (via API)
-
-AI automatically categorizes invoice line items into business expense categories to help with accounting and tax preparation.
-
-**How it works:**
-1. Invoice line items are sent to AI (e.g., "Website redesign - 50,000 CZK", "Logo design - 15,000 CZK")
-2. AI analyzes descriptions and assigns business categories
-3. Categories include: Web Development, Consulting, Design, Marketing, Software, Maintenance, etc.
-
-**Benefits:**
-- **Tax Deductions**: Properly categorized expenses make it easier to identify tax-deductible costs
-- **Accounting**: Simplifies bookkeeping and financial reporting
-- **Consistency**: AI ensures similar items are categorized the same way
-- **Time Saving**: No need to manually categorize each line item
-
-**What are the categories used for?**
-- Tracking different types of business activities
-- Separating deductible vs non-deductible expenses
-- Creating detailed profit & loss statements
-- Preparing for tax filings (daňové přiznání)
-- Business performance analysis by category
-
-### 3. Smart Payment Matching
+### 2. Smart Payment Matching
 **Location**: Payments page
 
 AI-powered payment reconciliation that matches bank payments to invoices even when variable symbols are missing or amounts don't match exactly.
@@ -116,30 +93,6 @@ Response:
 }
 ```
 
-### Categorize Invoice
-```http
-POST /api/ai/categorize-invoice
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "invoiceId": "uuid"
-}
-```
-
-Response:
-```json
-{
-  "categories": [
-    {
-      "description": "Web development services",
-      "category": "Web Development",
-      "confidence": 0.95
-    }
-  ]
-}
-```
-
 ### Match Payment with AI
 ```http
 POST /api/ai/match-payment
@@ -197,10 +150,9 @@ Perplexity AI operates on a usage-based pricing model:
 
 **Estimated usage per user:**
 - AI Assistant: ~500 tokens/question (50-100 questions/month)
-- Invoice categorization: ~300 tokens/invoice (10-50 invoices/month)
 - Payment matching: ~400 tokens/payment (5-20 payments/month)
 
-**Total estimated**: 40,000-80,000 tokens/month per active user (~$0.80-1.60/month)
+**Total estimated**: 30,000-60,000 tokens/month per active user (~$0.60-1.20/month)
 
 ## Models Used
 
