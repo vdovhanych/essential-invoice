@@ -27,8 +27,22 @@ const limiter = rateLimit({
 });
 
 // Middleware
+// CORS configuration - support multiple origins for development
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const allowedOrigins = corsOrigin.split(',').map(origin => origin.trim());
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, or Postman)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin is in the allowed list
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());

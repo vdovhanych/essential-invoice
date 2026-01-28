@@ -73,7 +73,7 @@ docker compose up -d
 | `DB_USER` | `postgres` | Database user |
 | `DB_PASSWORD` | `postgres` | Database password |
 | `JWT_SECRET` | - | JWT signing secret (required) |
-| `CORS_ORIGIN` | `http://localhost` | Allowed CORS origin |
+| `CORS_ORIGIN` | `http://localhost:5173` (dev)<br/>`http://localhost:8080` (Docker) | Allowed CORS origins (comma-separated) |
 | `BACKEND_PORT` | `3001` | Backend API port |
 | `FRONTEND_PORT` | `80` | Frontend web port |
 | `EMAIL_POLLING_INTERVAL` | `300000` | Email check interval (ms) |
@@ -212,6 +212,9 @@ Payments can be matched in two ways:
 
 ### Local Development Setup
 
+**Important:** For local development, the frontend runs on port 5173 (Vite default).  
+Make sure your `.env` file has: `CORS_ORIGIN=http://localhost:5173`
+
 1. Start database:
 ```bash
 docker compose up -d db
@@ -222,7 +225,7 @@ docker compose up -d db
 cd backend
 pnpm install
 cp ../.env.example .env
-# Edit .env with local settings
+# Edit .env - ensure CORS_ORIGIN=http://localhost:5173 for local dev
 pnpm run dev
 ```
 
