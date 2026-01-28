@@ -56,14 +56,14 @@ export interface PerplexityResponse {
  * Call Perplexity AI API with messages
  * @param apiKey - Perplexity API key
  * @param messages - Array of messages for the conversation
- * @param model - Model to use (default: llama-3.1-sonar-small-128k-online for web search)
+ * @param model - Model to use (default: sonar for general use)
  * @param temperature - Temperature for response randomness (default: 0.2 for more focused responses)
  * @returns Perplexity API response
  */
 export async function callPerplexity(
   apiKey: string,
   messages: PerplexityMessage[],
-  model: string = 'llama-3.1-sonar-small-128k-online',
+  model: string = 'sonar',
   temperature: number = 0.2
 ): Promise<PerplexityResponse> {
   if (!apiKey) {
@@ -130,7 +130,7 @@ export async function categorizeInvoiceItems(
     },
   ];
 
-  const response = await callPerplexity(apiKey, messages, 'llama-3.1-sonar-small-128k-chat', 0.1);
+  const response = await callPerplexity(apiKey, messages, 'sonar', 0.1);
   const text = extractResponseText(response);
   
   // Extract JSON from response
@@ -182,7 +182,7 @@ export async function matchPaymentToInvoice(
     },
   ];
 
-  const response = await callPerplexity(apiKey, messages, 'llama-3.1-sonar-small-128k-chat', 0.1);
+  const response = await callPerplexity(apiKey, messages, 'sonar', 0.1);
   const text = extractResponseText(response);
   
   // Handle null response
@@ -231,7 +231,7 @@ export async function getFinancialInsights(
     },
   ];
 
-  const response = await callPerplexity(apiKey, messages, 'llama-3.1-sonar-small-128k-chat', 0.3);
+  const response = await callPerplexity(apiKey, messages, 'sonar', 0.3);
   return extractResponseText(response);
 }
 
@@ -262,7 +262,7 @@ export async function getCzechTaxAdvice(
   ];
 
   // Use online model for web search capability
-  const response = await callPerplexity(apiKey, messages, 'llama-3.1-sonar-small-128k-online', 0.2);
+  const response = await callPerplexity(apiKey, messages, 'sonar', 0.2);
   const answer = extractResponseText(response);
   
   return { answer };

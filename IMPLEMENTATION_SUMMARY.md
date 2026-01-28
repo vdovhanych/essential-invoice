@@ -123,8 +123,7 @@ Perplexity API (External)
 - ✅ API key stored securely in environment variables
 
 ### Models Used
-- **Czech Tax Advisor**: `llama-3.1-sonar-small-128k-online` (with web search)
-- **Categorization & Matching**: `llama-3.1-sonar-small-128k-chat` (faster)
+- **All AI Features**: `sonar` (Perplexity's default model with automatic online search when needed)
 
 ## How to Use
 

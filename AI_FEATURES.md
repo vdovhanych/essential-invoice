@@ -224,8 +224,9 @@ Perplexity AI operates on a usage-based pricing model:
 
 ## Models Used
 
-- **Tax Advisor & Insights**: `llama-3.1-sonar-small-128k-online` (with web search)
-- **Categorization & Matching**: `llama-3.1-sonar-small-128k-chat` (faster, no web search needed)
+- **All AI Features**: `sonar` (Perplexity's default model, includes web search capability when needed)
+
+Note: The model automatically determines whether to use online search based on the query type.
 
 ## Troubleshooting
 
