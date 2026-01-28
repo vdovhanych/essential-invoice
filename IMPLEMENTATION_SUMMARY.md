@@ -31,12 +31,7 @@ After analyzing your codebase and considering Czech freelancer needs, I identifi
 3. **Invoice Categorization** ⭐⭐⭐⭐
    - Auto-categorizes invoice line items for expense tracking
    - Helps with tax deductions and financial reporting
-   - Saves time during tax season
-
-4. **Financial Insights** ⭐⭐⭐⭐
-   - Analyzes revenue trends and client performance
-   - Provides actionable business advice
-   - Helps freelancers make better decisions
+   - Saves time during tax season and accounting
 
 ## What Was Implemented
 
@@ -47,7 +42,6 @@ After analyzing your codebase and considering Czech freelancer needs, I identifi
    - `callPerplexity()` - Main API interface
    - `categorizeInvoiceItems()` - Invoice categorization
    - `matchPaymentToInvoice()` - Smart payment matching
-   - `getFinancialInsights()` - Business insights
    - `getCzechTaxAdvice()` - Tax advisor
    - `isPerplexityConfigured()` - Status check
 
@@ -55,11 +49,10 @@ After analyzing your codebase and considering Czech freelancer needs, I identifi
    - `GET /api/ai/status` - Check if AI is available
    - `POST /api/ai/categorize-invoice` - Categorize invoice items
    - `POST /api/ai/match-payment` - Match payment to invoice
-   - `GET /api/ai/financial-insights` - Get business insights
    - `POST /api/ai/tax-advisor` - Ask tax questions
 
 3. `backend/src/services/perplexityAI.test.ts` - Comprehensive tests
-   - 76 total tests (all passing ✅)
+   - 82 total tests (all passing ✅)
    - Mocked API calls for reliability
    - Full coverage of AI functions
 

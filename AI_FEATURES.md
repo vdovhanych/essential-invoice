@@ -2,7 +2,7 @@
 
 ## Overview
 
-Essential Invoice now includes powerful AI features powered by Perplexity AI. These features help Czech freelancers automate tasks, gain insights, and get instant advice on tax and accounting matters.
+Essential Invoice includes powerful AI features powered by Perplexity AI. These features help Czech freelancers automate tasks and get instant advice on tax and accounting matters.
 
 ## Features
 
@@ -23,23 +23,29 @@ A conversational AI assistant that helps you with Czech-specific tax and account
 - Czech tax law and regulation expertise
 - Available in both Czech and English
 - Context-aware responses
-- Automatic financial insights on your dashboard
 
 ### 2. Smart Invoice Categorization
-**Location**: Invoice detail pages
+**Location**: Invoice detail pages (via API)
 
-AI automatically categorizes invoice line items into business expense categories.
+AI automatically categorizes invoice line items into business expense categories to help with accounting and tax preparation.
 
 **How it works:**
-1. Open any invoice with line items
-2. Click "AI Categorize" button
-3. AI analyzes descriptions and suggests categories
-4. Categories include: Web Development, Consulting, Design, Marketing, Software, Maintenance, etc.
+1. Invoice line items are sent to AI (e.g., "Website redesign - 50,000 CZK", "Logo design - 15,000 CZK")
+2. AI analyzes descriptions and assigns business categories
+3. Categories include: Web Development, Consulting, Design, Marketing, Software, Maintenance, etc.
 
 **Benefits:**
-- Faster expense tracking
-- Consistent categorization
-- Better financial reporting
+- **Tax Deductions**: Properly categorized expenses make it easier to identify tax-deductible costs
+- **Accounting**: Simplifies bookkeeping and financial reporting
+- **Consistency**: AI ensures similar items are categorized the same way
+- **Time Saving**: No need to manually categorize each line item
+
+**What are the categories used for?**
+- Tracking different types of business activities
+- Separating deductible vs non-deductible expenses
+- Creating detailed profit & loss statements
+- Preparing for tax filings (daňové přiznání)
+- Business performance analysis by category
 
 ### 3. Smart Payment Matching
 **Location**: Payments page
@@ -59,17 +65,6 @@ AI-powered payment reconciliation that matches bank payments to invoices even wh
 - Handles ambiguous cases
 - Works when variable symbols are missing
 - Provides confidence scores
-
-### 4. Financial Insights
-**Location**: Dashboard (automatically loaded)
-
-AI provides personalized insights about your business performance based on your invoice and payment data.
-
-**Insights include:**
-- Revenue trends (month-over-month growth)
-- Top performing clients
-- Cash flow analysis
-- Business health indicators
 
 ## Setup
 
@@ -116,7 +111,6 @@ Response:
   "features": {
     "invoiceCategorization": true,
     "paymentMatching": true,
-    "financialInsights": true,
     "taxAdvisor": true
   }
 }
@@ -168,19 +162,6 @@ Response:
 }
 ```
 
-### Get Financial Insights
-```http
-GET /api/ai/financial-insights
-Authorization: Bearer <token>
-```
-
-Response:
-```json
-{
-  "insights": "Your revenue has increased by 25% this month compared to last month. Client A represents 50% of your total revenue. Consider diversifying your client base to reduce risk."
-}
-```
-
 ### Ask Tax Advisor
 ```http
 POST /api/ai/tax-advisor
@@ -218,9 +199,8 @@ Perplexity AI operates on a usage-based pricing model:
 - AI Assistant: ~500 tokens/question (50-100 questions/month)
 - Invoice categorization: ~300 tokens/invoice (10-50 invoices/month)
 - Payment matching: ~400 tokens/payment (5-20 payments/month)
-- Financial insights: ~500 tokens/load (10-20 loads/month)
 
-**Total estimated**: 50,000-100,000 tokens/month per active user (~$1-2/month)
+**Total estimated**: 40,000-80,000 tokens/month per active user (~$0.80-1.60/month)
 
 ## Models Used
 

@@ -2,30 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useAI } from '../context/AIContext';
 
 export default function AIAssistant() {
-  const { aiStatus, checkAIStatus, askTaxAdvisor, getFinancialInsights, loading } = useAI();
+  const { aiStatus, checkAIStatus, askTaxAdvisor, loading } = useAI();
   const [isOpen, setIsOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [conversation, setConversation] = useState<Array<{ type: 'user' | 'assistant'; text: string }>>([]);
-  const [insights, setInsights] = useState<string | null>(null);
 
   useEffect(() => {
     checkAIStatus();
   }, [checkAIStatus]);
-
-  useEffect(() => {
-    if (isOpen && !insights) {
-      loadInsights();
-    }
-  }, [isOpen]);
-
-  const loadInsights = async () => {
-    try {
-      const result = await getFinancialInsights();
-      setInsights(result);
-    } catch (err) {
-      console.error('Failed to load insights:', err);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,16 +96,6 @@ export default function AIAssistant() {
                 </svg>
               </button>
             </div>
-
-            {/* Insights Section */}
-            {insights && (
-              <div className="p-4 bg-indigo-50 border-b">
-                <h3 className="text-sm font-semibold text-indigo-900 mb-2">
-                  📊 Financial Insights
-                </h3>
-                <p className="text-sm text-indigo-800">{insights}</p>
-              </div>
-            )}
 
             {/* Conversation */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">

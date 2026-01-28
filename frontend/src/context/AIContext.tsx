@@ -6,7 +6,6 @@ interface AIFeatures {
   features: {
     invoiceCategorization: boolean;
     paymentMatching: boolean;
-    financialInsights: boolean;
     taxAdvisor: boolean;
   };
 }
@@ -18,7 +17,6 @@ interface AIContextType {
   checkAIStatus: () => Promise<void>;
   categorizeInvoice: (invoiceId: string) => Promise<any>;
   matchPaymentAI: (paymentId: string) => Promise<any>;
-  getFinancialInsights: () => Promise<string>;
   askTaxAdvisor: (question: string) => Promise<any>;
 }
 
@@ -117,34 +115,6 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
     [token]
   );
 
-  const getFinancialInsights = useCallback(async () => {
-    if (!token) throw new Error('Not authenticated');
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('http://localhost:3001/api/ai/financial-insights', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to get insights');
-      }
-
-      const data = await response.json();
-      return data.insights;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
-
   const askTaxAdvisor = useCallback(
     async (question: string) => {
       if (!token) throw new Error('Not authenticated');
@@ -188,7 +158,6 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
         checkAIStatus,
         categorizeInvoice,
         matchPaymentAI,
-        getFinancialInsights,
         askTaxAdvisor,
       }}
     >

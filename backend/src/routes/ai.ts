@@ -5,7 +5,6 @@ import {
   isPerplexityConfigured,
   categorizeInvoiceItems,
   matchPaymentToInvoice,
-  getFinancialInsights,
   getCzechTaxAdvice,
 } from '../services/perplexityAI.js';
 
@@ -19,7 +18,6 @@ aiRouter.get('/status', async (req: AuthRequest, res: Response) => {
     features: {
       invoiceCategorization: true,
       paymentMatching: true,
-      financialInsights: true,
       taxAdvisor: true,
     },
   });
@@ -136,71 +134,6 @@ aiRouter.post('/match-payment', async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('AI payment matching error:', error);
     res.status(500).json({ error: 'Failed to match payment' });
-  }
-});
-
-// Get financial insights for dashboard
-aiRouter.get('/financial-insights', async (req: AuthRequest, res: Response) => {
-  try {
-    const configured = await isPerplexityConfigured(req.userId!);
-    if (!configured) {
-      return res.status(503).json({ error: 'AI features not configured. Please add your Perplexity API key in Settings.' });
-    }
-
-    // Get financial data
-    const revenueResult = await query(
-      `SELECT 
-         SUM(CASE WHEN status = 'paid' THEN total ELSE 0 END) as total_revenue,
-         SUM(CASE WHEN status = 'paid' AND EXTRACT(MONTH FROM paid_at) = EXTRACT(MONTH FROM CURRENT_DATE) 
-                       AND EXTRACT(YEAR FROM paid_at) = EXTRACT(YEAR FROM CURRENT_DATE) 
-              THEN total ELSE 0 END) as current_month,
-         SUM(CASE WHEN status = 'paid' AND EXTRACT(MONTH FROM paid_at) = EXTRACT(MONTH FROM CURRENT_DATE) - 1
-                       AND EXTRACT(YEAR FROM paid_at) = EXTRACT(YEAR FROM CURRENT_DATE)
-              THEN total ELSE 0 END) as previous_month,
-         currency
-       FROM invoices 
-       WHERE user_id = $1
-       GROUP BY currency
-       ORDER BY total_revenue DESC
-       LIMIT 1`,
-      [req.userId]
-    );
-
-    if (revenueResult.rows.length === 0) {
-      return res.json({ insights: 'No revenue data available yet. Start creating and sending invoices!' });
-    }
-
-    const revenueData = revenueResult.rows[0];
-
-    // Get top clients
-    const topClientsResult = await query(
-      `SELECT c.company_name, SUM(i.total) as revenue
-       FROM invoices i
-       JOIN clients c ON c.id = i.client_id
-       WHERE i.user_id = $1 AND i.status = 'paid'
-       GROUP BY c.company_name
-       ORDER BY revenue DESC
-       LIMIT 3`,
-      [req.userId]
-    );
-
-    const topClients = topClientsResult.rows.map(row => ({
-      name: row.company_name,
-      revenue: parseFloat(row.revenue),
-    }));
-
-    const insights = await getFinancialInsights(req.userId!, {
-      totalRevenue: parseFloat(revenueData.total_revenue || 0),
-      currentMonth: parseFloat(revenueData.current_month || 0),
-      previousMonth: parseFloat(revenueData.previous_month || 0),
-      topClients,
-      currency: revenueData.currency || 'CZK',
-    });
-
-    res.json({ insights });
-  } catch (error) {
-    console.error('Financial insights error:', error);
-    res.status(500).json({ error: 'Failed to generate insights' });
   }
 });
 

@@ -200,42 +200,6 @@ export async function matchPaymentToInvoice(
 }
 
 /**
- * Get financial insights from invoice data
- * Analyzes revenue trends and provides business insights
- * @param userId - User ID to get API key for
- * @param data - Financial data to analyze
- */
-export async function getFinancialInsights(
-  userId: string,
-  data: {
-    totalRevenue: number;
-    currentMonth: number;
-    previousMonth: number;
-    topClients: Array<{ name: string; revenue: number }>;
-    currency: string;
-  }
-): Promise<string> {
-  const apiKey = await getUserApiKey(userId);
-  if (!apiKey) {
-    throw new Error('Perplexity API key not configured. Please add your API key in Settings.');
-  }
-
-  const messages: PerplexityMessage[] = [
-    {
-      role: 'system',
-      content: 'You are a financial advisor for Czech freelancers. Provide concise, actionable insights about their business performance in 3-4 sentences.',
-    },
-    {
-      role: 'user',
-      content: `Analyze this business data and provide insights:\n\nTotal Revenue: ${data.totalRevenue} ${data.currency}\nCurrent Month: ${data.currentMonth} ${data.currency}\nPrevious Month: ${data.previousMonth} ${data.currency}\nTop Clients: ${data.topClients.map(c => `${c.name} (${c.revenue} ${data.currency})`).join(', ')}\n\nProvide brief, actionable insights.`,
-    },
-  ];
-
-  const response = await callPerplexity(apiKey, messages, 'sonar', 0.3);
-  return extractResponseText(response);
-}
-
-/**
  * Czech tax and compliance advisor
  * Answers tax-related questions for Czech freelancers using web search
  * @param userId - User ID to get API key for

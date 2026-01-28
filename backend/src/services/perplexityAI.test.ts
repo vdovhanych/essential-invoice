@@ -4,7 +4,6 @@ import {
   extractResponseText, 
   categorizeInvoiceItems,
   matchPaymentToInvoice,
-  getFinancialInsights,
   getCzechTaxAdvice,
   isPerplexityConfigured 
 } from './perplexityAI';
@@ -272,44 +271,6 @@ describe('Perplexity AI Service', () => {
         []
       );
       expect(result).toBeNull();
-    });
-  });
-
-  describe('getFinancialInsights', () => {
-    it('should return insights text', async () => {
-      const mockResponse = {
-        id: 'test',
-        model: 'test',
-        object: 'test',
-        created: 0,
-        choices: [
-          {
-            index: 0,
-            finish_reason: 'stop',
-            message: {
-              role: 'assistant',
-              content: 'Your revenue has increased by 20% this month.',
-            },
-          },
-        ],
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
-
-      const data = {
-        totalRevenue: 100000,
-        currentMonth: 30000,
-        previousMonth: 25000,
-        topClients: [{ name: 'Client A', revenue: 50000 }],
-        currency: 'CZK',
-      };
-
-      const result = await getFinancialInsights(testUserId, data);
-      expect(typeof result).toBe('string');
-      expect(result.length).toBeGreaterThan(0);
     });
   });
 
