@@ -78,36 +78,26 @@ AI provides personalized insights about your business performance based on your 
 1. Go to [https://www.perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
 2. Sign up or log in
 3. Generate a new API key
-4. Copy the API key
+4. Copy the API key (starts with `pplx-`)
 
-### 2. Configure Environment Variable
+### 2. Configure in Settings
 
-Add your API key to the `.env` file in the project root:
+1. Log in to Essential Invoice
+2. Go to **Settings** (Nastavení)
+3. Scroll to **AI Features (Perplexity)** section
+4. Paste your API key in the input field
+5. Click **Save Settings** (Uložit nastavení)
 
-```bash
-PERPLEXITY_API_KEY=pplx-xxxxxxxxxxxxxxxxxxxxxxxx
-```
+### 3. Verify Configuration
 
-### 3. Restart the Application
+1. The AI Assistant button (lightbulb icon) should appear in the bottom-right corner
+2. If configured correctly, you'll see a green "Powered by Perplexity" badge
+3. Try asking a question to test
 
-If using Docker:
-```bash
-docker compose down
-docker compose up -d
-```
-
-If running locally:
-```bash
-cd backend
-pnpm run dev
-```
-
-### 4. Verify Configuration
-
-1. Log in to the application
-2. Click the AI Assistant button (lightbulb icon) in the bottom-right corner
-3. If configured correctly, you'll see a green "Powered by Perplexity" badge
-4. Try asking a question
+**Note**: Each user configures their own API key. This allows:
+- Independent API quotas per user
+- Better cost tracking
+- Privacy and security
 
 ## API Endpoints
 

@@ -47,9 +47,9 @@ JWT_SECRET=your_secure_jwt_secret_here_min_32_chars
 # Required: Set database password
 DB_PASSWORD=your_secure_database_password
 
-# Optional: AI Features (Perplexity API)
-# Get your API key from https://www.perplexity.ai/settings/api
-# PERPLEXITY_API_KEY=pplx-your_key_here
+# Note: AI features are now configured per-user in Settings page
+# Each user can add their own Perplexity API key in Settings > AI Features
+# No need to set PERPLEXITY_API_KEY here anymore
 ```
 
 4. Start the application:
@@ -96,12 +96,19 @@ Configure bank notification receiving in Settings > Email (IMAP):
 
 ### AI Features (Optional)
 
-To enable AI-powered features, add your Perplexity API key to `.env`:
-```bash
-PERPLEXITY_API_KEY=pplx-your_key_here
-```
+To enable AI-powered features, each user needs to configure their own Perplexity API key:
 
-Get your API key from [https://www.perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
+1. Get an API key from [https://www.perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
+2. Log in to Essential Invoice
+3. Go to Settings (Nastavení)
+4. Find the "AI funkce (Perplexity)" section
+5. Enter your API key and save
+
+**Benefits of per-user configuration:**
+- Each user controls their own AI quota
+- Better privacy and security
+- Individual cost tracking
+- Users can opt-in as needed
 
 See [AI_FEATURES.md](AI_FEATURES.md) for detailed documentation.
 
