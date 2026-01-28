@@ -13,8 +13,9 @@ export const aiRouter: ReturnType<typeof Router> = Router();
 
 // Check if AI features are available
 aiRouter.get('/status', async (req: AuthRequest, res: Response) => {
+  const configured = await isPerplexityConfigured(req.userId!);
   res.json({
-    available: isPerplexityConfigured(),
+    available: configured,
     features: {
       invoiceCategorization: true,
       paymentMatching: true,
@@ -27,8 +28,9 @@ aiRouter.get('/status', async (req: AuthRequest, res: Response) => {
 // Categorize invoice items
 aiRouter.post('/categorize-invoice', async (req: AuthRequest, res: Response) => {
   try {
-    if (!isPerplexityConfigured()) {
-      return res.status(503).json({ error: 'AI features not configured' });
+    const configured = await isPerplexityConfigured(req.userId!);
+    if (!configured) {
+      return res.status(503).json({ error: 'AI features not configured. Please add your Perplexity API key in Settings.' });
     }
 
     const { invoiceId } = req.body;
@@ -56,7 +58,7 @@ aiRouter.post('/categorize-invoice', async (req: AuthRequest, res: Response) => 
       total: parseFloat(row.total),
     }));
 
-    const categories = await categorizeInvoiceItems(items);
+    const categories = await categorizeInvoiceItems(req.userId!, items);
     res.json({ categories });
   } catch (error) {
     console.error('AI categorization error:', error);
@@ -67,8 +69,9 @@ aiRouter.post('/categorize-invoice', async (req: AuthRequest, res: Response) => 
 // AI-powered payment matching
 aiRouter.post('/match-payment', async (req: AuthRequest, res: Response) => {
   try {
-    if (!isPerplexityConfigured()) {
-      return res.status(503).json({ error: 'AI features not configured' });
+    const configured = await isPerplexityConfigured(req.userId!);
+    if (!configured) {
+      return res.status(503).json({ error: 'AI features not configured. Please add your Perplexity API key in Settings.' });
     }
 
     const { paymentId } = req.body;
@@ -118,6 +121,7 @@ aiRouter.post('/match-payment', async (req: AuthRequest, res: Response) => {
     }));
 
     const match = await matchPaymentToInvoice(
+      req.userId!,
       {
         amount: parseFloat(payment.amount),
         senderName: payment.sender_name,
@@ -138,8 +142,9 @@ aiRouter.post('/match-payment', async (req: AuthRequest, res: Response) => {
 // Get financial insights for dashboard
 aiRouter.get('/financial-insights', async (req: AuthRequest, res: Response) => {
   try {
-    if (!isPerplexityConfigured()) {
-      return res.status(503).json({ error: 'AI features not configured' });
+    const configured = await isPerplexityConfigured(req.userId!);
+    if (!configured) {
+      return res.status(503).json({ error: 'AI features not configured. Please add your Perplexity API key in Settings.' });
     }
 
     // Get financial data
@@ -184,7 +189,7 @@ aiRouter.get('/financial-insights', async (req: AuthRequest, res: Response) => {
       revenue: parseFloat(row.revenue),
     }));
 
-    const insights = await getFinancialInsights({
+    const insights = await getFinancialInsights(req.userId!, {
       totalRevenue: parseFloat(revenueData.total_revenue || 0),
       currentMonth: parseFloat(revenueData.current_month || 0),
       previousMonth: parseFloat(revenueData.previous_month || 0),
@@ -202,8 +207,9 @@ aiRouter.get('/financial-insights', async (req: AuthRequest, res: Response) => {
 // Czech tax advisor chat
 aiRouter.post('/tax-advisor', async (req: AuthRequest, res: Response) => {
   try {
-    if (!isPerplexityConfigured()) {
-      return res.status(503).json({ error: 'AI features not configured' });
+    const configured = await isPerplexityConfigured(req.userId!);
+    if (!configured) {
+      return res.status(503).json({ error: 'AI features not configured. Please add your Perplexity API key in Settings.' });
     }
 
     const { question } = req.body;
@@ -216,7 +222,7 @@ aiRouter.post('/tax-advisor', async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Question is too long (max 500 characters)' });
     }
 
-    const response = await getCzechTaxAdvice(question);
+    const response = await getCzechTaxAdvice(req.userId!, question);
     res.json(response);
   } catch (error) {
     console.error('Tax advisor error:', error);

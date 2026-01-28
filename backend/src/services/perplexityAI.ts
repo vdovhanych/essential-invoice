@@ -1,14 +1,30 @@
 import dotenv from 'dotenv';
+import { query } from '../db/init.js';
 
 dotenv.config();
 
 const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
 
 /**
- * Get the Perplexity API key from environment
+ * Get the Perplexity API key for a user from settings
+ * @param userId - User ID to get API key for
  */
-function getApiKey(): string | undefined {
-  return process.env.PERPLEXITY_API_KEY;
+async function getUserApiKey(userId: string): Promise<string | null> {
+  try {
+    const result = await query(
+      'SELECT perplexity_api_key FROM settings WHERE user_id = $1',
+      [userId]
+    );
+    
+    if (result.rows.length === 0 || !result.rows[0].perplexity_api_key) {
+      return null;
+    }
+    
+    return result.rows[0].perplexity_api_key;
+  } catch (error) {
+    console.error('Error getting Perplexity API key:', error);
+    return null;
+  }
 }
 
 export interface PerplexityMessage {
@@ -38,17 +54,18 @@ export interface PerplexityResponse {
 
 /**
  * Call Perplexity AI API with messages
+ * @param apiKey - Perplexity API key
  * @param messages - Array of messages for the conversation
  * @param model - Model to use (default: llama-3.1-sonar-small-128k-online for web search)
  * @param temperature - Temperature for response randomness (default: 0.2 for more focused responses)
  * @returns Perplexity API response
  */
 export async function callPerplexity(
+  apiKey: string,
   messages: PerplexityMessage[],
   model: string = 'llama-3.1-sonar-small-128k-online',
   temperature: number = 0.2
 ): Promise<PerplexityResponse> {
-  const apiKey = getApiKey();
   if (!apiKey) {
     throw new Error('PERPLEXITY_API_KEY is not configured');
   }
@@ -88,8 +105,18 @@ export function extractResponseText(response: PerplexityResponse): string {
 /**
  * Categorize invoice items using AI
  * Returns suggested categories for invoice line items
+ * @param userId - User ID to get API key for
+ * @param items - Invoice items to categorize
  */
-export async function categorizeInvoiceItems(items: Array<{ description: string; total: number }>): Promise<Array<{ description: string; category: string; confidence: number }>> {
+export async function categorizeInvoiceItems(
+  userId: string,
+  items: Array<{ description: string; total: number }>
+): Promise<Array<{ description: string; category: string; confidence: number }>> {
+  const apiKey = await getUserApiKey(userId);
+  if (!apiKey) {
+    throw new Error('Perplexity API key not configured. Please add your API key in Settings.');
+  }
+
   const itemsList = items.map((item, idx) => `${idx + 1}. ${item.description} (${item.total} CZK)`).join('\n');
   
   const messages: PerplexityMessage[] = [
@@ -103,7 +130,7 @@ export async function categorizeInvoiceItems(items: Array<{ description: string;
     },
   ];
 
-  const response = await callPerplexity(messages, 'llama-3.1-sonar-small-128k-chat', 0.1);
+  const response = await callPerplexity(apiKey, messages, 'llama-3.1-sonar-small-128k-chat', 0.1);
   const text = extractResponseText(response);
   
   // Extract JSON from response
@@ -118,11 +145,20 @@ export async function categorizeInvoiceItems(items: Array<{ description: string;
 /**
  * Match a payment to invoices using AI
  * Analyzes payment details and suggests the best matching invoice
+ * @param userId - User ID to get API key for
+ * @param payment - Payment details
+ * @param invoices - List of potential matching invoices
  */
 export async function matchPaymentToInvoice(
+  userId: string,
   payment: { amount: number; senderName?: string; message?: string; variableSymbol?: string; transactionDate: Date },
   invoices: Array<{ id: string; invoiceNumber: string; clientName: string; total: number; dueDate: Date; issueDate: Date }>
 ): Promise<{ invoiceId: string; confidence: number; reason: string } | null> {
+  const apiKey = await getUserApiKey(userId);
+  if (!apiKey) {
+    throw new Error('Perplexity API key not configured. Please add your API key in Settings.');
+  }
+
   const invoicesList = invoices.map(inv => 
     `ID: ${inv.id}, Number: ${inv.invoiceNumber}, Client: ${inv.clientName}, Amount: ${inv.total} CZK, Due: ${inv.dueDate.toISOString().split('T')[0]}`
   ).join('\n');
@@ -146,7 +182,7 @@ export async function matchPaymentToInvoice(
     },
   ];
 
-  const response = await callPerplexity(messages, 'llama-3.1-sonar-small-128k-chat', 0.1);
+  const response = await callPerplexity(apiKey, messages, 'llama-3.1-sonar-small-128k-chat', 0.1);
   const text = extractResponseText(response);
   
   // Handle null response
@@ -166,14 +202,24 @@ export async function matchPaymentToInvoice(
 /**
  * Get financial insights from invoice data
  * Analyzes revenue trends and provides business insights
+ * @param userId - User ID to get API key for
+ * @param data - Financial data to analyze
  */
-export async function getFinancialInsights(data: {
-  totalRevenue: number;
-  currentMonth: number;
-  previousMonth: number;
-  topClients: Array<{ name: string; revenue: number }>;
-  currency: string;
-}): Promise<string> {
+export async function getFinancialInsights(
+  userId: string,
+  data: {
+    totalRevenue: number;
+    currentMonth: number;
+    previousMonth: number;
+    topClients: Array<{ name: string; revenue: number }>;
+    currency: string;
+  }
+): Promise<string> {
+  const apiKey = await getUserApiKey(userId);
+  if (!apiKey) {
+    throw new Error('Perplexity API key not configured. Please add your API key in Settings.');
+  }
+
   const messages: PerplexityMessage[] = [
     {
       role: 'system',
@@ -185,15 +231,25 @@ export async function getFinancialInsights(data: {
     },
   ];
 
-  const response = await callPerplexity(messages, 'llama-3.1-sonar-small-128k-chat', 0.3);
+  const response = await callPerplexity(apiKey, messages, 'llama-3.1-sonar-small-128k-chat', 0.3);
   return extractResponseText(response);
 }
 
 /**
  * Czech tax and compliance advisor
  * Answers tax-related questions for Czech freelancers using web search
+ * @param userId - User ID to get API key for
+ * @param question - Tax question to answer
  */
-export async function getCzechTaxAdvice(question: string): Promise<{ answer: string; sources?: string[] }> {
+export async function getCzechTaxAdvice(
+  userId: string,
+  question: string
+): Promise<{ answer: string; sources?: string[] }> {
+  const apiKey = await getUserApiKey(userId);
+  if (!apiKey) {
+    throw new Error('Perplexity API key not configured. Please add your API key in Settings.');
+  }
+
   const messages: PerplexityMessage[] = [
     {
       role: 'system',
@@ -206,15 +262,17 @@ export async function getCzechTaxAdvice(question: string): Promise<{ answer: str
   ];
 
   // Use online model for web search capability
-  const response = await callPerplexity(messages, 'llama-3.1-sonar-small-128k-online', 0.2);
+  const response = await callPerplexity(apiKey, messages, 'llama-3.1-sonar-small-128k-online', 0.2);
   const answer = extractResponseText(response);
   
   return { answer };
 }
 
 /**
- * Check if Perplexity API is configured
+ * Check if Perplexity API is configured for a user
+ * @param userId - User ID to check
  */
-export function isPerplexityConfigured(): boolean {
-  return !!getApiKey();
+export async function isPerplexityConfigured(userId: string): Promise<boolean> {
+  const apiKey = await getUserApiKey(userId);
+  return !!apiKey;
 }

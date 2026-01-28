@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
-import { Mail, Server, AlertCircle, CheckCircle, Eye, EyeOff, Calculator, Landmark } from 'lucide-react';
+import { Mail, Server, AlertCircle, CheckCircle, Eye, EyeOff, Calculator, Landmark, Sparkles } from 'lucide-react';
 
 interface Settings {
   smtpHost: string | null;
@@ -26,6 +26,7 @@ interface Settings {
   pausalniDanEnabled: boolean;
   pausalniDanTier: number;
   pausalniDanLimit: number;
+  perplexityApiKeySet: boolean;
 }
 
 export default function Settings() {
@@ -34,7 +35,7 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<'smtp' | 'imap' | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [showPasswords, setShowPasswords] = useState({ smtp: false, imap: false });
+  const [showPasswords, setShowPasswords] = useState({ smtp: false, imap: false, perplexity: false });
 
   const [formData, setFormData] = useState({
     smtpHost: '',
@@ -59,6 +60,7 @@ export default function Settings() {
     pausalniDanEnabled: false,
     pausalniDanTier: 1,
     pausalniDanLimit: 1000000,
+    perplexityApiKey: '',
   });
 
   useEffect(() => {
@@ -92,6 +94,7 @@ export default function Settings() {
         pausalniDanEnabled: result.pausalniDanEnabled ?? false,
         pausalniDanTier: result.pausalniDanTier ?? 1,
         pausalniDanLimit: result.pausalniDanLimit ?? 1000000,
+        perplexityApiKey: '',
       });
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -373,6 +376,52 @@ export default function Settings() {
             >
               {testing === 'imap' ? 'Testuji...' : 'Otestovat připojení'}
             </button>
+          </div>
+        </div>
+
+        {/* AI Features Settings */}
+        <div className="card">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Sparkles className="h-5 w-5 text-purple-600" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">AI funkce (Perplexity)</h2>
+          </div>
+
+          <p className="text-sm text-gray-500 mb-4">
+            Aktivujte AI asistenta pro český daňový poradenství, inteligentní párování plateb a další funkce.
+          </p>
+
+          <div>
+            <label className="label">Perplexity API klíč {settings?.perplexityApiKeySet && '(nastaveno)'}</label>
+            <div className="relative">
+              <input
+                type={showPasswords.perplexity ? 'text' : 'password'}
+                name="perplexityApiKey"
+                value={formData.perplexityApiKey}
+                onChange={handleChange}
+                className="input pr-10"
+                placeholder={settings?.perplexityApiKeySet ? '••••••••' : 'pplx-xxxxxxxxxxxxxxxxxxxx'}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPasswords(p => ({ ...p, perplexity: !p.perplexity }))}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+              >
+                {showPasswords.perplexity ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Získejte API klíč na{' '}
+              <a 
+                href="https://www.perplexity.ai/settings/api" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                perplexity.ai/settings/api
+              </a>
+            </p>
           </div>
         </div>
 

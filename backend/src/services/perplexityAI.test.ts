@@ -8,36 +8,61 @@ import {
   getCzechTaxAdvice,
   isPerplexityConfigured 
 } from './perplexityAI';
+import * as dbInit from '../db/init.js';
 
 // Mock fetch
 global.fetch = vi.fn();
 
+// Mock database query
+vi.mock('../db/init.js', () => ({
+  query: vi.fn(),
+}));
+
+const mockQuery = vi.mocked(dbInit.query);
+
 describe('Perplexity AI Service', () => {
+  const testUserId = 'test-user-id';
+
   beforeEach(() => {
     vi.clearAllMocks();
-    // Set a default test API key for tests that need it
-    process.env.PERPLEXITY_API_KEY = 'test-key';
+    // Mock API key query to return test key
+    mockQuery.mockResolvedValue({
+      rows: [{ perplexity_api_key: 'test-key' }],
+      rowCount: 1,
+      command: 'SELECT',
+      oid: 0,
+      fields: [],
+    });
   });
 
   describe('isPerplexityConfigured', () => {
-    it('should return true if API key is configured', () => {
-      // This depends on environment variable, so we test the function exists
-      expect(typeof isPerplexityConfigured).toBe('function');
+    it('should return true if API key is configured', async () => {
+      const result = await isPerplexityConfigured(testUserId);
+      expect(result).toBe(true);
+      expect(mockQuery).toHaveBeenCalledWith(
+        'SELECT perplexity_api_key FROM settings WHERE user_id = $1',
+        [testUserId]
+      );
+    });
+
+    it('should return false if API key is not configured', async () => {
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ perplexity_api_key: null }],
+        rowCount: 1,
+        command: 'SELECT',
+        oid: 0,
+        fields: [],
+      });
+      const result = await isPerplexityConfigured(testUserId);
+      expect(result).toBe(false);
     });
   });
 
   describe('callPerplexity', () => {
     it('should throw error if API key is not configured', async () => {
-      // Save original env
-      const originalKey = process.env.PERPLEXITY_API_KEY;
-      delete process.env.PERPLEXITY_API_KEY;
-
-      await expect(callPerplexity([{ role: 'user', content: 'test' }])).rejects.toThrow(
+      await expect(callPerplexity('', [{ role: 'user', content: 'test' }])).rejects.toThrow(
         'PERPLEXITY_API_KEY is not configured'
       );
-
-      // Restore env
-      if (originalKey) process.env.PERPLEXITY_API_KEY = originalKey;
     });
 
     it('should call Perplexity API with correct parameters', async () => {
@@ -64,7 +89,7 @@ describe('Perplexity AI Service', () => {
       });
 
       const messages = [{ role: 'user' as const, content: 'Hello' }];
-      const result = await callPerplexity(messages);
+      const result = await callPerplexity('test-key', messages);
 
       expect(fetch).toHaveBeenCalledWith(
         'https://api.perplexity.ai/chat/completions',
@@ -86,7 +111,7 @@ describe('Perplexity AI Service', () => {
       });
 
       await expect(
-        callPerplexity([{ role: 'user', content: 'test' }])
+        callPerplexity('test-key', [{ role: 'user', content: 'test' }])
       ).rejects.toThrow('Perplexity API error: 500');
     });
   });
@@ -158,7 +183,7 @@ describe('Perplexity AI Service', () => {
         { description: 'Logo design', total: 5000 },
       ];
 
-      const result = await categorizeInvoiceItems(items);
+      const result = await categorizeInvoiceItems(testUserId, items);
       expect(result).toHaveLength(2);
       expect(result[0]).toHaveProperty('category');
       expect(result[0]).toHaveProperty('confidence');
@@ -212,7 +237,7 @@ describe('Perplexity AI Service', () => {
         },
       ];
 
-      const result = await matchPaymentToInvoice(payment, invoices);
+      const result = await matchPaymentToInvoice(testUserId, payment, invoices);
       expect(result).toHaveProperty('invoiceId', 'inv-123');
       expect(result).toHaveProperty('confidence');
       expect(result).toHaveProperty('reason');
@@ -242,6 +267,7 @@ describe('Perplexity AI Service', () => {
       });
 
       const result = await matchPaymentToInvoice(
+        testUserId,
         { amount: 1000, transactionDate: new Date() },
         []
       );
@@ -281,7 +307,7 @@ describe('Perplexity AI Service', () => {
         currency: 'CZK',
       };
 
-      const result = await getFinancialInsights(data);
+      const result = await getFinancialInsights(testUserId, data);
       expect(typeof result).toBe('string');
       expect(result.length).toBeGreaterThan(0);
     });
@@ -311,7 +337,7 @@ describe('Perplexity AI Service', () => {
         json: async () => mockResponse,
       });
 
-      const result = await getCzechTaxAdvice('When is VAT filing deadline?');
+      const result = await getCzechTaxAdvice(testUserId, 'When is VAT filing deadline?');
       expect(result).toHaveProperty('answer');
       expect(typeof result.answer).toBe('string');
     });
