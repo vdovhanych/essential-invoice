@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
-import { CreditCard, Search, Link2, Unlink, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { CreditCard, Search, Link2, Unlink, AlertCircle, CheckCircle, X, RefreshCw } from 'lucide-react';
 
 interface Payment {
   id: string;
@@ -35,6 +35,7 @@ interface PotentialMatch {
 export default function Payments() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [checkingEmails, setCheckingEmails] = useState(false);
   const [filter, setFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
   const [search, setSearch] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -107,6 +108,28 @@ export default function Payments() {
     }
   }
 
+  async function checkForNewPayments() {
+    setCheckingEmails(true);
+    setMessage(null);
+
+    try {
+      await api.post('/payments/check-emails');
+      setMessage({ 
+        type: 'success', 
+        text: 'Kontrola emailů dokončena. Pokud byly nalezeny nové platby, zobrazí se v seznamu.' 
+      });
+      loadPayments(); // Reload payments to show new ones
+    } catch (err: unknown) {
+      const error = err as Error;
+      setMessage({ 
+        type: 'error', 
+        text: error.message || 'Nepodařilo se zkontrolovat emaily. Zkontrolujte nastavení IMAP.' 
+      });
+    } finally {
+      setCheckingEmails(false);
+    }
+  }
+
   const filteredPayments = payments.filter(payment =>
     (payment.variableSymbol?.includes(search) ||
      payment.senderName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -125,6 +148,15 @@ export default function Payments() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Platby z banky</h1>
+        <button
+          onClick={checkForNewPayments}
+          disabled={checkingEmails}
+          className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          title="Zkontrolovat nové platby z emailu"
+        >
+          <RefreshCw className={`w-5 h-5 ${checkingEmails ? 'animate-spin' : ''}`} />
+          <span>{checkingEmails ? 'Kontroluji...' : 'Zkontrolovat emaily'}</span>
+        </button>
       </div>
 
       {/* Message */}
