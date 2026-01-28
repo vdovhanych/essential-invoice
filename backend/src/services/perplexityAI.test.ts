@@ -15,6 +15,8 @@ global.fetch = vi.fn();
 describe('Perplexity AI Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Set a default test API key for tests that need it
+    process.env.PERPLEXITY_API_KEY = 'test-key';
   });
 
   describe('isPerplexityConfigured', () => {
@@ -39,9 +41,6 @@ describe('Perplexity AI Service', () => {
     });
 
     it('should call Perplexity API with correct parameters', async () => {
-      // Set mock API key
-      process.env.PERPLEXITY_API_KEY = 'test-key';
-
       const mockResponse = {
         id: 'test-id',
         model: 'test-model',
@@ -80,8 +79,6 @@ describe('Perplexity AI Service', () => {
     });
 
     it('should throw error on API failure', async () => {
-      process.env.PERPLEXITY_API_KEY = 'test-key';
-
       (global.fetch as any).mockResolvedValueOnce({
         ok: false,
         status: 500,
@@ -131,8 +128,6 @@ describe('Perplexity AI Service', () => {
 
   describe('categorizeInvoiceItems', () => {
     it('should return categorized items', async () => {
-      process.env.PERPLEXITY_API_KEY = 'test-key';
-
       const mockResponse = {
         id: 'test',
         model: 'test',
@@ -172,8 +167,6 @@ describe('Perplexity AI Service', () => {
 
   describe('matchPaymentToInvoice', () => {
     it('should return matching invoice', async () => {
-      process.env.PERPLEXITY_API_KEY = 'test-key';
-
       const mockResponse = {
         id: 'test',
         model: 'test',
@@ -226,8 +219,6 @@ describe('Perplexity AI Service', () => {
     });
 
     it('should return null if no match', async () => {
-      process.env.PERPLEXITY_API_KEY = 'test-key';
-
       const mockResponse = {
         id: 'test',
         model: 'test',
@@ -260,8 +251,6 @@ describe('Perplexity AI Service', () => {
 
   describe('getFinancialInsights', () => {
     it('should return insights text', async () => {
-      process.env.PERPLEXITY_API_KEY = 'test-key';
-
       const mockResponse = {
         id: 'test',
         model: 'test',
@@ -300,8 +289,6 @@ describe('Perplexity AI Service', () => {
 
   describe('getCzechTaxAdvice', () => {
     it('should return tax advice', async () => {
-      process.env.PERPLEXITY_API_KEY = 'test-key';
-
       const mockResponse = {
         id: 'test',
         model: 'test',

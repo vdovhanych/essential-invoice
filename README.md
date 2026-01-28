@@ -4,6 +4,11 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 
 ## Features
 
+- **AI-Powered Features** (New! 🤖):
+  - Smart payment matching with Perplexity AI
+  - Invoice categorization and insights
+  - Czech tax & accounting advisor chatbot
+  - Real-time financial insights
 - **Invoice Management**: Create, edit, delete, and send invoices with automatic numbering
 - **Client Management**: Store and manage client contacts with ARES API integration for Czech companies
 - **PDF Generation**: Professional Czech invoice templates with QR payment codes (SPAYD format)
@@ -41,6 +46,10 @@ JWT_SECRET=your_secure_jwt_secret_here_min_32_chars
 
 # Required: Set database password
 DB_PASSWORD=your_secure_database_password
+
+# Optional: AI Features (Perplexity API)
+# Get your API key from https://www.perplexity.ai/settings/api
+# PERPLEXITY_API_KEY=pplx-your_key_here
 ```
 
 4. Start the application:
@@ -84,6 +93,17 @@ Configure bank notification receiving in Settings > Email (IMAP):
 - Port (typically 993 for TLS)
 - Username and password
 - Bank notification email filter (e.g., `noreply@airbank.cz`)
+
+### AI Features (Optional)
+
+To enable AI-powered features, add your Perplexity API key to `.env`:
+```bash
+PERPLEXITY_API_KEY=pplx-your_key_here
+```
+
+Get your API key from [https://www.perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
+
+See [AI_FEATURES.md](AI_FEATURES.md) for detailed documentation.
 
 ## Usage Guide
 

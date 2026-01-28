@@ -2,8 +2,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
 const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
+
+/**
+ * Get the Perplexity API key from environment
+ */
+function getApiKey(): string | undefined {
+  return process.env.PERPLEXITY_API_KEY;
+}
 
 export interface PerplexityMessage {
   role: 'system' | 'user' | 'assistant';
@@ -42,7 +48,8 @@ export async function callPerplexity(
   model: string = 'llama-3.1-sonar-small-128k-online',
   temperature: number = 0.2
 ): Promise<PerplexityResponse> {
-  if (!PERPLEXITY_API_KEY) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
     throw new Error('PERPLEXITY_API_KEY is not configured');
   }
 
@@ -50,7 +57,7 @@ export async function callPerplexity(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
+      'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model,
@@ -65,7 +72,7 @@ export async function callPerplexity(
     throw new Error(`Perplexity API error: ${response.status} - ${errorText}`);
   }
 
-  return await response.json();
+  return (await response.json()) as PerplexityResponse;
 }
 
 /**
@@ -209,5 +216,5 @@ export async function getCzechTaxAdvice(question: string): Promise<{ answer: str
  * Check if Perplexity API is configured
  */
 export function isPerplexityConfigured(): boolean {
-  return !!PERPLEXITY_API_KEY;
+  return !!getApiKey();
 }
