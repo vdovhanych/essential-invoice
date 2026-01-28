@@ -9,6 +9,7 @@ import { dashboardRouter } from './routes/dashboard.js';
 import { paymentRouter } from './routes/payments.js';
 import { settingsRouter } from './routes/settings.js';
 import { aresRouter } from './routes/ares.js';
+import { aiRouter } from './routes/ai.js';
 import { authenticateToken } from './middleware/auth.js';
 import { startEmailPolling } from './services/emailPoller.js';
 import { initializeDatabase } from './db/init.js';
@@ -48,6 +49,7 @@ app.use('/api/dashboard', authenticateToken, dashboardRouter);
 app.use('/api/payments', authenticateToken, paymentRouter);
 app.use('/api/settings', authenticateToken, settingsRouter);
 app.use('/api/ares', authenticateToken, aresRouter);
+app.use('/api/ai', authenticateToken, aiRouter);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
