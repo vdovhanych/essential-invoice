@@ -20,9 +20,7 @@ services:
 
   # Backend API
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/vdovhanych/essential-invoice/backend:${IMAGE_TAG:-latest}
     container_name: essential-invoice-backend
     restart: unless-stopped
     depends_on:
@@ -44,11 +42,7 @@ services:
 
   # Frontend
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:-/api}
+    image: ghcr.io/vdovhanych/essential-invoice/frontend:${IMAGE_TAG:-latest}
     container_name: essential-invoice-frontend
     restart: unless-stopped
     depends_on:
