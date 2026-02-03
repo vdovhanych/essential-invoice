@@ -36,7 +36,8 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
         calculatorEnabled: false,
         pausalniDanEnabled: false,
         pausalniDanTier: 1,
-        pausalniDanLimit: 1000000
+        pausalniDanLimit: 1000000,
+        perplexityApiKeySet: false
       });
     }
 
@@ -64,7 +65,8 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
       calculatorEnabled: settings.calculator_enabled ?? false,
       pausalniDanEnabled: settings.pausalni_dan_enabled ?? false,
       pausalniDanTier: settings.pausalni_dan_tier ?? 1,
-      pausalniDanLimit: settings.pausalni_dan_limit ?? 1000000
+      pausalniDanLimit: settings.pausalni_dan_limit ?? 1000000,
+      perplexityApiKeySet: !!settings.perplexity_api_key
     });
   } catch (error) {
     console.error('Get settings error:', error);
@@ -82,7 +84,8 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     defaultVatRate, defaultPaymentTerms,
     emailTemplate,
     calculatorEnabled,
-    pausalniDanEnabled, pausalniDanTier, pausalniDanLimit
+    pausalniDanEnabled, pausalniDanTier, pausalniDanLimit,
+    perplexityApiKey
   } = req.body;
 
   try {
@@ -121,6 +124,7 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     addUpdate('pausalni_dan_enabled', pausalniDanEnabled);
     addUpdate('pausalni_dan_tier', pausalniDanTier);
     addUpdate('pausalni_dan_limit', pausalniDanLimit);
+    if (perplexityApiKey) addUpdate('perplexity_api_key', perplexityApiKey); // Only update if provided
 
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No settings to update' });

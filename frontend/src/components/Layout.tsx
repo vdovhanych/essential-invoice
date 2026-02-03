@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AIAssistant from './AIAssistant';
 import { api } from '../utils/api';
 import {
   LayoutDashboard,
@@ -176,6 +177,9 @@ export default function Layout() {
         <main className="p-4 lg:p-6">
           <Outlet />
         </main>
+
+        {/* AI Assistant */}
+        <AIAssistant />
       </div>
     </div>
   );

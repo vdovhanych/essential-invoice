@@ -9,6 +9,7 @@ import { dashboardRouter } from './routes/dashboard.js';
 import { paymentRouter } from './routes/payments.js';
 import { settingsRouter } from './routes/settings.js';
 import { aresRouter } from './routes/ares.js';
+import { aiRouter } from './routes/ai.js';
 import { authenticateToken } from './middleware/auth.js';
 import { startEmailPolling } from './services/emailPoller.js';
 import { initializeDatabase } from './db/init.js';
@@ -26,8 +27,22 @@ const limiter = rateLimit({
 });
 
 // Middleware
+// CORS configuration - support multiple origins for development
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const allowedOrigins = corsOrigin.split(',').map(origin => origin.trim());
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, or Postman)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin is in the allowed list
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
@@ -48,6 +63,7 @@ app.use('/api/dashboard', authenticateToken, dashboardRouter);
 app.use('/api/payments', authenticateToken, paymentRouter);
 app.use('/api/settings', authenticateToken, settingsRouter);
 app.use('/api/ares', authenticateToken, aresRouter);
+app.use('/api/ai', authenticateToken, aiRouter);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -15,6 +15,39 @@ interface UserSettings {
   bankNotificationEmail: string | null;
 }
 
+async function getUserSettings(userId: string): Promise<UserSettings | null> {
+  const result = await query(`
+    SELECT
+      user_id,
+      imap_host,
+      imap_port,
+      imap_user,
+      imap_password,
+      imap_tls,
+      bank_notification_email
+    FROM settings
+    WHERE user_id = $1
+      AND imap_host IS NOT NULL
+      AND imap_user IS NOT NULL
+      AND imap_password IS NOT NULL
+  `, [userId]);
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  const row = result.rows[0];
+  return {
+    userId: row.user_id,
+    imapHost: row.imap_host,
+    imapPort: row.imap_port,
+    imapUser: row.imap_user,
+    imapPassword: row.imap_password,
+    imapTls: row.imap_tls,
+    bankNotificationEmail: row.bank_notification_email
+  };
+}
+
 async function getAllUserSettings(): Promise<UserSettings[]> {
   const result = await query(`
     SELECT

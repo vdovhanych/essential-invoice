@@ -4,6 +4,11 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 
 ## Features
 
+- **AI-Powered Features** (New! 🤖):
+  - Smart payment matching with Perplexity AI
+  - Invoice categorization and insights
+  - Czech tax & accounting advisor chatbot
+  - Real-time financial insights
 - **Invoice Management**: Create, edit, delete, and send invoices with automatic numbering
 - **Client Management**: Store and manage client contacts with ARES API integration for Czech companies
 - **PDF Generation**: Professional Czech invoice templates with QR payment codes (SPAYD format)
@@ -41,6 +46,10 @@ JWT_SECRET=your_secure_jwt_secret_here_min_32_chars
 
 # Required: Set database password
 DB_PASSWORD=your_secure_database_password
+
+# Note: AI features are now configured per-user in Settings page
+# Each user can add their own Perplexity API key in Settings > AI Features
+# No need to set PERPLEXITY_API_KEY here anymore
 ```
 
 4. Start the application:
@@ -64,7 +73,7 @@ docker compose up -d
 | `DB_USER` | `postgres` | Database user |
 | `DB_PASSWORD` | `postgres` | Database password |
 | `JWT_SECRET` | - | JWT signing secret (required) |
-| `CORS_ORIGIN` | `http://localhost` | Allowed CORS origin |
+| `CORS_ORIGIN` | `http://localhost:5173` (dev)<br/>`http://localhost:8080` (Docker) | Allowed CORS origins (comma-separated) |
 | `BACKEND_PORT` | `3001` | Backend API port |
 | `FRONTEND_PORT` | `80` | Frontend web port |
 | `EMAIL_POLLING_INTERVAL` | `300000` | Email check interval (ms) |
@@ -84,6 +93,24 @@ Configure bank notification receiving in Settings > Email (IMAP):
 - Port (typically 993 for TLS)
 - Username and password
 - Bank notification email filter (e.g., `noreply@airbank.cz`)
+
+### AI Features (Optional)
+
+To enable AI-powered features, each user needs to configure their own Perplexity API key:
+
+1. Get an API key from [https://www.perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
+2. Log in to Essential Invoice
+3. Go to Settings (Nastavení)
+4. Find the "AI funkce (Perplexity)" section
+5. Enter your API key and save
+
+**Benefits of per-user configuration:**
+- Each user controls their own AI quota
+- Better privacy and security
+- Individual cost tracking
+- Users can opt-in as needed
+
+See [AI_FEATURES.md](AI_FEATURES.md) for detailed documentation.
 
 ## Usage Guide
 
@@ -185,6 +212,9 @@ Payments can be matched in two ways:
 
 ### Local Development Setup
 
+**Important:** For local development, the frontend runs on port 5173 (Vite default).  
+Make sure your `.env` file has: `CORS_ORIGIN=http://localhost:5173`
+
 1. Start database:
 ```bash
 docker compose up -d db
@@ -195,7 +225,7 @@ docker compose up -d db
 cd backend
 pnpm install
 cp ../.env.example .env
-# Edit .env with local settings
+# Edit .env - ensure CORS_ORIGIN=http://localhost:5173 for local dev
 pnpm run dev
 ```
 

@@ -190,6 +190,14 @@ export async function initializeDatabase() {
         END IF;
       END $$;
 
+      -- Add perplexity_api_key column if it doesn't exist (migration for existing databases)
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='perplexity_api_key') THEN
+          ALTER TABLE settings ADD COLUMN perplexity_api_key VARCHAR(255);
+        END IF;
+      END $$;
+
       -- Create indexes
       CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
       CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);

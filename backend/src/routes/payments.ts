@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import { query } from '../db/init.js';
 import { AuthRequest } from '../middleware/auth.js';
+import { triggerPoll } from '../services/emailPoller.js';
 
 export const paymentRouter: ReturnType<typeof Router> = Router();
 
@@ -255,5 +256,27 @@ paymentRouter.delete('/:id', async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Delete payment error:', error);
     res.status(500).json({ error: 'Failed to delete payment' });
+  }
+});
+
+// Check for new payments from email
+paymentRouter.post('/check-emails', async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await triggerPoll(req.userId!);
+    
+    if (result.error) {
+      return res.status(400).json({ 
+        error: result.error,
+        processed: result.processed 
+      });
+    }
+
+    res.json({ 
+      message: 'Email check completed',
+      processed: result.processed 
+    });
+  } catch (error) {
+    console.error('Check emails error:', error);
+    res.status(500).json({ error: 'Failed to check emails' });
   }
 });
