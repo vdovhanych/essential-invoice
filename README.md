@@ -208,6 +208,11 @@ Payments can be matched in two ways:
 - `POST /api/settings/test-smtp` - Test SMTP connection
 - `POST /api/settings/test-imap` - Test IMAP connection
 
+### AI (Perplexity)
+- `GET /api/ai/status` - Check AI feature availability
+- `POST /api/ai/match-payment` - AI-powered payment matching
+- `POST /api/ai/tax-advisor` - Czech tax advisor chat
+
 ## Development
 
 ### Local Development Setup
@@ -269,26 +274,35 @@ pnpm test:coverage     # With coverage report
 essential-invoice/
 ├── backend/
 │   ├── src/
-│   │   ├── db/           # Database initialization
-│   │   ├── middleware/   # Auth middleware
-│   │   ├── routes/       # API routes
-│   │   └── services/     # Business logic
-│   │       ├── bankParsers/  # Bank email parsers
-│   │       ├── emailPoller.ts
-│   │       ├── emailSender.ts
-│   │       └── pdfGenerator.ts
+│   │   ├── db/              # Database init (init.ts) and migrations (migrate.ts)
+│   │   ├── middleware/      # Auth middleware (auth.ts)
+│   │   ├── routes/          # API routes (auth, clients, invoices, payments, settings, ares, dashboard, ai)
+│   │   ├── services/        # Business logic
+│   │   │   ├── bankParsers/ # Bank email parsers (Air Bank)
+│   │   │   ├── emailPoller.ts
+│   │   │   ├── emailSender.ts
+│   │   │   ├── pdfGenerator.ts
+│   │   │   └── perplexityAI.ts
+│   │   ├── utils/           # Validation utilities (IČO, IBAN, SPAYD)
+│   │   └── index.ts         # Express app entry point
+│   ├── uploads/             # File uploads (logos)
 │   ├── Dockerfile
 │   └── package.json
 ├── frontend/
 │   ├── src/
-│   │   ├── components/   # Shared components
-│   │   ├── context/      # React context
-│   │   ├── pages/        # Page components
-│   │   └── utils/        # Utilities
+│   │   ├── components/      # Layout, AIAssistant
+│   │   ├── context/         # AuthContext, AIContext
+│   │   ├── pages/           # All page components
+│   │   ├── utils/           # API client, formatting helpers
+│   │   └── test/            # Test setup (Vitest/jsdom)
 │   ├── Dockerfile
+│   ├── nginx.conf           # Production Nginx config
 │   └── package.json
-├── docker compose.yml
+├── .github/workflows/       # CI/CD (Docker build)
+├── docker-compose.yml
+├── docker-compose.production.yml
 ├── .env.example
+├── CLAUDE.md
 └── README.md
 ```
 
