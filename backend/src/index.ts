@@ -10,6 +10,7 @@ import { paymentRouter } from './routes/payments.js';
 import { settingsRouter } from './routes/settings.js';
 import { aresRouter } from './routes/ares.js';
 import { aiRouter } from './routes/ai.js';
+import { expenseRouter } from './routes/expenses.js';
 import { authenticateToken } from './middleware/auth.js';
 import { startEmailPolling } from './services/emailPoller.js';
 import { initializeDatabase } from './db/init.js';
@@ -18,6 +19,9 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Trust first proxy (needed when running behind Docker/nginx/reverse proxy)
+app.set('trust proxy', 1);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -45,7 +49,7 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(limiter);
 
 // Health check
@@ -64,6 +68,7 @@ app.use('/api/payments', authenticateToken, paymentRouter);
 app.use('/api/settings', authenticateToken, settingsRouter);
 app.use('/api/ares', authenticateToken, aresRouter);
 app.use('/api/ai', authenticateToken, aiRouter);
+app.use('/api/expenses', authenticateToken, expenseRouter);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

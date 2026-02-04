@@ -41,3 +41,19 @@ export function getStatusColor(status: string): string {
   };
   return colors[status] || 'badge-draft';
 }
+
+export function getExpenseStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    unpaid: 'Nezaplaceno',
+    paid: 'Zaplaceno',
+  };
+  return labels[status] || status;
+}
+
+export function getExpenseStatusColor(status: string): string {
+  const colors: Record<string, string> = {
+    unpaid: 'badge-overdue',
+    paid: 'badge-paid',
+  };
+  return colors[status] || 'badge-draft';
+}

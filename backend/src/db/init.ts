@@ -198,6 +198,32 @@ export async function initializeDatabase() {
         END IF;
       END $$;
 
+      -- Expenses table (received invoices / naklady)
+      CREATE TABLE IF NOT EXISTS expenses (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+        expense_number VARCHAR(50) UNIQUE NOT NULL,
+        supplier_invoice_number VARCHAR(100),
+        status VARCHAR(20) DEFAULT 'unpaid' CHECK (status IN ('unpaid', 'paid')),
+        currency VARCHAR(3) DEFAULT 'CZK' CHECK (currency IN ('CZK', 'EUR')),
+        issue_date DATE NOT NULL,
+        due_date DATE NOT NULL,
+        delivery_date DATE,
+        amount DECIMAL(12, 2) NOT NULL DEFAULT 0,
+        vat_rate DECIMAL(5, 2) DEFAULT 21,
+        vat_amount DECIMAL(12, 2) NOT NULL DEFAULT 0,
+        total DECIMAL(12, 2) NOT NULL DEFAULT 0,
+        description TEXT,
+        notes TEXT,
+        file_data TEXT,
+        file_name VARCHAR(255),
+        file_mime_type VARCHAR(100),
+        paid_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- Create indexes
       CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
       CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);
@@ -208,6 +234,9 @@ export async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments(user_id);
       CREATE INDEX IF NOT EXISTS idx_payments_variable_symbol ON payments(variable_symbol);
       CREATE INDEX IF NOT EXISTS idx_email_logs_invoice_id ON email_logs(invoice_id);
+      CREATE INDEX IF NOT EXISTS idx_expenses_user_id ON expenses(user_id);
+      CREATE INDEX IF NOT EXISTS idx_expenses_client_id ON expenses(client_id);
+      CREATE INDEX IF NOT EXISTS idx_expenses_status ON expenses(status);
     `);
 
     console.log('Database initialized successfully');

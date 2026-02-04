@@ -14,12 +14,14 @@ import {
   X,
   User,
   ChevronDown,
-  Calculator
+  Calculator,
+  Receipt
 } from 'lucide-react';
 
 const baseNavItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/invoices', icon: FileText, label: 'Faktury' },
+  { path: '/expenses', icon: Receipt, label: 'Naklady' },
   { path: '/clients', icon: Users, label: 'Klienti' },
   { path: '/payments', icon: CreditCard, label: 'Platby' },
 ];
