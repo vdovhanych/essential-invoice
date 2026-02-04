@@ -4,7 +4,9 @@ import {
   formatDate,
   formatDateTime,
   getStatusLabel,
-  getStatusColor
+  getStatusColor,
+  getExpenseStatusLabel,
+  getExpenseStatusColor
 } from './format';
 
 describe('Format Utilities', () => {
@@ -129,6 +131,34 @@ describe('Format Utilities', () => {
 
     it('should return default badge class for unknown status', () => {
       expect(getStatusColor('unknown')).toBe('badge-draft');
+    });
+  });
+
+  describe('getExpenseStatusLabel', () => {
+    it('should return Czech label for unpaid', () => {
+      expect(getExpenseStatusLabel('unpaid')).toBe('Nezaplaceno');
+    });
+
+    it('should return Czech label for paid', () => {
+      expect(getExpenseStatusLabel('paid')).toBe('Zaplaceno');
+    });
+
+    it('should return original status for unknown status', () => {
+      expect(getExpenseStatusLabel('unknown')).toBe('unknown');
+    });
+  });
+
+  describe('getExpenseStatusColor', () => {
+    it('should return badge class for unpaid', () => {
+      expect(getExpenseStatusColor('unpaid')).toBe('badge-overdue');
+    });
+
+    it('should return badge class for paid', () => {
+      expect(getExpenseStatusColor('paid')).toBe('badge-paid');
+    });
+
+    it('should return default badge class for unknown status', () => {
+      expect(getExpenseStatusColor('unknown')).toBe('badge-draft');
     });
   });
 });
