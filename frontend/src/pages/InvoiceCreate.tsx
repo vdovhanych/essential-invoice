@@ -176,7 +176,7 @@ export default function InvoiceCreate() {
   }
 
   const formatCurrency = (amount: number) => {
-    const symbol = formData.currency === 'CZK' ? 'Kc' : 'EUR';
+    const symbol = formData.currency === 'CZK' ? 'Kč' : 'EUR';
     return `${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${symbol}`;
   };
 

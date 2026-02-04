@@ -59,10 +59,10 @@ export default function Expenses() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Naklady</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Náklady</h1>
         <Link to="/expenses/new" className="btn btn-primary flex items-center space-x-2">
           <Plus className="h-4 w-4" />
-          <span>Novy naklad</span>
+          <span>Nový náklad</span>
         </Link>
       </div>
 
@@ -72,7 +72,7 @@ export default function Expenses() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Hledat naklady..."
+            placeholder="Hledat náklady..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input pl-10"
@@ -85,7 +85,7 @@ export default function Expenses() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="input w-auto"
           >
-            <option value="">Vsechny stavy</option>
+            <option value="">Všechny stavy</option>
             <option value="unpaid">Nezaplaceno</option>
             <option value="paid">Zaplaceno</option>
           </select>
@@ -99,12 +99,12 @@ export default function Expenses() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Cislo</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Číslo</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Dodavatel</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Cislo faktury</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Datum prijeti</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Číslo faktury</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Datum přijetí</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Splatnost</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500">Castka</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500">Částka</th>
                   <th className="text-center py-3 px-4 font-medium text-gray-500">Stav</th>
                 </tr>
               </thead>
@@ -152,10 +152,10 @@ export default function Expenses() {
         ) : (
           <div className="text-center py-12">
             <Receipt className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Zadne naklady nenalezeny</p>
+            <p className="text-gray-500">Žádné náklady nenalezeny</p>
             <Link to="/expenses/new" className="btn btn-primary mt-4 inline-flex items-center space-x-2">
               <Plus className="h-4 w-4" />
-              <span>Pridat prvni naklad</span>
+              <span>Přidat první náklad</span>
             </Link>
           </div>
         )}

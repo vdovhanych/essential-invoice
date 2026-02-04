@@ -198,7 +198,7 @@ export async function initializeDatabase() {
         END IF;
       END $$;
 
-      -- Expenses table (received invoices / naklady)
+      -- Expenses table (received invoices / náklady)
       CREATE TABLE IF NOT EXISTS expenses (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

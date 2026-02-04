@@ -83,12 +83,12 @@ export default function ExpenseCreate() {
 
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
-      setError('Povolene formaty: PDF, JPEG, PNG');
+      setError('Povolené formáty: PDF, JPEG, PNG');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setError('Maximalni velikost souboru je 5 MB');
+      setError('Maximální velikost souboru je 5 MB');
       return;
     }
 
@@ -122,7 +122,7 @@ export default function ExpenseCreate() {
     setError('');
 
     if (Number(formData.amount) <= 0) {
-      setError('Zadejte castku');
+      setError('Zadejte částku');
       return;
     }
 
@@ -154,7 +154,7 @@ export default function ExpenseCreate() {
       navigate('/expenses');
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Nepodarilo se ulozit naklad');
+      setError(error.message || 'Nepodařilo se uložit náklad');
     } finally {
       setSaving(false);
     }
@@ -169,7 +169,7 @@ export default function ExpenseCreate() {
   }
 
   const formatCurrencyLocal = (amount: number) => {
-    const symbol = formData.currency === 'CZK' ? 'Kc' : 'EUR';
+    const symbol = formData.currency === 'CZK' ? 'Kč' : 'EUR';
     return `${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${symbol}`;
   };
 
@@ -183,7 +183,7 @@ export default function ExpenseCreate() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-2xl font-bold text-gray-900">
-          {isEdit ? 'Upravit naklad' : 'Novy naklad'}
+          {isEdit ? 'Upravit náklad' : 'Nový náklad'}
         </h1>
       </div>
 
@@ -219,10 +219,10 @@ export default function ExpenseCreate() {
 
         {/* Expense details */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Udaje nakladu</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Údaje nákladu</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="supplierInvoiceNumber" className="label">Cislo faktury dodavatele</label>
+              <label htmlFor="supplierInvoiceNumber" className="label">Číslo faktury dodavatele</label>
               <input
                 type="text"
                 id="supplierInvoiceNumber"
@@ -235,7 +235,7 @@ export default function ExpenseCreate() {
               />
             </div>
             <div>
-              <label htmlFor="issueDate" className="label">Datum prijeti *</label>
+              <label htmlFor="issueDate" className="label">Datum přijetí *</label>
               <input
                 type="date"
                 id="issueDate"
@@ -270,7 +270,7 @@ export default function ExpenseCreate() {
               />
             </div>
             <div>
-              <label htmlFor="currency" className="label">Mena</label>
+              <label htmlFor="currency" className="label">Měna</label>
               <select
                 id="currency"
                 name="currency"
@@ -287,10 +287,10 @@ export default function ExpenseCreate() {
 
         {/* Amount */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Castka</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Částka</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="amount" className="label">Zaklad dane *</label>
+              <label htmlFor="amount" className="label">Základ daně *</label>
               <input
                 type="number"
                 id="amount"
@@ -322,7 +322,7 @@ export default function ExpenseCreate() {
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex flex-col items-end space-y-2">
               <div className="flex justify-between w-full max-w-xs">
-                <span className="text-gray-600">Zaklad dane:</span>
+                <span className="text-gray-600">Základ daně:</span>
                 <span className="font-medium">{formatCurrencyLocal(Number(formData.amount))}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs">
@@ -339,7 +339,7 @@ export default function ExpenseCreate() {
 
         {/* File attachment */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Priloha</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Příloha</h2>
           {fileName ? (
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-gray-700">{fileName}</span>
@@ -356,7 +356,7 @@ export default function ExpenseCreate() {
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
                 <Upload className="h-8 w-8 text-gray-400 mb-2" />
                 <p className="text-sm text-gray-500">
-                  Kliknete pro nahrani souboru (PDF, JPEG, PNG, max 5 MB)
+                  Klikněte pro nahrání souboru (PDF, JPEG, PNG, max 5 MB)
                 </p>
               </div>
               <input
@@ -379,16 +379,16 @@ export default function ExpenseCreate() {
             className="input"
             rows={2}
             maxLength={300}
-            placeholder="Za co je naklad..."
+            placeholder="Za co je náklad..."
           />
           <p className="text-sm text-gray-500 mt-1">
-            {formData.description.length}/300 znaku
+            {formData.description.length}/300 znaků
           </p>
         </div>
 
         {/* Notes */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznamky</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznámky</h2>
           <textarea
             name="notes"
             value={formData.notes}
@@ -396,10 +396,10 @@ export default function ExpenseCreate() {
             className="input"
             rows={2}
             maxLength={300}
-            placeholder="Doplnujici poznamky..."
+            placeholder="Doplňující poznámky..."
           />
           <p className="text-sm text-gray-500 mt-1">
-            {formData.notes.length}/300 znaku
+            {formData.notes.length}/300 znaků
           </p>
         </div>
 
@@ -410,14 +410,14 @@ export default function ExpenseCreate() {
             onClick={() => navigate('/expenses')}
             className="btn btn-secondary"
           >
-            Zrusit
+            Zrušit
           </button>
           <button
             type="submit"
             disabled={saving}
             className="btn btn-primary"
           >
-            {saving ? 'Ukladam...' : (isEdit ? 'Ulozit zmeny' : 'Vytvorit naklad')}
+            {saving ? 'Ukládám...' : (isEdit ? 'Uložit změny' : 'Vytvořit náklad')}
           </button>
         </div>
       </form>

@@ -66,30 +66,30 @@ export default function ExpenseDetail() {
   async function handleMarkPaid() {
     try {
       await api.post(`/expenses/${id}/mark-paid`);
-      setMessage({ type: 'success', text: 'Naklad byl oznacen jako zaplaceny' });
+      setMessage({ type: 'success', text: 'Náklad byl označen jako zaplacený' });
       loadExpense();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodarilo se oznacit naklad jako zaplaceny' });
+      setMessage({ type: 'error', text: 'Nepodařilo se označit náklad jako zaplacený' });
     }
   }
 
   async function handleMarkUnpaid() {
     try {
       await api.post(`/expenses/${id}/mark-unpaid`);
-      setMessage({ type: 'success', text: 'Naklad byl oznacen jako nezaplaceny' });
+      setMessage({ type: 'success', text: 'Náklad byl označen jako nezaplacený' });
       loadExpense();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodarilo se oznacit naklad jako nezaplaceny' });
+      setMessage({ type: 'error', text: 'Nepodařilo se označit náklad jako nezaplacený' });
     }
   }
 
   async function handleDelete() {
-    if (!confirm('Opravdu chcete smazat tento naklad? Tato akce je nevratna.')) return;
+    if (!confirm('Opravdu chcete smazat tento náklad? Tato akce je nevratná.')) return;
     try {
       await api.delete(`/expenses/${id}`);
       navigate('/expenses');
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodarilo se smazat naklad' });
+      setMessage({ type: 'error', text: 'Nepodařilo se smazat náklad' });
     }
   }
 
@@ -98,7 +98,7 @@ export default function ExpenseDetail() {
     try {
       await api.download(`/expenses/${id}/file`, expense.fileName);
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodarilo se stahnout soubor' });
+      setMessage({ type: 'error', text: 'Nepodařilo se stáhnout soubor' });
     }
   }
 
@@ -111,7 +111,7 @@ export default function ExpenseDetail() {
   }
 
   if (!expense) {
-    return <div className="text-center text-gray-500">Naklad nenalezen</div>;
+    return <div className="text-center text-gray-500">Náklad nenalezen</div>;
   }
 
   return (
@@ -127,7 +127,7 @@ export default function ExpenseDetail() {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Naklad {expense.expenseNumber}
+              Náklad {expense.expenseNumber}
             </h1>
             <span className={`badge ${getExpenseStatusColor(expense.status)}`}>
               {getExpenseStatusLabel(expense.status)}
@@ -150,7 +150,7 @@ export default function ExpenseDetail() {
           {expense.status === 'paid' && (
             <button onClick={handleMarkUnpaid} className="btn btn-secondary flex items-center space-x-2">
               <XCircle className="h-4 w-4" />
-              <span>Oznacit jako nezaplaceny</span>
+              <span>Označit jako nezaplacený</span>
             </button>
           )}
         </div>
@@ -176,8 +176,8 @@ export default function ExpenseDetail() {
               <div className="space-y-2">
                 <p className="font-medium text-gray-900">{expense.clientName}</p>
                 {expense.clientAddress && <p className="text-gray-600">{expense.clientAddress}</p>}
-                {expense.clientIco && <p className="text-gray-600">ICO: {expense.clientIco}</p>}
-                {expense.clientDic && <p className="text-gray-600">DIC: {expense.clientDic}</p>}
+                {expense.clientIco && <p className="text-gray-600">IČO: {expense.clientIco}</p>}
+                {expense.clientDic && <p className="text-gray-600">DIČ: {expense.clientDic}</p>}
                 {expense.clientEmail && <p className="text-gray-600">Email: {expense.clientEmail}</p>}
               </div>
             </div>
@@ -185,10 +185,10 @@ export default function ExpenseDetail() {
 
           {/* Amount */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Castka</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Částka</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Zaklad dane:</span>
+                <span className="text-gray-600">Základ daně:</span>
                 <span className="font-medium">{formatCurrency(expense.amount, expense.currency)}</span>
               </div>
               <div className="flex justify-between">
@@ -214,10 +214,10 @@ export default function ExpenseDetail() {
           {expense.fileData && expense.fileName && (
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Priloha</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Příloha</h2>
                 <button onClick={handleDownloadFile} className="btn btn-secondary flex items-center space-x-2">
                   <Download className="h-4 w-4" />
-                  <span>Stahnout</span>
+                  <span>Stáhnout</span>
                 </button>
               </div>
               {expense.fileMimeType === 'application/pdf' ? (
@@ -227,7 +227,7 @@ export default function ExpenseDetail() {
                   className="w-full h-[500px] rounded border border-gray-200"
                 >
                   <p className="p-4 text-gray-500 text-center">
-                    Vas prohlizec nepodporuje zobrazeni PDF.
+                    Váš prohlížeč nepodporuje zobrazení PDF.
                   </p>
                 </object>
               ) : (
@@ -243,7 +243,7 @@ export default function ExpenseDetail() {
           {/* Notes */}
           {expense.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznamky</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznámky</h2>
               <p className="text-gray-600 whitespace-pre-wrap">{expense.notes}</p>
             </div>
           )}
@@ -253,20 +253,20 @@ export default function ExpenseDetail() {
         <div className="space-y-6">
           {/* Details */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Udaje</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Údaje</h2>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-gray-500">Cislo nakladu:</dt>
+                <dt className="text-gray-500">Číslo nákladu:</dt>
                 <dd className="font-medium">{expense.expenseNumber}</dd>
               </div>
               {expense.supplierInvoiceNumber && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">Cislo faktury:</dt>
+                  <dt className="text-gray-500">Číslo faktury:</dt>
                   <dd className="font-medium">{expense.supplierInvoiceNumber}</dd>
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-gray-500">Datum prijeti:</dt>
+                <dt className="text-gray-500">Datum přijetí:</dt>
                 <dd className="font-medium">{formatDate(expense.issueDate)}</dd>
               </div>
               <div className="flex justify-between">
@@ -297,7 +297,7 @@ export default function ExpenseDetail() {
                 className="btn btn-danger w-full flex items-center justify-center space-x-2"
               >
                 <Trash2 className="h-4 w-4" />
-                <span>Smazat naklad</span>
+                <span>Smazat náklad</span>
               </button>
             </div>
           </div>
