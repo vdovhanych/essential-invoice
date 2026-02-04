@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM dhi.io/node:24-debian13-dev AS builder
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -19,7 +19,7 @@ COPY . .
 RUN pnpm run build
 
 # Production stage with Nginx
-FROM nginx:alpine
+FROM dhi.io/nginx:1.28
 
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
@@ -27,10 +27,10 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Health check
+# Health check - using nginx's built-in signal (no shell available in DHI runtime)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost/health || exit 1
+    CMD ["-t"]
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["-g", "daemon off;"]
