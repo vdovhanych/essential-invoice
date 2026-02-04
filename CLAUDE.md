@@ -29,16 +29,16 @@ pnpm test:coverage      # Run tests with coverage
 
 ### Docker
 ```bash
-docker-compose up -d           # Start all services
-docker-compose up -d db        # Start only database (for local dev)
-docker-compose logs backend    # View backend logs
+docker compose up -d           # Start all services (dev)
+docker compose up -d db        # Start only database (for local dev)
+docker compose logs backend    # View backend logs
+# Production: docker compose -f docker-compose.production.yml up -d
 ```
 
 ### Database
 ```bash
 cd backend
 pnpm run migrate        # Run database migrations
-pnpm run seed           # Seed database
 ```
 
 ## Architecture
@@ -47,27 +47,37 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 
 ### Backend (`backend/src/`)
 - **Express API** with JWT authentication and rate limiting
-- **Routes**: `routes/` - REST endpoints for auth, clients, invoices, payments, settings, ARES lookup, dashboard
+- **Entry point**: `index.ts` - Express app setup, middleware, route mounting
+- **Routes**: `routes/` - REST endpoints for auth, clients, invoices, payments, settings, ARES lookup, dashboard, AI
 - **Services**: `services/` - Business logic:
   - `pdfGenerator.ts` - Invoice PDF generation using Puppeteer with Czech formatting and QR payment codes (SPAYD)
   - `emailSender.ts` - SMTP email sending for invoice delivery
   - `emailPoller.ts` - IMAP polling for bank payment notifications
+  - `perplexityAI.ts` - Perplexity AI integration for tax advice and financial guidance
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
 - **Utils**: `utils/validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
-- **Database**: PostgreSQL with `pg` driver, migrations in `db/`
+- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script.
 
 ### Frontend (`frontend/src/`)
 - **React 18** with TypeScript, Vite, and TailwindCSS
-- **Context**: `context/AuthContext.tsx` - Authentication state management
-- **Pages**: `pages/` - Dashboard, Clients, Invoices, Payments, Settings, Profile, Login, Register
-- **Utils**: `utils/format.ts` - Date/currency formatting helpers
+- **Context**:
+  - `context/AuthContext.tsx` - Authentication state management
+  - `context/AIContext.tsx` - AI assistant state management
+- **Components**: `components/` - Reusable UI:
+  - `Layout.tsx` - Main layout wrapper with navigation
+  - `AIAssistant.tsx` - AI assistant chat component
+- **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, Payments, Settings, Profile, Calculator, Login, Register
+- **Utils**:
+  - `utils/format.ts` - Date/currency formatting helpers
+  - `utils/api.ts` - API client and request utilities
 - **Path alias**: `@/*` maps to `src/*`
 
 ### Key Integrations
 - **ARES API**: Czech company registry lookup by IČO (`routes/ares.ts`)
 - **SPAYD**: Czech QR payment code standard for bank transfers
 - **Air Bank**: Email notification parsing for automatic payment matching
+- **Perplexity AI**: AI-powered Czech tax advisor, payment matching, and financial insights (`routes/ai.ts`, `services/perplexityAI.ts`)
 
 ## Testing
 
