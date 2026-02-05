@@ -10,6 +10,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
   - Czech tax & accounting advisor chatbot
   - Real-time financial insights
 - **Invoice Management**: Create, edit, delete, and send invoices with automatic numbering
+- **Expense Tracking**: Track business expenses with PDF attachments and automatic numbering
 - **Client Management**: Store and manage client contacts with ARES API integration for Czech companies
 - **PDF Generation**: Professional Czech invoice templates with QR payment codes (SPAYD format)
 - **Email Integration**: Send invoices via SMTP, receive bank notifications via IMAP
@@ -110,7 +111,10 @@ To enable AI-powered features, each user needs to configure their own Perplexity
 - Individual cost tracking
 - Users can opt-in as needed
 
-See [AI_FEATURES.md](AI_FEATURES.md) for detailed documentation.
+Once configured, AI features become available in the application:
+- Payment matching suggestions in the Payments page
+- Tax advisor chatbot accessible from the AI assistant
+- Financial insights on the Dashboard
 
 ## Usage Guide
 
@@ -187,6 +191,16 @@ Payments can be matched in two ways:
 - `POST /api/invoices/:id/send` - Send via email
 - `POST /api/invoices/:id/mark-paid` - Mark as paid
 - `POST /api/invoices/:id/cancel` - Cancel invoice
+
+### Expenses
+- `GET /api/expenses` - List expenses (filters: status, clientId, from, to)
+- `GET /api/expenses/:id` - Get expense details
+- `GET /api/expenses/:id/file` - Download attached file
+- `POST /api/expenses` - Create expense with optional file upload
+- `PUT /api/expenses/:id` - Update expense
+- `DELETE /api/expenses/:id` - Delete expense
+- `POST /api/expenses/:id/mark-paid` - Mark as paid
+- `POST /api/expenses/:id/cancel` - Cancel expense
 
 ### Payments
 - `GET /api/payments` - List payments (filter: matched)
@@ -276,23 +290,25 @@ essential-invoice/
 │   ├── src/
 │   │   ├── db/              # Database init (init.ts) and migrations (migrate.ts)
 │   │   ├── middleware/      # Auth middleware (auth.ts)
-│   │   ├── routes/          # API routes (auth, clients, invoices, payments, settings, ares, dashboard, ai)
+│   │   ├── routes/          # API routes (auth, clients, invoices, expenses, payments, settings, ares, dashboard, ai)
 │   │   ├── services/        # Business logic
 │   │   │   ├── bankParsers/ # Bank email parsers (Air Bank)
 │   │   │   ├── emailPoller.ts
 │   │   │   ├── emailSender.ts
-│   │   │   ├── pdfGenerator.ts
+│   │   │   ├── pdfGenerator.ts  # Uses pdfmake library
 │   │   │   └── perplexityAI.ts
 │   │   ├── utils/           # Validation utilities (IČO, IBAN, SPAYD)
 │   │   └── index.ts         # Express app entry point
-│   ├── uploads/             # File uploads (logos)
+│   ├── uploads/             # File uploads (logos, expense attachments)
 │   ├── Dockerfile
 │   └── package.json
 ├── frontend/
 │   ├── src/
 │   │   ├── components/      # Layout, AIAssistant
 │   │   ├── context/         # AuthContext, AIContext
-│   │   ├── pages/           # All page components
+│   │   ├── pages/           # Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail,
+│   │   │                    # Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile,
+│   │   │                    # Calculator, Login, Register
 │   │   ├── utils/           # API client, formatting helpers
 │   │   └── test/            # Test setup (Vitest/jsdom)
 │   ├── Dockerfile
@@ -393,6 +409,32 @@ MIT License - See LICENSE file for details.
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
+
+### Documentation Guidelines
+
+When contributing code changes, **always update the documentation** to reflect your changes:
+
+1. **Added a new feature?**
+   - Add it to the "Features" section
+   - Document the API endpoints in "API Reference"
+   - Update the project structure tree if needed
+   - Update CLAUDE.md architecture section
+
+2. **Changed existing behavior?**
+   - Update the relevant sections in README.md
+   - Update usage examples if applicable
+   - Update CLAUDE.md if architecture changed
+
+3. **Added configuration options?**
+   - Add to .env.example with clear comments
+   - Document in the "Configuration" section
+   - Update CLAUDE.md "Environment" section
+
+4. **Changed dependencies?**
+   - Update mentions in both README.md and CLAUDE.md
+   - Ensure accuracy (e.g., don't say "Puppeteer" if you switched to "pdfmake")
+
+**Documentation is part of your contribution.** PRs with outdated documentation may be rejected.
 
 ## Support
 

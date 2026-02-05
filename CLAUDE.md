@@ -48,9 +48,9 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 ### Backend (`backend/src/`)
 - **Express API** with JWT authentication and rate limiting
 - **Entry point**: `index.ts` - Express app setup, middleware, route mounting
-- **Routes**: `routes/` - REST endpoints for auth, clients, invoices, payments, settings, ARES lookup, dashboard, AI
+- **Routes**: `routes/` - REST endpoints for auth, clients, invoices, expenses, payments, settings, ARES lookup, dashboard, AI
 - **Services**: `services/` - Business logic:
-  - `pdfGenerator.ts` - Invoice PDF generation using Puppeteer with Czech formatting and QR payment codes (SPAYD)
+  - `pdfGenerator.ts` - Invoice PDF generation using **pdfmake** library with Czech formatting and QR payment codes (SPAYD)
   - `emailSender.ts` - SMTP email sending for invoice delivery
   - `emailPoller.ts` - IMAP polling for bank payment notifications
   - `perplexityAI.ts` - Perplexity AI integration for tax advice and financial guidance
@@ -67,7 +67,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 - **Components**: `components/` - Reusable UI:
   - `Layout.tsx` - Main layout wrapper with navigation
   - `AIAssistant.tsx` - AI assistant chat component
-- **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, Payments, Settings, Profile, Calculator, Login, Register
+- **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register
 - **Utils**:
   - `utils/format.ts` - Date/currency formatting helpers
   - `utils/api.ts` - API client and request utilities
@@ -103,3 +103,74 @@ Requires `.env` file in root (copy from `.env.example`). Key variables:
 - `JWT_SECRET` - Required for authentication
 - `DB_*` - PostgreSQL connection settings
 - SMTP/IMAP configured in-app via Settings page
+
+## Documentation Maintenance
+
+**CRITICAL**: When making ANY changes to the codebase, you MUST update the relevant documentation files to reflect those changes. This ensures the documentation stays accurate and useful.
+
+### When to Update Documentation
+
+Update documentation immediately when you:
+
+1. **Add new features or endpoints**:
+   - Add to README.md "Features" section
+   - Add to README.md "API Reference" section (with full endpoint details)
+   - Update CLAUDE.md architecture section with new routes/pages/services
+   - Update project structure in README.md if new directories/files are added
+
+2. **Change existing functionality**:
+   - Update descriptions in README.md and CLAUDE.md
+   - Update API endpoint documentation if signatures change
+   - Update usage examples if behavior changes
+
+3. **Add/change dependencies**:
+   - If switching libraries (e.g., Puppeteer → pdfmake), update all mentions
+   - Document new key dependencies in architecture sections
+
+4. **Add new pages or routes**:
+   - Update CLAUDE.md Frontend pages list
+   - Update CLAUDE.md Backend routes list
+   - Update README.md project structure tree
+
+5. **Change configuration**:
+   - Update .env.example with new environment variables
+   - Document new config options in README.md "Configuration" section
+   - Update CLAUDE.md "Environment" section
+
+6. **Remove features or files**:
+   - Remove from all documentation
+   - Remove broken references (e.g., links to deleted files)
+
+### Files to Keep Updated
+
+- **CLAUDE.md**: Technical architecture, commands, file locations, testing instructions
+- **README.md**: User-facing features, setup guide, API reference, troubleshooting
+- **.env.example**: All environment variables with comments
+
+### Documentation Update Checklist
+
+Before completing any task that modifies code, ask yourself:
+
+- [ ] Did I add/remove/change any API endpoints? → Update README.md API Reference
+- [ ] Did I add/remove any frontend pages? → Update CLAUDE.md pages list
+- [ ] Did I add/remove any backend routes? → Update CLAUDE.md routes list
+- [ ] Did I change how a feature works? → Update README.md features and usage guide
+- [ ] Did I switch or add major libraries? → Update both README.md and CLAUDE.md
+- [ ] Did I add new environment variables? → Update .env.example and README.md configuration section
+- [ ] Did I change the project structure? → Update README.md project structure tree
+
+### Example: Adding a New Feature
+
+If you add an "Expenses" feature:
+
+1. Add route: `backend/src/routes/expenses.ts`
+2. Mount in: `backend/src/index.ts`
+3. Add pages: `frontend/src/pages/Expenses.tsx`, `ExpenseCreate.tsx`, `ExpenseDetail.tsx`
+4. **Immediately update documentation**:
+   - README.md: Add "Expense Tracking" to Features list
+   - README.md: Add Expenses API endpoints to API Reference
+   - README.md: Update project structure to include expenses routes and pages
+   - CLAUDE.md: Add `expenses` to Backend routes list
+   - CLAUDE.md: Add expense pages to Frontend pages list
+
+**Remember**: Documentation is part of the deliverable. A feature is not complete until its documentation is updated.
