@@ -19,10 +19,10 @@ import {
 } from 'lucide-react';
 
 const baseNavItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { path: '/', icon: LayoutDashboard, label: 'Přehled' },
   { path: '/invoices', icon: FileText, label: 'Faktury' },
-  { path: '/expenses', icon: Receipt, label: 'Naklady' },
-  { path: '/clients', icon: Users, label: 'Klienti' },
+  { path: '/expenses', icon: Receipt, label: 'Náklady' },
+  { path: '/clients', icon: Users, label: 'Kontakty' },
   { path: '/payments', icon: CreditCard, label: 'Platby' },
 ];
 
