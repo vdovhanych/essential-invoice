@@ -4,6 +4,7 @@ import { query } from '../db/init.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { generateInvoicePDF } from '../services/pdfGenerator.js';
 import { sendInvoiceEmail } from '../services/emailSender.js';
+import { generateSpayd } from '../utils/validation.js';
 
 export const invoiceRouter: ReturnType<typeof Router> = Router();
 
@@ -224,7 +225,14 @@ invoiceRouter.post('/',
       // Generate QR payment data (SPAYD format) for CZK invoices
       let qrPaymentData = null;
       if (currency === 'CZK' && user.bank_account && user.bank_code) {
-        qrPaymentData = `SPD*1.0*ACC:CZ${user.bank_account}${user.bank_code}*AM:${total.toFixed(2)}*CC:CZK*X-VS:${variableSymbol}*MSG:Faktura ${invoiceNumber}`;
+        qrPaymentData = generateSpayd(
+          user.bank_account,
+          user.bank_code,
+          total,
+          currency,
+          variableSymbol,
+          `Faktura ${invoiceNumber}`
+        );
       }
 
       // Create invoice
