@@ -35,6 +35,7 @@ interface InvoiceData {
   userAddress: string;
   userIco: string;
   userDic: string;
+  userVatPayer: boolean;
   userBankAccount: string;
   userBankCode: string;
   userLogoDataUrl: string | null;
@@ -89,7 +90,8 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
           { text: invoice.userCompanyName || invoice.userName, bold: true, fontSize: 13, alignment: 'right' as const },
           ...(invoice.userAddress ? [{ text: invoice.userAddress, color: '#555', alignment: 'right' as const }] : []),
           ...(invoice.userIco ? [{ text: `IČO: ${invoice.userIco}`, color: '#555', alignment: 'right' as const }] : []),
-          ...(invoice.userDic ? [{ text: `DIČ: ${invoice.userDic}`, color: '#555', alignment: 'right' as const }] : []),
+          ...(invoice.userVatPayer && invoice.userDic ? [{ text: `DIČ: ${invoice.userDic}`, color: '#555', alignment: 'right' as const }] : []),
+          ...(!invoice.userVatPayer ? [{ text: 'Neplátce DPH', color: '#555', alignment: 'right' as const }] : []),
         ],
       };
 
@@ -113,11 +115,15 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
   };
 
   // --- Parties section ---
-  function buildPartyStack(title: string, name: string, address: string, ico: string, dic: string): Column {
+  function buildPartyStack(title: string, name: string, address: string, ico: string, dic: string, showVatPayer: boolean = false): Column {
     const lines: Content[] = [];
     if (address) lines.push({ text: address, color: '#555' });
     if (ico) lines.push({ text: `IČO: ${ico}`, color: '#555' });
-    if (dic) lines.push({ text: `DIČ: ${dic}`, color: '#555' });
+    if (showVatPayer) {
+      lines.push({ text: 'Neplátce DPH', color: '#555' });
+    } else if (dic) {
+      lines.push({ text: `DIČ: ${dic}`, color: '#555' });
+    }
     return {
       width: '*',
       stack: [
@@ -130,7 +136,7 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
 
   const partiesSection: Content = {
     columns: [
-      buildPartyStack('DODAVATEL', invoice.userCompanyName || invoice.userName, invoice.userAddress, invoice.userIco, invoice.userDic),
+      buildPartyStack('DODAVATEL', invoice.userCompanyName || invoice.userName, invoice.userAddress, invoice.userIco, invoice.userDic, !invoice.userVatPayer),
       buildPartyStack('ODBĚRATEL', invoice.clientName, invoice.clientAddress, invoice.clientIco, invoice.clientDic),
     ],
     margin: [0, 0, 0, 18],
@@ -200,27 +206,34 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
   };
 
   // --- Totals section ---
+  const totalsRows: any[] = [
+    [
+      { text: 'Základ daně:' },
+      { text: formatCurrency(invoice.subtotal, invoice.currency), alignment: 'right' as const },
+    ],
+  ];
+
+  // Only show VAT line if VAT rate is greater than 0
+  if (invoice.vatRate > 0) {
+    totalsRows.push([
+      { text: `DPH (${invoice.vatRate}%):` },
+      { text: formatCurrency(invoice.vatAmount, invoice.currency), alignment: 'right' as const },
+    ]);
+  }
+
+  totalsRows.push([
+    { text: 'Celkem k úhradě:', bold: true, fontSize: 14, color: BLUE, margin: [0, 8, 0, 0] as [number, number, number, number] },
+    { text: formatCurrency(invoice.total, invoice.currency), bold: true, fontSize: 14, color: BLUE, alignment: 'right' as const, margin: [0, 8, 0, 0] as [number, number, number, number] },
+  ]);
+
   const totalsTable: Column = {
     width: 250,
     table: {
       widths: ['*', 'auto'],
-      body: [
-        [
-          { text: 'Základ daně:' },
-          { text: formatCurrency(invoice.subtotal, invoice.currency), alignment: 'right' as const },
-        ],
-        [
-          { text: `DPH (${invoice.vatRate}%):` },
-          { text: formatCurrency(invoice.vatAmount, invoice.currency), alignment: 'right' as const },
-        ],
-        [
-          { text: 'Celkem k úhradě:', bold: true, fontSize: 14, color: BLUE, margin: [0, 8, 0, 0] as [number, number, number, number] },
-          { text: formatCurrency(invoice.total, invoice.currency), bold: true, fontSize: 14, color: BLUE, alignment: 'right' as const, margin: [0, 8, 0, 0] as [number, number, number, number] },
-        ],
-      ],
+      body: totalsRows,
     },
     layout: {
-      hLineWidth: (i: number) => (i > 0 && i < 3 ? 1 : 0),
+      hLineWidth: (i: number) => (i > 0 && i < totalsRows.length ? 1 : 0),
       vLineWidth: () => 0,
       hLineColor: () => GRAY_BORDER,
       paddingTop: () => 4,
@@ -397,7 +410,8 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
       c.ico as client_ico, c.dic as client_dic,
       u.name as user_name, u.company_name as user_company_name,
       u.company_address as user_address, u.company_ico as user_ico,
-      u.company_dic as user_dic, u.bank_account as user_bank_account,
+      u.company_dic as user_dic, u.vat_payer as user_vat_payer,
+      u.bank_account as user_bank_account,
       u.bank_code as user_bank_code, u.logo_data as user_logo_data,
       u.logo_mime_type as user_logo_mime_type
     FROM invoices i
@@ -445,6 +459,7 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
     userAddress: row.user_address,
     userIco: row.user_ico,
     userDic: row.user_dic,
+    userVatPayer: row.user_vat_payer !== false, // Default to true if null
     userBankAccount: row.user_bank_account,
     userBankCode: row.user_bank_code,
     userLogoDataUrl,

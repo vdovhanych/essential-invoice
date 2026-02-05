@@ -123,7 +123,7 @@ authRouter.post('/login',
 authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const result = await query(
-      `SELECT id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, logo_data IS NOT NULL as has_logo, created_at
+      `SELECT id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, vat_payer, logo_data IS NOT NULL as has_logo, created_at
        FROM users WHERE id = $1`,
       [req.userId]
     );
@@ -143,6 +143,7 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
       companyAddress: user.company_address,
       bankAccount: user.bank_account,
       bankCode: user.bank_code,
+      vatPayer: user.vat_payer,
       hasLogo: user.has_logo,
       createdAt: user.created_at
     });
@@ -154,7 +155,7 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
 
 // Update user profile
 authRouter.put('/me', authenticateToken, async (req: AuthRequest, res: Response) => {
-  const { name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode } = req.body;
+  const { name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode, vatPayer } = req.body;
 
   try {
     const result = await query(
@@ -166,10 +167,11 @@ authRouter.put('/me', authenticateToken, async (req: AuthRequest, res: Response)
         company_address = $5,
         bank_account = $6,
         bank_code = $7,
+        vat_payer = COALESCE($8, vat_payer),
         updated_at = CURRENT_TIMESTAMP
-       WHERE id = $8
-       RETURNING id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code`,
-      [name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode, req.userId]
+       WHERE id = $9
+       RETURNING id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, vat_payer`,
+      [name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode, vatPayer, req.userId]
     );
 
     if (result.rows.length === 0) {
@@ -186,7 +188,8 @@ authRouter.put('/me', authenticateToken, async (req: AuthRequest, res: Response)
       companyDic: user.company_dic,
       companyAddress: user.company_address,
       bankAccount: user.bank_account,
-      bankCode: user.bank_code
+      bankCode: user.bank_code,
+      vatPayer: user.vat_payer
     });
   } catch (error) {
     console.error('Update profile error:', error);

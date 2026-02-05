@@ -26,6 +26,7 @@ export default function Profile() {
     companyAddress: user?.companyAddress || '',
     bankAccount: user?.bankAccount || '',
     bankCode: user?.bankCode || '',
+    vatPayer: user?.vatPayer !== false, // Default to true
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -35,7 +36,9 @@ export default function Profile() {
   });
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const target = e.target;
+    const value = target.type === 'checkbox' ? (target as HTMLInputElement).checked : target.value;
+    setFormData({ ...formData, [target.name]: value });
   }
 
   function handlePasswordChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -234,7 +237,30 @@ export default function Profile() {
               value={formData.companyDic}
               onChange={handleChange}
               className="input"
+              disabled={!formData.vatPayer}
             />
+            {!formData.vatPayer && (
+              <p className="text-xs text-gray-500 mt-1">DIČ není potřeba pro neplátce DPH</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <input
+            type="checkbox"
+            id="vatPayer"
+            name="vatPayer"
+            checked={formData.vatPayer}
+            onChange={handleChange}
+            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <div className="flex-1">
+            <label htmlFor="vatPayer" className="text-sm font-medium text-gray-900 cursor-pointer">
+              Jsem plátce DPH
+            </label>
+            <p className="text-xs text-gray-600 mt-1">
+              Pokud nejste plátce DPH, na fakturách se zobrazí "Neplátce DPH" místo DIČ
+            </p>
           </div>
         </div>
 

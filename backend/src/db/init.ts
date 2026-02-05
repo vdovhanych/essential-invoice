@@ -198,6 +198,14 @@ export async function initializeDatabase() {
         END IF;
       END $$;
 
+      -- Add vat_payer column to users table if it doesn't exist (migration for existing databases)
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='vat_payer') THEN
+          ALTER TABLE users ADD COLUMN vat_payer BOOLEAN DEFAULT true;
+        END IF;
+      END $$;
+
       -- Expenses table (received invoices / náklady)
       CREATE TABLE IF NOT EXISTS expenses (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
