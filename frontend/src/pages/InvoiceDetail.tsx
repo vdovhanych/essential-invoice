@@ -157,7 +157,7 @@ export default function InvoiceDetail() {
   }
 
   async function handleDelete() {
-    if (!confirm('Opravdu chcete smazat tuto fakturu? Tato akce je nevratna.')) return;
+    if (!confirm('Opravdu chcete smazat tuto fakturu? Tato akce je nevratná.')) return;
     try {
       await api.delete(`/invoices/${id}`);
       navigate('/invoices');
