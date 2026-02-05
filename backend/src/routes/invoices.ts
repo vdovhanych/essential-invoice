@@ -312,7 +312,7 @@ invoiceRouter.put('/:id',
       let subtotal = 0;
       let vatAmount = 0;
       let total = 0;
-      const actualVatRate = vatRate || 21;
+      const actualVatRate = vatRate ?? 21;
 
       if (items) {
         for (const item of items) {
