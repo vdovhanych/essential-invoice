@@ -111,7 +111,7 @@ export default function Invoices() {
               <thead>
                 <tr className="border-b border-gray-200">
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Číslo</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Klient</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Kontakt</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Datum vystavení</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Splatnost</th>
                   <th className="text-right py-3 px-4 font-medium text-gray-500">Částka</th>

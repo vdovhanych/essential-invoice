@@ -63,7 +63,7 @@ export default function ClientDetail() {
   }
 
   if (!client) {
-    return <div className="text-center text-gray-500">Klient nenalezen</div>;
+    return <div className="text-center text-gray-500">Kontakt nenalezen</div>;
   }
 
   const totalRevenue = invoices
@@ -248,7 +248,7 @@ export default function ClientDetail() {
             ) : (
               <div className="text-center py-8">
                 <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">Žádné faktury pro tohoto klienta</p>
+                <p className="text-gray-500">Žádné faktury pro tento kontakt</p>
               </div>
             )}
           </div>

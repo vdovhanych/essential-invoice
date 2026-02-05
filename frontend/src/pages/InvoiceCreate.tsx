@@ -130,7 +130,7 @@ export default function InvoiceCreate() {
 
     // Validation
     if (!formData.clientId) {
-      setError('Vyberte klienta');
+      setError('Vyberte kontakt');
       return;
     }
 
@@ -204,9 +204,9 @@ export default function InvoiceCreate() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Client selection */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Klient</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Kontakt</h2>
           <div>
-            <label htmlFor="clientId" className="label">Vyberte klienta *</label>
+            <label htmlFor="clientId" className="label">Vyberte kontakt *</label>
             <select
               id="clientId"
               name="clientId"
@@ -215,7 +215,7 @@ export default function InvoiceCreate() {
               className="input"
               required
             >
-              <option value="">-- Vyberte klienta --</option>
+              <option value="">-- Vyberte kontakt --</option>
               {clients.map(client => (
                 <option key={client.id} value={client.id}>
                   {client.companyName} ({client.primaryEmail})
@@ -224,8 +224,8 @@ export default function InvoiceCreate() {
             </select>
             {clients.length === 0 && (
               <p className="text-sm text-gray-500 mt-2">
-                Zatím nemáte žádné klienty.{' '}
-                <a href="/clients" className="text-blue-600 hover:underline">Přidat klienta</a>
+                Zatím nemáte žádné kontakty.{' '}
+                <a href="/clients" className="text-blue-600 hover:underline">Přidat kontakt</a>
               </p>
             )}
           </div>

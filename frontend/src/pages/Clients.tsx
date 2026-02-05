@@ -122,10 +122,10 @@ export default function Clients() {
     try {
       if (editingClient) {
         await api.put(`/clients/${editingClient.id}`, formData);
-        setMessage({ type: 'success', text: 'Klient byl aktualizován' });
+        setMessage({ type: 'success', text: 'Kontakt byl aktualizován' });
       } else {
         await api.post('/clients', formData);
-        setMessage({ type: 'success', text: 'Klient byl vytvořen' });
+        setMessage({ type: 'success', text: 'Kontakt byl vytvořen' });
       }
       setShowModal(false);
       loadClients();
@@ -136,15 +136,15 @@ export default function Clients() {
   }
 
   async function handleDelete(client: Client) {
-    if (!confirm(`Opravdu chcete smazat klienta "${client.companyName}"?`)) return;
+    if (!confirm(`Opravdu chcete smazat kontakt "${client.companyName}"?`)) return;
 
     try {
       await api.delete(`/clients/${client.id}`);
-      setMessage({ type: 'success', text: 'Klient byl smazán' });
+      setMessage({ type: 'success', text: 'Kontakt byl smazán' });
       loadClients();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se smazat klienta' });
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se smazat kontakt' });
     }
   }
 
@@ -165,10 +165,10 @@ export default function Clients() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Klienti</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Kontakty</h1>
         <button onClick={openCreateModal} className="btn btn-primary flex items-center space-x-2">
           <Plus className="h-4 w-4" />
-          <span>Nový klient</span>
+          <span>Nový kontakt</span>
         </button>
       </div>
 
@@ -187,7 +187,7 @@ export default function Clients() {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
         <input
           type="text"
-          placeholder="Hledat klienty..."
+          placeholder="Hledat kontakty..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="input pl-10"
@@ -247,10 +247,10 @@ export default function Clients() {
       ) : (
         <div className="card text-center py-12">
           <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Žádní klienti nenalezeni</p>
+          <p className="text-gray-500">Žádné kontakty nenalezeny</p>
           <button onClick={openCreateModal} className="btn btn-primary mt-4 inline-flex items-center space-x-2">
             <Plus className="h-4 w-4" />
-            <span>Přidat prvního klienta</span>
+            <span>Přidat první kontakt</span>
           </button>
         </div>
       )}
@@ -261,7 +261,7 @@ export default function Clients() {
           <div className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
-                {editingClient ? 'Upravit klienta' : 'Nový klient'}
+                {editingClient ? 'Upravit kontakt' : 'Nový kontakt'}
               </h2>
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
                 <X className="h-5 w-5" />
@@ -390,7 +390,7 @@ export default function Clients() {
                   Zrušit
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  {editingClient ? 'Uložit změny' : 'Vytvořit klienta'}
+                  {editingClient ? 'Uložit změny' : 'Vytvořit kontakt'}
                 </button>
               </div>
             </form>
