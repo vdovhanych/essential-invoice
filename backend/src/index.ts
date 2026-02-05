@@ -85,10 +85,8 @@ async function start() {
       console.log(`Server running on port ${PORT}`);
     });
 
-    // Start email polling if configured
-    if (process.env.IMAP_HOST && process.env.IMAP_USER) {
-      startEmailPolling();
-    }
+    // Start email polling service (checks database for users with IMAP configured)
+    startEmailPolling();
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
