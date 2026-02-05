@@ -71,7 +71,7 @@ export default function Layout() {
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           <Link to="/" className="flex items-center space-x-2">
             <FileText className="h-8 w-8 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">Invoice</span>
+            <span className="text-xl font-bold text-gray-900">essentialInvoice</span>
           </Link>
           <button
             className="lg:hidden p-2 rounded-lg hover:bg-gray-100"

@@ -77,22 +77,23 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
   const senderEmail = mail.from?.value[0]?.address || '';
   const emailBody = mail.text || '';
   const emailDate = mail.date || new Date();
+  const subject = mail.subject || '';
 
-  console.log(`Processing email from ${senderEmail} for user ${userId}`);
+  console.log(`  Processing email from ${senderEmail}`);
+  console.log(`    Subject: ${subject}`);
 
   // Parse the email using bank parsers
   const { payment, bankType } = parsePaymentEmail(senderEmail, emailBody, emailDate);
 
   if (!payment) {
     // Not a recognized bank payment email or outgoing payment
+    console.log(`    ⊘ Not a recognized bank payment notification (or outgoing payment)`);
     return;
   }
 
-  console.log(`Parsed ${bankType} payment:`, {
-    amount: payment.amount,
-    vs: payment.variableSymbol,
-    sender: payment.senderName
-  });
+  console.log(`    ✓ Parsed ${bankType} payment: ${payment.amount} ${payment.currency}`);
+  console.log(`      Variable Symbol: ${payment.variableSymbol || 'none'}`);
+  console.log(`      Sender: ${payment.senderName || 'unknown'}`);
 
   // Check if payment already exists (by transaction code)
   if (payment.transactionCode) {
@@ -102,7 +103,7 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
     );
 
     if (existing.rows.length > 0) {
-      console.log(`Payment ${payment.transactionCode} already processed, skipping`);
+      console.log(`    ⊘ Payment ${payment.transactionCode} already exists, skipping`);
       return;
     }
   }
@@ -122,9 +123,9 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
     if (invoiceResult.rows.length === 1) {
       invoiceId = invoiceResult.rows[0].id;
       matchMethod = 'variable_symbol';
-      console.log(`Matched by variable symbol: ${payment.variableSymbol}`);
+      console.log(`    ✓ Matched to invoice by variable symbol: ${payment.variableSymbol}`);
     } else if (invoiceResult.rows.length > 1) {
-      console.log(`Multiple invoices match variable symbol ${payment.variableSymbol}, manual matching required`);
+      console.log(`    ! Multiple invoices match VS ${payment.variableSymbol}, manual matching required`);
     }
   }
 
@@ -142,9 +143,9 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
     if (invoiceResult.rows.length === 1) {
       invoiceId = invoiceResult.rows[0].id;
       matchMethod = 'exact_amount';
-      console.log(`Matched by exact amount: ${payment.amount} ${payment.currency}`);
+      console.log(`    ✓ Matched to invoice by exact amount: ${payment.amount} ${payment.currency}`);
     } else if (invoiceResult.rows.length > 1) {
-      console.log(`Multiple invoices match amount ${payment.amount}, manual matching required`);
+      console.log(`    ! Multiple invoices match amount ${payment.amount}, manual matching required`);
     }
   }
 
@@ -174,7 +175,8 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
     ]
   );
 
-  console.log(`Created payment record: ${paymentResult.rows[0].id}`);
+  const createdPaymentId = paymentResult.rows[0].id;
+  console.log(`    ✓ Created payment record: ${createdPaymentId}`);
 
   // If matched, update invoice status
   if (invoiceId) {
@@ -184,7 +186,9 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
        WHERE id = $2`,
       [payment.transactionDate || new Date(), invoiceId]
     );
-    console.log(`Updated invoice ${invoiceId} to paid`);
+    console.log(`    ✓ Marked invoice ${invoiceId} as paid`);
+  } else {
+    console.log(`    ! No matching invoice found - payment saved as unmatched`);
   }
 
   // Log the bank notification
@@ -228,12 +232,12 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
           }
 
           if (results.length === 0) {
-            console.log(`No new emails for user ${settings.userId}`);
+            console.log(`  ✓ No new unseen emails found for user ${settings.userId}`);
             imap.end();
             return resolve();
           }
 
-          console.log(`Found ${results.length} new emails for user ${settings.userId}`);
+          console.log(`  → Found ${results.length} new unseen email(s) for user ${settings.userId}`);
 
           const fetch = imap.fetch(results, {
             bodies: '',
@@ -295,8 +299,15 @@ async function pollAllUsers(): Promise<void> {
 
   try {
     const allSettings = await getAllUserSettings();
+    console.log(`Found ${allSettings.length} user(s) with IMAP configured`);
+
+    if (allSettings.length === 0) {
+      console.log('No users have IMAP configured, skipping poll');
+      return;
+    }
 
     for (const settings of allSettings) {
+      console.log(`Polling emails for user ${settings.userId} (${settings.imapHost})`);
       try {
         await fetchEmails(settings);
       } catch (error) {
