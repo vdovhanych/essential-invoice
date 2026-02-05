@@ -109,7 +109,7 @@ export default function InvoiceDetail() {
   async function handleDownloadPDF() {
     if (!invoice) return;
     try {
-      await api.download(`/invoices/${id}/pdf`, `faktura-${invoice.invoiceNumber}.pdf`);
+      await api.download(`/invoices/${id}/pdf`, `${invoice.invoiceNumber}.pdf`);
     } catch (error) {
       setMessage({ type: 'error', text: 'Nepodařilo se stáhnout PDF' });
     }
@@ -409,7 +409,7 @@ export default function InvoiceDetail() {
                       Váš prohlížeč nepodporuje zobrazení PDF.{' '}
                       <a
                         href={`data:application/pdf;base64,${previewData.pdfBase64}`}
-                        download={`faktura-${invoice.invoiceNumber}.pdf`}
+                        download={`${invoice.invoiceNumber}.pdf`}
                         className="text-blue-600 hover:underline"
                       >
                         Stáhnout PDF
