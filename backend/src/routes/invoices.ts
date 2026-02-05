@@ -551,30 +551,38 @@ invoiceRouter.post('/:id/send', async (req: AuthRequest, res: Response) => {
 });
 
 // Mark invoice as paid manually
-invoiceRouter.post('/:id/mark-paid', async (req: AuthRequest, res: Response) => {
-  const { paidAt } = req.body;
-
-  try {
-    const result = await query(
-      `UPDATE invoices SET
-        status = 'paid',
-        paid_at = COALESCE($1, CURRENT_TIMESTAMP),
-        updated_at = CURRENT_TIMESTAMP
-       WHERE id = $2 AND user_id = $3 AND status != 'cancelled'
-       RETURNING *`,
-      [paidAt, req.params.id, req.userId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Invoice not found or already cancelled' });
+invoiceRouter.post('/:id/mark-paid',
+  body('paidAt').optional().isISO8601(),
+  async (req: AuthRequest, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
-    res.json({ message: 'Invoice marked as paid', invoice: result.rows[0] });
-  } catch (error) {
-    console.error('Mark paid error:', error);
-    res.status(500).json({ error: 'Failed to mark invoice as paid' });
+    const { paidAt } = req.body;
+
+    try {
+      const result = await query(
+        `UPDATE invoices SET
+          status = 'paid',
+          paid_at = COALESCE($1, CURRENT_TIMESTAMP),
+          updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2 AND user_id = $3 AND status != 'cancelled'
+         RETURNING *`,
+        [paidAt, req.params.id, req.userId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Invoice not found or already cancelled' });
+      }
+
+      res.json({ message: 'Invoice marked as paid', invoice: result.rows[0] });
+    } catch (error) {
+      console.error('Mark paid error:', error);
+      res.status(500).json({ error: 'Failed to mark invoice as paid' });
+    }
   }
-});
+);
 
 // Cancel invoice
 invoiceRouter.post('/:id/cancel', async (req: AuthRequest, res: Response) => {
