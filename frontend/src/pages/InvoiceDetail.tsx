@@ -66,6 +66,8 @@ export default function InvoiceDetail() {
   } | null>(null);
   const [customMessage, setCustomMessage] = useState('');
   const [secondaryEmail, setSecondaryEmail] = useState('');
+  const [showMarkPaidModal, setShowMarkPaidModal] = useState(false);
+  const [paidDate, setPaidDate] = useState('');
 
   useEffect(() => {
     loadInvoice();
@@ -135,10 +137,18 @@ export default function InvoiceDetail() {
     }
   }
 
+  function openMarkPaidModal() {
+    if (!invoice) return;
+    // Default to due date
+    setPaidDate(invoice.dueDate);
+    setShowMarkPaidModal(true);
+  }
+
   async function handleMarkPaid() {
     try {
-      await api.post(`/invoices/${id}/mark-paid`);
+      await api.post(`/invoices/${id}/mark-paid`, { paidAt: paidDate });
       setMessage({ type: 'success', text: 'Faktura byla označena jako zaplacená' });
+      setShowMarkPaidModal(false);
       loadInvoice();
     } catch (error) {
       setMessage({ type: 'error', text: 'Nepodařilo se označit fakturu jako zaplacenou' });
@@ -221,7 +231,7 @@ export default function InvoiceDetail() {
                 <Send className="h-4 w-4" />
                 <span>Odeslat znovu</span>
               </button>
-              <button onClick={handleMarkPaid} className="btn btn-success flex items-center space-x-2">
+              <button onClick={openMarkPaidModal} className="btn btn-success flex items-center space-x-2">
                 <CheckCircle className="h-4 w-4" />
                 <span>Zaplaceno</span>
               </button>
@@ -492,6 +502,48 @@ export default function InvoiceDetail() {
                 </div>
               </div>
             ) : null}
+          </div>
+        </div>
+      )}
+
+      {/* Mark as paid modal */}
+      {showMarkPaidModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-md p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Označit fakturu jako zaplacenou
+            </h2>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Datum zaplacení
+              </label>
+              <input
+                type="date"
+                value={paidDate}
+                onChange={(e) => setPaidDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Výchozí datum je datum splatnosti faktury
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowMarkPaidModal(false)}
+                className="btn btn-secondary"
+              >
+                Zrušit
+              </button>
+              <button
+                onClick={handleMarkPaid}
+                className="btn btn-success flex items-center space-x-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                <span>Potvrdit</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
