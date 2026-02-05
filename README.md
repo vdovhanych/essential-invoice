@@ -14,7 +14,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 - **Client Management**: Store and manage client contacts with ARES API integration for Czech companies
 - **PDF Generation**: Professional Czech invoice templates with QR payment codes (SPAYD format)
 - **Email Integration**: Send invoices via SMTP, receive bank notifications via IMAP
-- **Bank Payment Matching**: Automatic matching of Air Bank payment notifications to invoices
+- **Bank Payment Matching**: Automatic matching of Air Bank payment notifications to invoices, with manual matching, unmatching, and deletion capabilities
 - **Dashboard**: Overview of revenue, outstanding payments, and recent activity
 - **Multi-currency**: Support for CZK and EUR
 - **Docker Ready**: Single command deployment with docker compose
@@ -199,6 +199,8 @@ Payments can be matched in two ways:
 - `GET /api/payments/:id/matches` - Get potential invoice matches
 - `POST /api/payments/:id/match` - Match to invoice
 - `POST /api/payments/:id/unmatch` - Remove match
+- `DELETE /api/payments/:id` - Delete unmatched payment
+- `POST /api/payments/check-emails` - Check for new payments from email
 
 ### ARES
 - `GET /api/ares/lookup/:ico` - Lookup company by ICO

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
-import { CreditCard, Search, Link2, Unlink, AlertCircle, CheckCircle, X, RefreshCw } from 'lucide-react';
+import { CreditCard, Search, Link2, Unlink, AlertCircle, CheckCircle, X, RefreshCw, Trash2 } from 'lucide-react';
 
 interface Payment {
   id: string;
@@ -105,6 +105,19 @@ export default function Payments() {
     } catch (err: unknown) {
       const error = err as Error;
       setMessage({ type: 'error', text: error.message || 'Nepodařilo se zrušit spárování' });
+    }
+  }
+
+  async function handleDelete(payment: Payment) {
+    if (!confirm('Opravdu chcete smazat tuto platbu? Tuto akci nelze vrátit zpět.')) return;
+
+    try {
+      await api.delete(`/payments/${payment.id}`);
+      setMessage({ type: 'success', text: 'Platba byla smazána' });
+      loadPayments();
+    } catch (err: unknown) {
+      const error = err as Error;
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se smazat platbu' });
     }
   }
 
@@ -261,12 +274,21 @@ export default function Payments() {
                           <Unlink className="h-4 w-4" />
                         </button>
                       ) : (
-                        <button
-                          onClick={() => openMatchModal(payment)}
-                          className="btn btn-secondary text-sm py-1 px-3"
-                        >
-                          Sparovat
-                        </button>
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => openMatchModal(payment)}
+                            className="btn btn-secondary text-sm py-1 px-3"
+                          >
+                            Spárovat
+                          </button>
+                          <button
+                            onClick={() => handleDelete(payment)}
+                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                            title="Smazat platbu"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
