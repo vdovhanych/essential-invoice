@@ -40,7 +40,7 @@ cd essential-invoice
 cp .env.example .env
 ```
 
-3. Edit `.env` with your settings:
+3. Edit `.env` with your settings: (required: JWT_SECRET, DB_PASSWORD)
 ```bash
 # Required: Set a secure JWT secret (min 32 characters)
 JWT_SECRET=your_secure_jwt_secret_here_min_32_chars
@@ -48,9 +48,6 @@ JWT_SECRET=your_secure_jwt_secret_here_min_32_chars
 # Required: Set database password
 DB_PASSWORD=your_secure_database_password
 
-# Note: AI features are now configured per-user in Settings page
-# Each user can add their own Perplexity API key in Settings > AI Features
-# No need to set PERPLEXITY_API_KEY here anymore
 ```
 
 4. Start the application:
@@ -104,12 +101,6 @@ To enable AI-powered features, each user needs to configure their own Perplexity
 3. Go to Settings (Nastavení)
 4. Find the "AI funkce (Perplexity)" section
 5. Enter your API key and save
-
-**Benefits of per-user configuration:**
-- Each user controls their own AI quota
-- Better privacy and security
-- Individual cost tracking
-- Users can opt-in as needed
 
 Once configured, AI features become available in the application:
 - Payment matching suggestions in the Payments page
