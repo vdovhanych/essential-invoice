@@ -11,6 +11,7 @@ interface User {
   companyAddress?: string;
   bankAccount?: string;
   bankCode?: string;
+  vatPayer?: boolean;
   hasLogo?: boolean;
 }
 
