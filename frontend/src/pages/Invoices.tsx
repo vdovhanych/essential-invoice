@@ -50,7 +50,7 @@ export default function Invoices() {
 
   async function handleDownloadPDF(invoiceId: string, invoiceNumber: string) {
     try {
-      await api.download(`/invoices/${invoiceId}/pdf`, `faktura-${invoiceNumber}.pdf`);
+      await api.download(`/invoices/${invoiceId}/pdf`, `${invoiceNumber}.pdf`);
     } catch (error) {
       console.error('Failed to download PDF:', error);
     }

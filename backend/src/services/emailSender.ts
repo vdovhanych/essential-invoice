@@ -99,7 +99,7 @@ S pozdravem,
       text: emailBody,
       attachments: [
         {
-          filename: `faktura-${invoice.invoice_number}.pdf`,
+          filename: `${invoice.invoice_number}.pdf`,
           content: pdfBuffer,
           contentType: 'application/pdf'
         }
@@ -125,7 +125,7 @@ S pozdravem,
         text: emailBody,
         attachments: [
           {
-            filename: `faktura-${invoice.invoice_number}.pdf`,
+            filename: `${invoice.invoice_number}.pdf`,
             content: pdfBuffer,
             contentType: 'application/pdf'
           }
