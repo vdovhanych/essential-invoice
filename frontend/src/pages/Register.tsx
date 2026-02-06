@@ -10,17 +10,11 @@ export default function Register() {
     password: '',
     confirmPassword: '',
     name: '',
-    companyName: '',
-    companyIco: '',
-    companyDic: '',
-    companyAddress: '',
-    bankAccount: '',
-    bankCode: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
 
@@ -41,7 +35,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await register(formData);
+      await register({ email: formData.email, password: formData.password, name: formData.name });
     } catch (err: unknown) {
       const error = err as Error;
       setError(error.message || 'Registrace selhala');
@@ -121,87 +115,6 @@ export default function Register() {
                   onChange={handleChange}
                   className="input"
                   required
-                />
-              </div>
-            </div>
-
-            <hr className="my-6" />
-            <h3 className="font-medium text-gray-900">Firemní údaje (volitelné)</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label htmlFor="companyName" className="label">Název firmy</label>
-                <input
-                  type="text"
-                  id="companyName"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  className="input"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="companyIco" className="label">IČO</label>
-                <input
-                  type="text"
-                  id="companyIco"
-                  name="companyIco"
-                  value={formData.companyIco}
-                  onChange={handleChange}
-                  className="input"
-                  maxLength={8}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="companyDic" className="label">DIČ</label>
-                <input
-                  type="text"
-                  id="companyDic"
-                  name="companyDic"
-                  value={formData.companyDic}
-                  onChange={handleChange}
-                  className="input"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label htmlFor="companyAddress" className="label">Adresa</label>
-                <textarea
-                  id="companyAddress"
-                  name="companyAddress"
-                  value={formData.companyAddress}
-                  onChange={handleChange}
-                  className="input"
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="bankAccount" className="label">Číslo účtu</label>
-                <input
-                  type="text"
-                  id="bankAccount"
-                  name="bankAccount"
-                  value={formData.bankAccount}
-                  onChange={handleChange}
-                  className="input"
-                  placeholder="1234567890"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="bankCode" className="label">Kód banky</label>
-                <input
-                  type="text"
-                  id="bankCode"
-                  name="bankCode"
-                  value={formData.bankCode}
-                  onChange={handleChange}
-                  className="input"
-                  placeholder="0100"
-                  maxLength={4}
                 />
               </div>
             </div>

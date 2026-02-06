@@ -34,9 +34,6 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
         defaultPaymentTerms: 14,
         emailTemplate: null,
         calculatorEnabled: false,
-        pausalniDanEnabled: false,
-        pausalniDanTier: 1,
-        pausalniDanLimit: 1000000,
         perplexityApiKeySet: false
       });
     }
@@ -63,9 +60,6 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
       defaultPaymentTerms: settings.default_payment_terms,
       emailTemplate: settings.email_template,
       calculatorEnabled: settings.calculator_enabled ?? false,
-      pausalniDanEnabled: settings.pausalni_dan_enabled ?? false,
-      pausalniDanTier: settings.pausalni_dan_tier ?? 1,
-      pausalniDanLimit: settings.pausalni_dan_limit ?? 1000000,
       perplexityApiKeySet: !!settings.perplexity_api_key
     });
   } catch (error) {
@@ -84,7 +78,6 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     defaultVatRate, defaultPaymentTerms,
     emailTemplate,
     calculatorEnabled,
-    pausalniDanEnabled, pausalniDanTier, pausalniDanLimit,
     perplexityApiKey
   } = req.body;
 
@@ -121,9 +114,6 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     addUpdate('default_payment_terms', defaultPaymentTerms);
     addUpdate('email_template', emailTemplate);
     addUpdate('calculator_enabled', calculatorEnabled);
-    addUpdate('pausalni_dan_enabled', pausalniDanEnabled);
-    addUpdate('pausalni_dan_tier', pausalniDanTier);
-    addUpdate('pausalni_dan_limit', pausalniDanLimit);
     if (perplexityApiKey) addUpdate('perplexity_api_key', perplexityApiKey); // Only update if provided
 
     if (updates.length === 0) {

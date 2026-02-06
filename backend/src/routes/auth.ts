@@ -33,7 +33,7 @@ authRouter.post('/register',
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode } = req.body;
+    const { email, password, name } = req.body;
 
     try {
       // Check if user exists
@@ -47,10 +47,10 @@ authRouter.post('/register',
 
       // Create user
       const result = await query(
-        `INSERT INTO users (email, password_hash, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `INSERT INTO users (email, password_hash, name)
+         VALUES ($1, $2, $3)
          RETURNING id, email, name`,
-        [email, passwordHash, name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode]
+        [email, passwordHash, name]
       );
 
       const user = result.rows[0];
@@ -66,7 +66,7 @@ authRouter.post('/register',
       const token = jwt.sign({ userId: user.id, email: user.email }, secret, { expiresIn: '7d' });
 
       res.status(201).json({
-        user: { id: user.id, email: user.email, name: user.name },
+        user: { id: user.id, email: user.email, name: user.name, onboardingCompleted: false },
         token
       });
     } catch (error) {
@@ -123,7 +123,7 @@ authRouter.post('/login',
 authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const result = await query(
-      `SELECT id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, vat_payer, logo_data IS NOT NULL as has_logo, created_at
+      `SELECT id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, vat_payer, onboarding_completed, pausalni_dan_enabled, pausalni_dan_tier, pausalni_dan_limit, logo_data IS NOT NULL as has_logo, created_at
        FROM users WHERE id = $1`,
       [req.userId]
     );
@@ -144,6 +144,10 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
       bankAccount: user.bank_account,
       bankCode: user.bank_code,
       vatPayer: user.vat_payer,
+      onboardingCompleted: user.onboarding_completed,
+      pausalniDanEnabled: user.pausalni_dan_enabled,
+      pausalniDanTier: user.pausalni_dan_tier,
+      pausalniDanLimit: user.pausalni_dan_limit,
       hasLogo: user.has_logo,
       createdAt: user.created_at
     });
@@ -155,7 +159,7 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
 
 // Update user profile
 authRouter.put('/me', authenticateToken, async (req: AuthRequest, res: Response) => {
-  const { name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode, vatPayer } = req.body;
+  const { name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode, vatPayer, onboardingCompleted, pausalniDanEnabled, pausalniDanTier, pausalniDanLimit } = req.body;
 
   try {
     const result = await query(
@@ -168,10 +172,14 @@ authRouter.put('/me', authenticateToken, async (req: AuthRequest, res: Response)
         bank_account = $6,
         bank_code = $7,
         vat_payer = COALESCE($8, vat_payer),
+        onboarding_completed = COALESCE($9, onboarding_completed),
+        pausalni_dan_enabled = COALESCE($10, pausalni_dan_enabled),
+        pausalni_dan_tier = COALESCE($11, pausalni_dan_tier),
+        pausalni_dan_limit = COALESCE($12, pausalni_dan_limit),
         updated_at = CURRENT_TIMESTAMP
-       WHERE id = $9
-       RETURNING id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, vat_payer`,
-      [name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode, vatPayer, req.userId]
+       WHERE id = $13
+       RETURNING id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, vat_payer, onboarding_completed, pausalni_dan_enabled, pausalni_dan_tier, pausalni_dan_limit`,
+      [name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode, vatPayer, onboardingCompleted, pausalniDanEnabled, pausalniDanTier, pausalniDanLimit, req.userId]
     );
 
     if (result.rows.length === 0) {
@@ -189,7 +197,11 @@ authRouter.put('/me', authenticateToken, async (req: AuthRequest, res: Response)
       companyAddress: user.company_address,
       bankAccount: user.bank_account,
       bankCode: user.bank_code,
-      vatPayer: user.vat_payer
+      vatPayer: user.vat_payer,
+      onboardingCompleted: user.onboarding_completed,
+      pausalniDanEnabled: user.pausalni_dan_enabled,
+      pausalniDanTier: user.pausalni_dan_tier,
+      pausalniDanLimit: user.pausalni_dan_limit
     });
   } catch (error) {
     console.error('Update profile error:', error);

@@ -23,11 +23,34 @@ vi.mock('lucide-react', () => ({
   Eye: () => <span data-testid="eye-icon" />,
   EyeOff: () => <span data-testid="eye-off-icon" />,
   Calculator: () => <span data-testid="calculator-icon" />,
-  Landmark: () => <span data-testid="landmark-icon" />,
   Sparkles: () => <span data-testid="sparkles-icon" />
 }));
 
 const getVatSelect = () => document.querySelector('select[name="defaultVatRate"]') as HTMLSelectElement;
+
+const defaultSettings = {
+  smtpHost: null,
+  smtpPort: 587,
+  smtpUser: null,
+  smtpPasswordSet: false,
+  smtpSecure: true,
+  smtpFromEmail: null,
+  smtpFromName: null,
+  imapHost: null,
+  imapPort: 993,
+  imapUser: null,
+  imapPasswordSet: false,
+  imapTls: true,
+  bankNotificationEmail: null,
+  emailPollingInterval: 300,
+  invoiceNumberPrefix: '',
+  invoiceNumberFormat: 'YYYYMM##',
+  defaultVatRate: 21,
+  defaultPaymentTerms: 14,
+  emailTemplate: null,
+  calculatorEnabled: false,
+  perplexityApiKeySet: false
+};
 
 describe('Settings Component', () => {
   beforeEach(() => {
@@ -35,31 +58,7 @@ describe('Settings Component', () => {
   });
 
   it('should load and display defaultVatRate: 0 correctly', async () => {
-    mockGet.mockResolvedValueOnce({
-      smtpHost: null,
-      smtpPort: 587,
-      smtpUser: null,
-      smtpPasswordSet: false,
-      smtpSecure: true,
-      smtpFromEmail: null,
-      smtpFromName: null,
-      imapHost: null,
-      imapPort: 993,
-      imapUser: null,
-      imapPasswordSet: false,
-      imapTls: true,
-      bankNotificationEmail: null,
-      emailPollingInterval: 300,
-      invoiceNumberPrefix: '',
-      invoiceNumberFormat: 'YYYYMM##',
-      defaultVatRate: 0, // VAT rate is 0
-      defaultPaymentTerms: 14,
-      emailTemplate: null,
-      calculatorEnabled: false,
-      pausalniDanEnabled: false,
-      pausalniDanTier: 1,
-      pausalniDanLimit: 1000000
-    });
+    mockGet.mockResolvedValueOnce({ ...defaultSettings, defaultVatRate: 0 });
 
     render(<Settings />);
 
@@ -72,60 +71,10 @@ describe('Settings Component', () => {
 
   it('should save defaultVatRate: 0 and reload correctly', async () => {
     // Initial load with VAT 21
-    mockGet.mockResolvedValueOnce({
-      smtpHost: null,
-      smtpPort: 587,
-      smtpUser: null,
-      smtpPasswordSet: false,
-      smtpSecure: true,
-      smtpFromEmail: null,
-      smtpFromName: null,
-      imapHost: null,
-      imapPort: 993,
-      imapUser: null,
-      imapPasswordSet: false,
-      imapTls: true,
-      bankNotificationEmail: null,
-      emailPollingInterval: 300,
-      invoiceNumberPrefix: '',
-      invoiceNumberFormat: 'YYYYMM##',
-      defaultVatRate: 21,
-      defaultPaymentTerms: 14,
-      emailTemplate: null,
-      calculatorEnabled: false,
-      pausalniDanEnabled: false,
-      pausalniDanTier: 1,
-      pausalniDanLimit: 1000000
-    });
-
+    mockGet.mockResolvedValueOnce({ ...defaultSettings, defaultVatRate: 21 });
     mockPut.mockResolvedValueOnce({ message: 'Settings updated successfully' });
-
     // After save, backend returns with VAT 0
-    mockGet.mockResolvedValueOnce({
-      smtpHost: null,
-      smtpPort: 587,
-      smtpUser: null,
-      smtpPasswordSet: false,
-      smtpSecure: true,
-      smtpFromEmail: null,
-      smtpFromName: null,
-      imapHost: null,
-      imapPort: 993,
-      imapUser: null,
-      imapPasswordSet: false,
-      imapTls: true,
-      bankNotificationEmail: null,
-      emailPollingInterval: 300,
-      invoiceNumberPrefix: '',
-      invoiceNumberFormat: 'YYYYMM##',
-      defaultVatRate: 0, // Now 0 after save
-      defaultPaymentTerms: 14,
-      emailTemplate: null,
-      calculatorEnabled: false,
-      pausalniDanEnabled: false,
-      pausalniDanTier: 1,
-      pausalniDanLimit: 1000000
-    });
+    mockGet.mockResolvedValueOnce({ ...defaultSettings, defaultVatRate: 0 });
 
     render(<Settings />);
 
@@ -157,5 +106,19 @@ describe('Settings Component', () => {
     await waitFor(() => {
       expect(getVatSelect().value).toBe('0');
     });
+  });
+
+  it('should not render paušální daň section', async () => {
+    mockGet.mockResolvedValueOnce(defaultSettings);
+
+    render(<Settings />);
+
+    await waitFor(() => {
+      expect(getVatSelect()).toBeTruthy();
+    });
+
+    // Paušální daň section should NOT be present (moved to Profile)
+    expect(screen.queryByText('Paušální daň')).not.toBeInTheDocument();
+    expect(screen.queryByText('Používám paušální daň')).not.toBeInTheDocument();
   });
 });

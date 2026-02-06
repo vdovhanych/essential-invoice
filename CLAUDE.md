@@ -57,7 +57,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
 - **Utils**: `utils/validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
-- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default true) to track VAT payer status for invoice PDF generation.
+- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings.
 
 ### Frontend (`frontend/src/`)
 - **React 18** with TypeScript, Vite, and TailwindCSS
@@ -67,7 +67,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 - **Components**: `components/` - Reusable UI:
   - `Layout.tsx` - Main layout wrapper with navigation
   - `AIAssistant.tsx` - AI assistant chat component
-- **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register
+- **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding
 - **Utils**:
   - `utils/format.ts` - Date/currency formatting helpers
   - `utils/api.ts` - API client and request utilities
