@@ -202,9 +202,46 @@ export async function initializeDatabase() {
       DO $$
       BEGIN
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='vat_payer') THEN
-          ALTER TABLE users ADD COLUMN vat_payer BOOLEAN DEFAULT true;
+          ALTER TABLE users ADD COLUMN vat_payer BOOLEAN DEFAULT false;
         END IF;
       END $$;
+
+      -- Migration: Change vat_payer default from true to false
+      ALTER TABLE users ALTER COLUMN vat_payer SET DEFAULT false;
+
+      -- Add onboarding_completed column to users table if it doesn't exist
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='onboarding_completed') THEN
+          ALTER TABLE users ADD COLUMN onboarding_completed BOOLEAN DEFAULT false;
+        END IF;
+      END $$;
+
+      -- Add paušální daň columns to users table if they don't exist
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='pausalni_dan_enabled') THEN
+          ALTER TABLE users ADD COLUMN pausalni_dan_enabled BOOLEAN DEFAULT false;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='pausalni_dan_tier') THEN
+          ALTER TABLE users ADD COLUMN pausalni_dan_tier INTEGER DEFAULT 1;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='pausalni_dan_limit') THEN
+          ALTER TABLE users ADD COLUMN pausalni_dan_limit INTEGER DEFAULT 1000000;
+        END IF;
+      END $$;
+
+      -- Migrate paušální daň data from settings to users
+      UPDATE users SET
+        pausalni_dan_enabled = s.pausalni_dan_enabled,
+        pausalni_dan_tier = s.pausalni_dan_tier,
+        pausalni_dan_limit = s.pausalni_dan_limit
+      FROM settings s WHERE s.user_id = users.id
+        AND users.pausalni_dan_enabled = false
+        AND s.pausalni_dan_enabled = true;
+
+      -- Mark existing users as having completed onboarding (they already have data)
+      UPDATE users SET onboarding_completed = true WHERE onboarding_completed = false AND company_name IS NOT NULL AND company_name != '';
 
       -- Expenses table (received invoices / náklady)
       CREATE TABLE IF NOT EXISTS expenses (

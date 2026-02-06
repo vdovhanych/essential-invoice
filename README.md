@@ -15,6 +15,8 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 - **PDF Generation**: Professional Czech invoice templates with QR payment codes (SPAYD format), VAT/non-VAT payer support
 - **Email Integration**: Send invoices via SMTP, receive bank notifications via IMAP
 - **Bank Payment Matching**: Automatic matching of Air Bank payment notifications to invoices, with manual matching, unmatching, and deletion capabilities
+- **Onboarding Wizard**: Guided 2-step setup after registration to collect company and bank details
+- **Paušální Daň Tracking**: Monitor invoiced amounts against paušální daň limits (3 tiers)
 - **Dashboard**: Overview of revenue, outstanding payments, and recent activity
 - **Multi-currency**: Support for CZK and EUR
 - **Docker Ready**: Single command deployment with docker compose
@@ -111,14 +113,18 @@ Once configured, AI features become available in the application:
 
 ### Setting Up Your Profile
 
-1. Register/Login to your account
-2. Go to **Profile** and fill in your company details:
-   - Company name, address, ICO
+1. Register your account (only name, email, password required)
+2. Complete the **Onboarding Wizard** (2 steps):
+   - **Step 1**: Company name, IČO, address, VAT payer status, DIČ, paušální daň settings
+   - **Step 2**: Bank account, bank code, logo upload
+3. After onboarding, you can update your details anytime in **Profile**:
+   - Company name, address, IČO
    - VAT payer status (checkbox "Jsem plátce DPH"):
-     - If **checked** (default): You are a VAT payer - DIČ will be shown on invoices
-     - If **unchecked**: You are not a VAT payer - "Neplátce DPH" will be shown instead of DIČ on invoices
-   - DIC (only required if you are a VAT payer)
+     - If **checked**: You are a VAT payer - DIČ will be shown on invoices
+     - If **unchecked** (default): You are not a VAT payer - "Neplátce DPH" will be shown instead of DIČ on invoices
+   - DIČ (only required if you are a VAT payer)
    - Bank account number and bank code (required for QR payment codes)
+   - Paušální daň settings (tier, income limit)
 
 ### Adding Clients
 
@@ -306,7 +312,7 @@ essential-invoice/
 │   │   ├── context/         # AuthContext, AIContext
 │   │   ├── pages/           # Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail,
 │   │   │                    # Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile,
-│   │   │                    # Calculator, Login, Register
+│   │   │                    # Calculator, Login, Register, Onboarding
 │   │   ├── utils/           # API client, formatting helpers
 │   │   └── test/            # Test setup (Vitest/jsdom)
 │   ├── Dockerfile

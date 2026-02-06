@@ -107,6 +107,71 @@ describe('Auth Routes', () => {
       expect(response.body.user.email).toBe('new@example.com');
       expect(response.body.token).toBeDefined();
     });
+
+    it('should register user with onboardingCompleted: false', async () => {
+      const userId = 'new-user-id';
+      // Check if user exists
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+      // Create user
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{ id: userId, email: 'new@example.com', name: 'New User' }]
+      } as any);
+      // Create default settings
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+
+      const response = await request(app)
+        .post('/auth/register')
+        .send({
+          email: 'new@example.com',
+          password: 'password123',
+          name: 'New User'
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.user).toBeDefined();
+      expect(response.body.user.onboardingCompleted).toBe(false);
+    });
+
+    it('should only accept name, email, password (no company fields)', async () => {
+      const userId = 'new-user-id';
+      // Check if user exists
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+      // Create user
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{ id: userId, email: 'new@example.com', name: 'New User' }]
+      } as any);
+      // Create default settings
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+
+      const response = await request(app)
+        .post('/auth/register')
+        .send({
+          email: 'new@example.com',
+          password: 'password123',
+          name: 'New User',
+          companyName: 'Should Be Ignored',
+          companyIco: '12345678'
+        });
+
+      expect(response.status).toBe(201);
+
+      // Verify the INSERT query only includes email, password_hash, name
+      const insertCall = mockedQuery.mock.calls[1];
+      const sql = insertCall[0] as string;
+      expect(sql).toContain('INSERT INTO users');
+      expect(sql).toContain('email');
+      expect(sql).toContain('password_hash');
+      expect(sql).toContain('name');
+      expect(sql).not.toContain('company_name');
+      expect(sql).not.toContain('company_ico');
+
+      // Verify the parameters array has exactly 3 items (email, passwordHash, name)
+      const params = insertCall[1] as any[];
+      expect(params).toHaveLength(3);
+      expect(params[0]).toBe('new@example.com');
+      // params[1] is the bcrypt hash
+      expect(params[2]).toBe('New User');
+    });
   });
 
   describe('POST /auth/login', () => {
@@ -192,6 +257,109 @@ describe('Auth Routes', () => {
     });
   });
 
+  describe('GET /auth/me - new fields', () => {
+    it('should return onboardingCompleted field', async () => {
+      const userId = 'test-user-id';
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{
+          id: userId,
+          email: 'test@example.com',
+          name: 'Test User',
+          company_name: 'Test Company',
+          company_ico: '12345678',
+          company_dic: 'CZ12345678',
+          company_address: 'Test Address',
+          bank_account: '123456789',
+          bank_code: '0100',
+          vat_payer: true,
+          onboarding_completed: true,
+          pausalni_dan_enabled: false,
+          pausalni_dan_tier: null,
+          pausalni_dan_limit: null,
+          has_logo: false,
+          created_at: new Date()
+        }]
+      } as any);
+
+      const response = await request(app)
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.onboardingCompleted).toBe(true);
+    });
+
+    it('should return pausalni dan fields', async () => {
+      const userId = 'test-user-id';
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{
+          id: userId,
+          email: 'test@example.com',
+          name: 'Test User',
+          company_name: 'Test Company',
+          company_ico: '12345678',
+          company_dic: 'CZ12345678',
+          company_address: 'Test Address',
+          bank_account: '123456789',
+          bank_code: '0100',
+          vat_payer: true,
+          onboarding_completed: true,
+          pausalni_dan_enabled: true,
+          pausalni_dan_tier: 2,
+          pausalni_dan_limit: 1500000,
+          has_logo: false,
+          created_at: new Date()
+        }]
+      } as any);
+
+      const response = await request(app)
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.pausalniDanEnabled).toBe(true);
+      expect(response.body.pausalniDanTier).toBe(2);
+      expect(response.body.pausalniDanLimit).toBe(1500000);
+    });
+
+    it('should return vatPayer defaulting to false for new user', async () => {
+      const userId = 'test-user-id';
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{
+          id: userId,
+          email: 'test@example.com',
+          name: 'Test User',
+          company_name: null,
+          company_ico: null,
+          company_dic: null,
+          company_address: null,
+          bank_account: null,
+          bank_code: null,
+          vat_payer: false,
+          onboarding_completed: false,
+          pausalni_dan_enabled: false,
+          pausalni_dan_tier: null,
+          pausalni_dan_limit: null,
+          has_logo: false,
+          created_at: new Date()
+        }]
+      } as any);
+
+      const response = await request(app)
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.vatPayer).toBe(false);
+    });
+  });
+
   describe('PUT /auth/me', () => {
     it('should update user profile', async () => {
       const userId = 'test-user-id';
@@ -221,6 +389,80 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.name).toBe('Updated Name');
+    });
+  });
+
+  describe('PUT /auth/me - new fields', () => {
+    it('should update onboardingCompleted to true', async () => {
+      const userId = 'test-user-id';
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{
+          id: userId,
+          email: 'test@example.com',
+          name: 'Test User',
+          company_name: 'Test Company',
+          company_ico: '12345678',
+          company_dic: 'CZ12345678',
+          company_address: 'Test Address',
+          bank_account: '123456789',
+          bank_code: '0100',
+          vat_payer: true,
+          onboarding_completed: true,
+          pausalni_dan_enabled: false,
+          pausalni_dan_tier: null,
+          pausalni_dan_limit: null
+        }]
+      } as any);
+
+      const response = await request(app)
+        .put('/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          onboardingCompleted: true
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.onboardingCompleted).toBe(true);
+    });
+
+    it('should update pausalni dan fields', async () => {
+      const userId = 'test-user-id';
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{
+          id: userId,
+          email: 'test@example.com',
+          name: 'Test User',
+          company_name: 'Test Company',
+          company_ico: '12345678',
+          company_dic: 'CZ12345678',
+          company_address: 'Test Address',
+          bank_account: '123456789',
+          bank_code: '0100',
+          vat_payer: true,
+          onboarding_completed: true,
+          pausalni_dan_enabled: true,
+          pausalni_dan_tier: 2,
+          pausalni_dan_limit: 1500000
+        }]
+      } as any);
+
+      const response = await request(app)
+        .put('/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          pausalniDanEnabled: true,
+          pausalniDanTier: 2,
+          pausalniDanLimit: 1500000
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.pausalniDanEnabled).toBe(true);
+      expect(response.body.pausalniDanTier).toBe(2);
+      expect(response.body.pausalniDanLimit).toBe(1500000);
     });
   });
 

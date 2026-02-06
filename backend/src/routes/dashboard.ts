@@ -63,11 +63,11 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
       WHERE user_id = $1 AND invoice_id IS NULL
     `, [req.userId]);
 
-    // Get paušální daň settings and calculate yearly invoiced amount
+    // Get paušální daň settings from users table
     const settingsResult = await query(`
       SELECT pausalni_dan_enabled, pausalni_dan_tier, pausalni_dan_limit
-      FROM settings
-      WHERE user_id = $1
+      FROM users
+      WHERE id = $1
     `, [req.userId]);
 
     // Get total invoiced this year (paid invoices in CZK only)

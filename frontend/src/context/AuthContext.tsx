@@ -13,6 +13,10 @@ interface User {
   bankCode?: string;
   vatPayer?: boolean;
   hasLogo?: boolean;
+  onboardingCompleted?: boolean;
+  pausalniDanEnabled?: boolean;
+  pausalniDanTier?: number;
+  pausalniDanLimit?: number;
 }
 
 interface AuthContextType {
@@ -30,12 +34,6 @@ interface RegisterData {
   email: string;
   password: string;
   name: string;
-  companyName?: string;
-  companyIco?: string;
-  companyDic?: string;
-  companyAddress?: string;
-  bankAccount?: string;
-  bankCode?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
