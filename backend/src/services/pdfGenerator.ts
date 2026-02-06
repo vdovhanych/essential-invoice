@@ -145,16 +145,14 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
   // --- Dates section ---
   const datesSection: Content = {
     table: {
-      widths: ['*', '*', '*'],
+      widths: ['*', '*'],
       body: [
         [
           { text: 'DATUM VYSTAVENÍ', fontSize: 8, color: '#666', alignment: 'center' as const },
-          { text: 'DATUM ZDANITELNÉHO PLNĚNÍ', fontSize: 8, color: '#666', alignment: 'center' as const },
           { text: 'DATUM SPLATNOSTI', fontSize: 8, color: '#666', alignment: 'center' as const },
         ],
         [
           { text: formatDate(invoice.issueDate), fontSize: 11, bold: true, alignment: 'center' as const },
-          { text: formatDate(invoice.deliveryDate), fontSize: 11, bold: true, alignment: 'center' as const },
           { text: formatDate(invoice.dueDate), fontSize: 11, bold: true, alignment: 'center' as const },
         ],
       ],
