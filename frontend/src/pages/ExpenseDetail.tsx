@@ -273,12 +273,6 @@ export default function ExpenseDetail() {
                 <dt className="text-gray-500">Datum splatnosti:</dt>
                 <dd className="font-medium">{formatDate(expense.dueDate)}</dd>
               </div>
-              {expense.deliveryDate && (
-                <div className="flex justify-between">
-                  <dt className="text-gray-500">DUZP:</dt>
-                  <dd className="font-medium">{formatDate(expense.deliveryDate)}</dd>
-                </div>
-              )}
               {expense.paidAt && (
                 <div className="flex justify-between">
                   <dt className="text-gray-500">Zaplaceno:</dt>

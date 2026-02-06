@@ -34,7 +34,6 @@ export default function InvoiceCreate() {
     clientId: '',
     issueDate: new Date().toISOString().split('T')[0],
     dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    deliveryDate: new Date().toISOString().split('T')[0],
     currency: 'CZK',
     vatRate: 21,
     notes: '',
@@ -63,7 +62,6 @@ export default function InvoiceCreate() {
           clientId: invoice.clientId,
           issueDate: invoice.issueDate.split('T')[0],
           dueDate: invoice.dueDate.split('T')[0],
-          deliveryDate: invoice.deliveryDate.split('T')[0],
           currency: invoice.currency,
           vatRate: invoice.vatRate,
           notes: invoice.notes || '',
@@ -257,17 +255,6 @@ export default function InvoiceCreate() {
                 onChange={handleChange}
                 className="input"
                 required
-              />
-            </div>
-            <div>
-              <label htmlFor="deliveryDate" className="label">DUZP</label>
-              <input
-                type="date"
-                id="deliveryDate"
-                name="deliveryDate"
-                value={formData.deliveryDate}
-                onChange={handleChange}
-                className="input"
               />
             </div>
             <div>

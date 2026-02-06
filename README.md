@@ -130,7 +130,7 @@ Once configured, AI features become available in the application:
 
 1. Go to **Invoices** and click "New Invoice"
 2. Select a client (auto-fills their details)
-3. Set dates: Issue date, due date, delivery date (DUZP)
+3. Set dates: Issue date and due date
 4. Add line items with description, quantity, unit, and price
 5. Select currency (CZK/EUR) and VAT rate
    - **Note**: If you set VAT rate to 0%, the VAT line will not be shown on the PDF invoice

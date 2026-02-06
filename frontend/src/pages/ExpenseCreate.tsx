@@ -24,7 +24,6 @@ export default function ExpenseCreate() {
     supplierInvoiceNumber: '',
     issueDate: new Date().toISOString().split('T')[0],
     dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    deliveryDate: new Date().toISOString().split('T')[0],
     currency: 'CZK',
     amount: 0,
     vatRate: 21,
@@ -52,7 +51,6 @@ export default function ExpenseCreate() {
           supplierInvoiceNumber: expense.supplierInvoiceNumber || '',
           issueDate: expense.issueDate.split('T')[0],
           dueDate: expense.dueDate.split('T')[0],
-          deliveryDate: expense.deliveryDate ? expense.deliveryDate.split('T')[0] : '',
           currency: expense.currency,
           amount: expense.amount,
           vatRate: expense.vatRate,
@@ -134,7 +132,6 @@ export default function ExpenseCreate() {
         supplierInvoiceNumber: formData.supplierInvoiceNumber || null,
         issueDate: formData.issueDate,
         dueDate: formData.dueDate,
-        deliveryDate: formData.deliveryDate || null,
         currency: formData.currency,
         amount: Number(formData.amount),
         vatRate: Number(formData.vatRate),
@@ -256,17 +253,6 @@ export default function ExpenseCreate() {
                 onChange={handleChange}
                 className="input"
                 required
-              />
-            </div>
-            <div>
-              <label htmlFor="deliveryDate" className="label">DUZP</label>
-              <input
-                type="date"
-                id="deliveryDate"
-                name="deliveryDate"
-                value={formData.deliveryDate}
-                onChange={handleChange}
-                className="input"
               />
             </div>
             <div>

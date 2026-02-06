@@ -338,10 +338,6 @@ export default function InvoiceDetail() {
                 <dt className="text-gray-500">Datum splatnosti:</dt>
                 <dd className="font-medium">{formatDate(invoice.dueDate)}</dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-gray-500">DUZP:</dt>
-                <dd className="font-medium">{formatDate(invoice.deliveryDate)}</dd>
-              </div>
               {invoice.sentAt && (
                 <div className="flex justify-between">
                   <dt className="text-gray-500">Odesláno:</dt>
