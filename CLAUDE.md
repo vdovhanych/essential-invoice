@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Documentation Structure
+
+This repository has comprehensive documentation in the `docs/` folder. **Always refer to the docs folder for detailed information:**
+
+- **[docs/development.md](docs/development.md)** - Development setup, workflow, and commands
+- **[docs/architecture.md](docs/architecture.md)** - Technical architecture and design decisions
+- **[docs/api.md](docs/api.md)** - Complete API reference
+- **[docs/configuration.md](docs/configuration.md)** - Configuration options and setup
+- **[docs/usage.md](docs/usage.md)** - User guide and application usage
+- **[docs/testing.md](docs/testing.md)** - Testing guidelines and how to run tests
+- **[docs/troubleshooting.md](docs/troubleshooting.md)** - Common issues and solutions
+- **[docs/backup.md](docs/backup.md)** - Backup and restore procedures
+- **[docs/bank-support.md](docs/bank-support.md)** - Bank integration details
+- **[docs/security.md](docs/security.md)** - Security features and best practices
+
+## Quick Reference
+
 ## Build and Development Commands
 
 ### Backend (Express/TypeScript)
@@ -104,6 +121,7 @@ Requires `.env` file in root (copy from `.env.example`). Key variables:
 - `DB_*` - PostgreSQL connection settings
 - SMTP/IMAP configured in-app via Settings page
 
+
 ## Documentation Maintenance
 
 **CRITICAL**: When making ANY changes to the codebase, you MUST update the relevant documentation files to reflect those changes. This ensures the documentation stays accurate and useful.
@@ -114,27 +132,27 @@ Update documentation immediately when you:
 
 1. **Add new features or endpoints**:
    - Add to README.md "Features" section
-   - Add to README.md "API Reference" section (with full endpoint details)
-   - Update CLAUDE.md architecture section with new routes/pages/services
-   - Update project structure in README.md if new directories/files are added
+   - Add to [docs/api.md](docs/api.md) "API Reference" section (with full endpoint details)
+   - Update [docs/architecture.md](docs/architecture.md) with new routes/pages/services
+   - Update [docs/development.md](docs/development.md) project structure if new directories/files are added
 
 2. **Change existing functionality**:
-   - Update descriptions in README.md and CLAUDE.md
-   - Update API endpoint documentation if signatures change
-   - Update usage examples if behavior changes
+   - Update descriptions in README.md and [docs/architecture.md](docs/architecture.md)
+   - Update [docs/api.md](docs/api.md) if endpoint signatures change
+   - Update [docs/usage.md](docs/usage.md) if behavior changes
 
 3. **Add/change dependencies**:
    - If switching libraries (e.g., Puppeteer → pdfmake), update all mentions
-   - Document new key dependencies in architecture sections
+   - Document new key dependencies in [docs/architecture.md](docs/architecture.md)
 
 4. **Add new pages or routes**:
    - Update CLAUDE.md Frontend pages list
    - Update CLAUDE.md Backend routes list
-   - Update README.md project structure tree
+   - Update [docs/development.md](docs/development.md) project structure tree
 
 5. **Change configuration**:
    - Update .env.example with new environment variables
-   - Document new config options in README.md "Configuration" section
+   - Document new config options in [docs/configuration.md](docs/configuration.md)
    - Update CLAUDE.md "Environment" section
 
 6. **Remove features or files**:
@@ -143,21 +161,24 @@ Update documentation immediately when you:
 
 ### Files to Keep Updated
 
-- **CLAUDE.md**: Technical architecture, commands, file locations, testing instructions
-- **README.md**: User-facing features, setup guide, API reference, troubleshooting
+- **CLAUDE.md**: Technical quick reference, commands, testing instructions
+- **README.md**: Project overview, quick start, technology stack
+- **docs/*.md**: Detailed documentation for all aspects of the project
 - **.env.example**: All environment variables with comments
 
 ### Documentation Update Checklist
 
 Before completing any task that modifies code, ask yourself:
 
-- [ ] Did I add/remove/change any API endpoints? → Update README.md API Reference
+- [ ] Did I add/remove/change any API endpoints? → Update [docs/api.md](docs/api.md)
 - [ ] Did I add/remove any frontend pages? → Update CLAUDE.md pages list
 - [ ] Did I add/remove any backend routes? → Update CLAUDE.md routes list
-- [ ] Did I change how a feature works? → Update README.md features and usage guide
-- [ ] Did I switch or add major libraries? → Update both README.md and CLAUDE.md
-- [ ] Did I add new environment variables? → Update .env.example and README.md configuration section
-- [ ] Did I change the project structure? → Update README.md project structure tree
+- [ ] Did I change how a feature works? → Update [docs/usage.md](docs/usage.md)
+- [ ] Did I switch or add major libraries? → Update [docs/architecture.md](docs/architecture.md)
+- [ ] Did I add new environment variables? → Update .env.example and [docs/configuration.md](docs/configuration.md)
+- [ ] Did I change the project structure? → Update [docs/development.md](docs/development.md)
+- [ ] Did I add bank support? → Update [docs/bank-support.md](docs/bank-support.md)
+- [ ] Did I change security features? → Update [docs/security.md](docs/security.md)
 
 ### Example: Adding a New Feature
 
@@ -168,9 +189,10 @@ If you add an "Expenses" feature:
 3. Add pages: `frontend/src/pages/Expenses.tsx`, `ExpenseCreate.tsx`, `ExpenseDetail.tsx`
 4. **Immediately update documentation**:
    - README.md: Add "Expense Tracking" to Features list
-   - README.md: Add Expenses API endpoints to API Reference
-   - README.md: Update project structure to include expenses routes and pages
+   - [docs/api.md](docs/api.md): Add Expenses API endpoints
+   - [docs/development.md](docs/development.md): Update project structure to include expenses routes and pages
    - CLAUDE.md: Add `expenses` to Backend routes list
    - CLAUDE.md: Add expense pages to Frontend pages list
+   - [docs/usage.md](docs/usage.md): Add section on managing expenses
 
 **Remember**: Documentation is part of the deliverable. A feature is not complete until its documentation is updated.
