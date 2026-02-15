@@ -21,11 +21,13 @@ backend:
       memory: "512Mi"
       cpu: "500m"
 
-  # -- Additional environment variables for the backend
+  # -- Environment variables for the backend
   env:
     NODE_ENV: production
     # -- Email polling interval in milliseconds (default: 5 minutes)
     EMAIL_POLLING_INTERVAL: "300000"
+    # -- CORS allowed origin (set to your frontend URL)
+    CORS_ORIGIN: "*"
 
   # -- Node selector for backend pods
   nodeSelector: {}
@@ -94,8 +96,10 @@ ingress:
 # Generate with: openssl rand -base64 32
 jwtSecret: ""
 
-# -- Use an existing Kubernetes secret for JWT and DB credentials
-# The secret should contain keys: JWT_SECRET, DB_PASSWORD
+# -- Use an existing Kubernetes secret for JWT (and optional external DB credentials)
+# The secret must contain: JWT_SECRET
+# When postgresql.enabled=false (external DB), it must also contain: DB_PASSWORD
+# When postgresql.enabled=true, DB password is read from the Bitnami subchart secret (key: postgres-password)
 existingSecret: ""
 
 # -- Image pull secrets for private registries
