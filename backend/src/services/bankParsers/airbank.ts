@@ -1,5 +1,5 @@
 // Air Bank email parser
-// Parses incoming payment notifications from Air Bank (noreply@airbank.cz)
+// Parses incoming payment notifications from Air Bank (info@airbank.cz)
 
 export interface ParsedPayment {
   amount: number;
@@ -106,4 +106,4 @@ export function parseAirBankEmail(emailBody: string, emailDate: Date): ParsedPay
 
 // Export bank identifier
 export const BANK_TYPE = 'airbank';
-export const EXPECTED_SENDER = 'noreply@airbank.cz';
+export const EXPECTED_SENDER = 'info@airbank.cz';
