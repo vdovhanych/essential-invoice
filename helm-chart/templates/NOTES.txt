@@ -11,14 +11,16 @@ Access your application at:
 
 {{- else }}
 
-To access the application, run:
+To access the application, port-forward both services:
 
+  kubectl port-forward svc/{{ include "essential-invoice.backend.serviceName" . }} 3001:{{ .Values.backend.port }} -n {{ .Release.Namespace }} &
   kubectl port-forward svc/{{ include "essential-invoice.frontend.serviceName" . }} 8080:{{ .Values.frontend.port }} -n {{ .Release.Namespace }}
 
 Then open http://localhost:8080 in your browser.
 
-To access the backend API directly:
+Note: Both port-forwards are needed. The frontend proxies /api requests
+to the backend service inside the cluster.
 
-  kubectl port-forward svc/{{ include "essential-invoice.backend.serviceName" . }} 3001:{{ .Values.backend.port }} -n {{ .Release.Namespace }}
+For production use, enable ingress in your values.yaml.
 
 {{- end }}

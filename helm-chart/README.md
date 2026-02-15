@@ -56,6 +56,7 @@ helm uninstall essential-invoice -n essential-invoice
 | `backend.resources.limits.cpu` | CPU limit | `500m` |
 | `backend.env.NODE_ENV` | Node environment | `production` |
 | `backend.env.EMAIL_POLLING_INTERVAL` | Email polling interval (ms) | `300000` |
+| `backend.env.CORS_ORIGIN` | Allowed CORS origin | `*` |
 
 ### Frontend
 
@@ -85,7 +86,7 @@ helm uninstall essential-invoice -n essential-invoice
 | Parameter | Description | Default |
 |---|---|---|
 | `jwtSecret` | JWT signing secret (required) | `""` |
-| `existingSecret` | Use existing secret (keys: `JWT_SECRET`, `DB_PASSWORD`) | `""` |
+| `existingSecret` | Use existing secret (key: `JWT_SECRET`; also `DB_PASSWORD` for external DB) | `""` |
 
 ### PostgreSQL (Bitnami subchart)
 
@@ -144,15 +145,19 @@ postgresql:
 ### Using existing secrets
 
 ```bash
-# Create the secret manually
-kubectl create secret generic essential-invoice-creds \
+# Create a secret for the application (JWT)
+kubectl create secret generic essential-invoice-app \
   --from-literal=JWT_SECRET=$(openssl rand -base64 32) \
-  --from-literal=DB_PASSWORD=my-db-password \
   -n essential-invoice
 
-# Reference it in values
+# Create a separate secret for PostgreSQL (Bitnami expects "postgres-password" key)
+kubectl create secret generic essential-invoice-db \
+  --from-literal=postgres-password=my-db-password \
+  -n essential-invoice
+
+# Reference them in values
 helm install essential-invoice . \
-  --set existingSecret=essential-invoice-creds \
-  --set postgresql.auth.existingSecret=essential-invoice-creds \
+  --set existingSecret=essential-invoice-app \
+  --set postgresql.auth.existingSecret=essential-invoice-db \
   -n essential-invoice
 ```
