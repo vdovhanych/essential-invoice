@@ -1,0 +1,142 @@
+# -- Backend (Express API) configuration
+backend:
+  # -- Backend container image
+  image:
+    repository: ghcr.io/vdovhanych/essential-invoice/backend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  # -- Number of backend replicas
+  replicas: 1
+
+  # -- Backend service port
+  port: 3001
+
+  # -- Resource requests and limits
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  # -- Additional environment variables for the backend
+  env:
+    NODE_ENV: production
+    # -- Email polling interval in milliseconds (default: 5 minutes)
+    EMAIL_POLLING_INTERVAL: "300000"
+
+  # -- Node selector for backend pods
+  nodeSelector: {}
+
+  # -- Tolerations for backend pods
+  tolerations: []
+
+  # -- Affinity rules for backend pods
+  affinity: {}
+
+# -- Frontend (Nginx + React SPA) configuration
+frontend:
+  # -- Frontend container image
+  image:
+    repository: ghcr.io/vdovhanych/essential-invoice/frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  # -- Number of frontend replicas
+  replicas: 1
+
+  # -- Frontend service port
+  port: 80
+
+  # -- Resource requests and limits
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+  # -- Node selector for frontend pods
+  nodeSelector: {}
+
+  # -- Tolerations for frontend pods
+  tolerations: []
+
+  # -- Affinity rules for frontend pods
+  affinity: {}
+
+# -- Ingress configuration
+ingress:
+  # -- Enable ingress resource
+  enabled: false
+
+  # -- Ingress class name (e.g. "nginx", "traefik")
+  className: ""
+
+  # -- Ingress annotations (e.g. cert-manager, nginx config)
+  annotations: {}
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+    # nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+
+  # -- Hostname for the ingress
+  host: ""
+
+  # -- TLS configuration
+  tls: []
+  #  - secretName: essential-invoice-tls
+  #    hosts:
+  #      - invoice.example.com
+
+# -- JWT secret for backend authentication (required)
+# Generate with: openssl rand -base64 32
+jwtSecret: ""
+
+# -- Use an existing Kubernetes secret for JWT and DB credentials
+# The secret should contain keys: JWT_SECRET, DB_PASSWORD
+existingSecret: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Override the full name of resources
+fullnameOverride: ""
+
+# -- Override the chart name
+nameOverride: ""
+
+# -- PostgreSQL subchart configuration (Bitnami)
+# See: https://github.com/bitnami/charts/tree/main/bitnami/postgresql
+postgresql:
+  # -- Enable the PostgreSQL subchart
+  enabled: true
+
+  auth:
+    # -- PostgreSQL database name
+    database: essential_invoice
+    # -- PostgreSQL username
+    username: postgres
+    # -- PostgreSQL password (required if not using existingSecret)
+    password: ""
+    # -- Use an existing secret for PostgreSQL credentials
+    # The secret should contain key: postgres-password
+    existingSecret: ""
+
+  primary:
+    persistence:
+      # -- Enable persistent storage for PostgreSQL
+      enabled: true
+      # -- Storage size for PostgreSQL PVC
+      size: 5Gi
+
+  # -- Override to connect to an external database instead of the subchart
+  # Set postgresql.enabled=false and configure these:
+  external:
+    host: ""
+    port: 5432
+    database: essential_invoice
+    username: postgres
+    # -- Password for external database (or use existingSecret)
+    password: ""
