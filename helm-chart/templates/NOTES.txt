@@ -1,0 +1,24 @@
+Essential Invoice has been deployed!
+
+{{- if .Values.ingress.enabled }}
+
+Access your application at:
+{{- if .Values.ingress.tls }}
+  https://{{ .Values.ingress.host }}
+{{- else }}
+  http://{{ .Values.ingress.host }}
+{{- end }}
+
+{{- else }}
+
+To access the application, run:
+
+  kubectl port-forward svc/{{ include "essential-invoice.frontend.serviceName" . }} 8080:{{ .Values.frontend.port }} -n {{ .Release.Namespace }}
+
+Then open http://localhost:8080 in your browser.
+
+To access the backend API directly:
+
+  kubectl port-forward svc/{{ include "essential-invoice.backend.serviceName" . }} 3001:{{ .Values.backend.port }} -n {{ .Release.Namespace }}
+
+{{- end }}

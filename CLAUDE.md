@@ -35,6 +35,17 @@ docker compose logs backend    # View backend logs
 # Production: docker compose -f docker-compose.production.yml up -d
 ```
 
+### Helm (Kubernetes)
+```bash
+cd helm-chart
+helm dependency update                          # Download PostgreSQL subchart
+helm lint .                                     # Validate chart
+helm template essential-invoice .               # Dry-run render
+helm install essential-invoice . \              # Install
+  --namespace essential-invoice --create-namespace \
+  --set jwtSecret=<secret> --set postgresql.auth.password=<password>
+```
+
 ### Database
 ```bash
 cd backend
@@ -72,6 +83,14 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `utils/format.ts` - Date/currency formatting helpers
   - `utils/api.ts` - API client and request utilities
 - **Path alias**: `@/*` maps to `src/*`
+
+### Helm Chart (`helm-chart/`)
+- **Chart.yaml**: Chart metadata with Bitnami PostgreSQL subchart dependency
+- **values.yaml**: All configurable values (backend, frontend, ingress, postgresql, secrets)
+- **templates/**: Kubernetes manifests for backend deployment/service, frontend deployment/service, ingress (optional), secrets
+- PostgreSQL deployed via Bitnami subchart with PVC persistence; can be disabled in favor of external DB
+- Ingress disabled by default; supports TLS via cert-manager annotations
+- Secrets managed via k8s Secret or existing secret reference
 
 ### Key Integrations
 - **ARES API**: Czech company registry lookup by IČO (`routes/ares.ts`)

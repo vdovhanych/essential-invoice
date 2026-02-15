@@ -1,0 +1,19 @@
+apiVersion: v2
+name: essential-invoice
+description: A self-hosted invoicing application for Czech freelancers
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+home: https://github.com/vdovhanych/essential-invoice
+sources:
+  - https://github.com/vdovhanych/essential-invoice
+
+maintainers:
+  - name: vdovhanych
+
+dependencies:
+  - name: postgresql
+    version: "16.4.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
