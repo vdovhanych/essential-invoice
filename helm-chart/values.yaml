@@ -3,6 +3,7 @@ backend:
   # -- Backend container image
   image:
     repository: ghcr.io/vdovhanych/essential-invoice/backend
+    # -- Override with a specific version tag for production (e.g. "1.0.0")
     tag: latest
     pullPolicy: IfNotPresent
 
@@ -26,7 +27,9 @@ backend:
     NODE_ENV: production
     # -- Email polling interval in milliseconds (default: 5 minutes)
     EMAIL_POLLING_INTERVAL: "300000"
-    # -- CORS allowed origin (set to your frontend URL)
+    # -- CORS allowed origin(s), comma-separated. With ingress (same-origin),
+    # -- CORS is not needed and this value is ignored by browsers.
+    # -- For cross-origin setups, set to your frontend URL (e.g. "https://invoices.example.com").
     CORS_ORIGIN: "*"
 
   # -- Node selector for backend pods
@@ -43,6 +46,7 @@ frontend:
   # -- Frontend container image
   image:
     repository: ghcr.io/vdovhanych/essential-invoice/frontend
+    # -- Override with a specific version tag for production (e.g. "1.0.0")
     tag: latest
     pullPolicy: IfNotPresent
 
@@ -92,7 +96,7 @@ ingress:
   #    hosts:
   #      - invoice.example.com
 
-# -- JWT secret for backend authentication (required)
+# -- REQUIRED: JWT secret for backend authentication
 # Generate with: openssl rand -base64 32
 jwtSecret: ""
 
@@ -122,7 +126,7 @@ postgresql:
     database: essential_invoice
     # -- PostgreSQL username
     username: postgres
-    # -- PostgreSQL password (required if not using existingSecret)
+    # -- REQUIRED: PostgreSQL password (unless using auth.existingSecret)
     password: ""
     # -- Use an existing secret for PostgreSQL credentials
     # The secret should contain key: postgres-password
@@ -135,7 +139,7 @@ postgresql:
       # -- Storage size for PostgreSQL PVC
       size: 5Gi
 
-  # -- Override to connect to an external database instead of the subchart
+  # -- External database connection (only used when postgresql.enabled=false)
   # Set postgresql.enabled=false and configure these:
   external:
     host: ""
