@@ -131,13 +131,13 @@ PostgreSQL secret name for DB password.
 */}}
 {{- define "essential-invoice.databaseSecretName" -}}
 {{- if .Values.postgresql.enabled }}
-  {{- if .Values.postgresql.auth.existingSecret }}
-    {{- .Values.postgresql.auth.existingSecret }}
-  {{- else }}
-    {{- printf "%s-postgresql" .Release.Name }}
-  {{- end }}
+{{- if .Values.postgresql.auth.existingSecret }}
+{{- .Values.postgresql.auth.existingSecret }}
 {{- else }}
-  {{- include "essential-invoice.secretName" . }}
+{{- printf "%s-postgresql" .Release.Name }}
+{{- end }}
+{{- else }}
+{{- include "essential-invoice.secretName" . }}
 {{- end }}
 {{- end }}
 

@@ -119,8 +119,10 @@ postgresql:
 
 ### With ingress and TLS (nginx + cert-manager)
 
+> **Warning**: Do not commit secrets to version control. Use `--set` flags or `existingSecret` for production.
+
 ```yaml
-jwtSecret: "my-jwt-secret"
+jwtSecret: "my-jwt-secret"  # example only — use --set or existingSecret in production
 
 ingress:
   enabled: true
