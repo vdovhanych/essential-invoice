@@ -2,17 +2,29 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 // Mock the database module
 vi.mock('../db/init.js', () => ({
   query: vi.fn()
 }));
 
+// Mock the global email sender
+vi.mock('../services/globalEmailSender.js', () => ({
+  isGlobalSmtpConfigured: vi.fn(),
+  sendWelcomeEmail: vi.fn().mockResolvedValue(undefined),
+  sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
+}));
+
 // Import after mocking
 import { authRouter } from './auth.js';
 import { query } from '../db/init.js';
+import { isGlobalSmtpConfigured, sendWelcomeEmail, sendPasswordResetEmail } from '../services/globalEmailSender.js';
 
 const mockedQuery = vi.mocked(query);
+const mockedIsGlobalSmtpConfigured = vi.mocked(isGlobalSmtpConfigured);
+const mockedSendWelcomeEmail = vi.mocked(sendWelcomeEmail);
+const mockedSendPasswordResetEmail = vi.mocked(sendPasswordResetEmail);
 
 describe('Auth Routes', () => {
   const app = express();
@@ -22,6 +34,10 @@ describe('Auth Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.JWT_SECRET = 'test-secret';
+    // Restore default mock implementations after clearAllMocks
+    mockedIsGlobalSmtpConfigured.mockReturnValue(false);
+    mockedSendWelcomeEmail.mockResolvedValue(undefined);
+    mockedSendPasswordResetEmail.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -480,6 +496,209 @@ describe('Auth Routes', () => {
         });
 
       expect(response.status).toBe(400);
+    });
+  });
+
+  describe('POST /auth/register - welcome email', () => {
+    it('should send welcome email when global SMTP is configured', async () => {
+      mockedIsGlobalSmtpConfigured.mockReturnValue(true);
+      // Check if user exists
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+      // Create user
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{ id: 'new-id', email: 'new@example.com', name: 'New User' }]
+      } as any);
+      // Create default settings
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+
+      const response = await request(app)
+        .post('/auth/register')
+        .send({
+          email: 'new@example.com',
+          password: 'password123',
+          name: 'New User'
+        });
+
+      expect(response.status).toBe(201);
+      expect(mockedSendWelcomeEmail).toHaveBeenCalledWith('new@example.com', 'New User');
+    });
+
+    it('should still register successfully when global SMTP is not configured', async () => {
+      mockedIsGlobalSmtpConfigured.mockReturnValue(false);
+      // Check if user exists
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+      // Create user
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{ id: 'new-id', email: 'new@example.com', name: 'New User' }]
+      } as any);
+      // Create default settings
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+
+      const response = await request(app)
+        .post('/auth/register')
+        .send({
+          email: 'new@example.com',
+          password: 'password123',
+          name: 'New User'
+        });
+
+      expect(response.status).toBe(201);
+      expect(mockedSendWelcomeEmail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /auth/forgot-password', () => {
+    it('should return success even if email does not exist', async () => {
+      mockedIsGlobalSmtpConfigured.mockReturnValue(true);
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+
+      const response = await request(app)
+        .post('/auth/forgot-password')
+        .send({ email: 'nonexistent@example.com' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBeDefined();
+      expect(mockedSendPasswordResetEmail).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for invalid email format', async () => {
+      const response = await request(app)
+        .post('/auth/forgot-password')
+        .send({ email: 'not-an-email' });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should create token and send email when user exists', async () => {
+      mockedIsGlobalSmtpConfigured.mockReturnValue(true);
+      // User lookup
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{ id: 'user-id', name: 'Test User', email: 'test@example.com' }]
+      } as any);
+      // Invalidate existing tokens
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+      // Insert new token
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+
+      const response = await request(app)
+        .post('/auth/forgot-password')
+        .send({ email: 'test@example.com' });
+
+      expect(response.status).toBe(200);
+      expect(mockedSendPasswordResetEmail).toHaveBeenCalledWith(
+        'test@example.com',
+        'Test User',
+        expect.any(String)
+      );
+    });
+
+    it('should return success when global SMTP is not configured', async () => {
+      mockedIsGlobalSmtpConfigured.mockReturnValue(false);
+
+      const response = await request(app)
+        .post('/auth/forgot-password')
+        .send({ email: 'test@example.com' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBeDefined();
+    });
+  });
+
+  describe('POST /auth/reset-password', () => {
+    it('should return 400 if token is missing', async () => {
+      const response = await request(app)
+        .post('/auth/reset-password')
+        .send({ password: 'newpassword123' });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 400 if password is too short', async () => {
+      const response = await request(app)
+        .post('/auth/reset-password')
+        .send({ token: 'some-token', password: 'short' });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 400 for invalid token', async () => {
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+
+      const response = await request(app)
+        .post('/auth/reset-password')
+        .send({ token: 'invalid-token', password: 'newpassword123' });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('Neplatný');
+    });
+
+    it('should return 400 for already-used token', async () => {
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{
+          id: 'token-id',
+          user_id: 'user-id',
+          expires_at: new Date(Date.now() + 3600000),
+          used_at: new Date()
+        }]
+      } as any);
+
+      const response = await request(app)
+        .post('/auth/reset-password')
+        .send({ token: 'used-token', password: 'newpassword123' });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('již byl použit');
+    });
+
+    it('should return 400 for expired token', async () => {
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{
+          id: 'token-id',
+          user_id: 'user-id',
+          expires_at: new Date(Date.now() - 3600000),
+          used_at: null
+        }]
+      } as any);
+
+      const response = await request(app)
+        .post('/auth/reset-password')
+        .send({ token: 'expired-token', password: 'newpassword123' });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('vypršela');
+    });
+
+    it('should reset password successfully with valid token', async () => {
+      // Token lookup
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{
+          id: 'token-id',
+          user_id: 'user-id',
+          expires_at: new Date(Date.now() + 3600000),
+          used_at: null
+        }]
+      } as any);
+      // Update password
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+      // Mark token as used
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+      // Clean up expired tokens
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+
+      const response = await request(app)
+        .post('/auth/reset-password')
+        .send({ token: 'valid-token', password: 'newpassword123' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).toContain('úspěšně');
+
+      // Verify password was updated
+      const updateCall = mockedQuery.mock.calls[1];
+      expect(updateCall[0]).toContain('UPDATE users SET password_hash');
+
+      // Verify token was marked as used
+      const markUsedCall = mockedQuery.mock.calls[2];
+      expect(markUsedCall[0]).toContain('UPDATE password_reset_tokens SET used_at');
     });
   });
 });

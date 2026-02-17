@@ -2,9 +2,12 @@ import { Router, Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import multer from 'multer';
+import rateLimit from 'express-rate-limit';
 import { query } from '../db/init.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { isGlobalSmtpConfigured, sendWelcomeEmail, sendPasswordResetEmail } from '../services/globalEmailSender.js';
 
 // Configure multer for logo uploads (memory storage for base64 conversion)
 const upload = multer({
@@ -64,6 +67,13 @@ authRouter.post('/register',
       // Generate token
       const secret = process.env.JWT_SECRET || 'your-secret-key';
       const token = jwt.sign({ userId: user.id, email: user.email }, secret, { expiresIn: '7d' });
+
+      // Send welcome email (fire-and-forget)
+      if (isGlobalSmtpConfigured()) {
+        sendWelcomeEmail(email, name).catch(err => {
+          console.error('Failed to send welcome email:', err);
+        });
+      }
 
       res.status(201).json({
         user: { id: user.id, email: user.email, name: user.name, onboardingCompleted: false },
@@ -240,6 +250,124 @@ authRouter.post('/change-password', authenticateToken,
     } catch (error) {
       console.error('Change password error:', error);
       res.status(500).json({ error: 'Failed to change password' });
+    }
+  }
+);
+
+// Rate limiter for forgot-password
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Příliš mnoho požadavků na obnovení hesla, zkuste to prosím později.' }
+});
+
+// Forgot password
+authRouter.post('/forgot-password',
+  forgotPasswordLimiter,
+  body('email').isEmail().normalizeEmail(),
+  async (req: Request, res: Response) => {
+    const genericResponse = { message: 'Pokud účet s tímto emailem existuje, byl odeslán odkaz pro obnovení hesla.' };
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+
+    try {
+      if (!isGlobalSmtpConfigured()) {
+        console.error('Global SMTP not configured, cannot send password reset email');
+        return res.json(genericResponse);
+      }
+
+      const userResult = await query('SELECT id, name, email FROM users WHERE email = $1', [email]);
+      if (userResult.rows.length === 0) {
+        return res.json(genericResponse);
+      }
+
+      const user = userResult.rows[0];
+
+      // Invalidate existing tokens for this user
+      await query(
+        'UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND used_at IS NULL',
+        [user.id]
+      );
+
+      // Generate token
+      const token = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await query(
+        'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)',
+        [user.id, tokenHash, expiresAt]
+      );
+
+      await sendPasswordResetEmail(user.email, user.name, token);
+
+      res.json(genericResponse);
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      res.json(genericResponse);
+    }
+  }
+);
+
+// Reset password
+authRouter.post('/reset-password',
+  body('token').notEmpty(),
+  body('password').isLength({ min: 8 }),
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { token, password } = req.body;
+
+    try {
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+      const tokenResult = await query(
+        `SELECT id, user_id, expires_at, used_at FROM password_reset_tokens WHERE token_hash = $1`,
+        [tokenHash]
+      );
+
+      if (tokenResult.rows.length === 0) {
+        return res.status(400).json({ error: 'Neplatný nebo expirovaný odkaz pro obnovení hesla.' });
+      }
+
+      const resetToken = tokenResult.rows[0];
+
+      if (resetToken.used_at) {
+        return res.status(400).json({ error: 'Tento odkaz pro obnovení hesla již byl použit.' });
+      }
+
+      if (new Date(resetToken.expires_at) < new Date()) {
+        return res.status(400).json({ error: 'Platnost odkazu pro obnovení hesla vypršela.' });
+      }
+
+      // Hash new password and update
+      const passwordHash = await bcrypt.hash(password, 12);
+      await query(
+        'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+        [passwordHash, resetToken.user_id]
+      );
+
+      // Mark token as used
+      await query(
+        'UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1',
+        [resetToken.id]
+      );
+
+      // Clean up expired tokens
+      await query('DELETE FROM password_reset_tokens WHERE expires_at < CURRENT_TIMESTAMP');
+
+      res.json({ message: 'Heslo bylo úspěšně změněno.' });
+    } catch (error) {
+      console.error('Reset password error:', error);
+      res.status(500).json({ error: 'Nepodařilo se obnovit heslo.' });
     }
   }
 );

@@ -291,7 +291,29 @@ export async function initializeDatabase() {
         END IF;
       END $$;
 
+      -- Password reset tokens table
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token_hash VARCHAR(64) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        used_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Migration: expand email_type check constraint to include system email types
+      DO $$
+      BEGIN
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'email_logs_email_type_check') THEN
+          ALTER TABLE email_logs DROP CONSTRAINT email_logs_email_type_check;
+          ALTER TABLE email_logs ADD CONSTRAINT email_logs_email_type_check
+            CHECK (email_type IN ('invoice_sent', 'bank_notification', 'welcome', 'password_reset'));
+        END IF;
+      END $$;
+
       -- Create indexes
+      CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token_hash ON password_reset_tokens(token_hash);
+      CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens(user_id);
       CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
       CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);
       CREATE INDEX IF NOT EXISTS idx_invoices_client_id ON invoices(client_id);

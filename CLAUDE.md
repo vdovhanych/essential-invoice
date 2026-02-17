@@ -59,16 +59,17 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 ### Backend (`backend/src/`)
 - **Express API** with JWT authentication and rate limiting
 - **Entry point**: `index.ts` - Express app setup, middleware, route mounting
-- **Routes**: `routes/` - REST endpoints for auth, clients, invoices, expenses, payments, settings, ARES lookup, dashboard, AI
+- **Routes**: `routes/` - REST endpoints for auth (register, login, forgot-password, reset-password), clients, invoices, expenses, payments, settings, ARES lookup, dashboard, AI
 - **Services**: `services/` - Business logic:
   - `pdfGenerator.ts` - Invoice PDF generation using **pdfmake** library with Czech formatting, QR payment codes (SPAYD), and VAT/non-VAT payer support (hides DIČ and shows "Neplátce DPH" for non-VAT payers, hides DPH line when rate is 0%)
-  - `emailSender.ts` - SMTP email sending for invoice delivery
+  - `emailSender.ts` - Per-user SMTP email sending for invoice delivery
+  - `globalEmailSender.ts` - Global SMTP email sending for system emails (welcome, password reset), configured via env vars
   - `emailPoller.ts` - IMAP polling for bank payment notifications
   - `perplexityAI.ts` - Perplexity AI integration for tax advice and financial guidance
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
 - **Utils**: `utils/validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
-- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings.
+- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow.
 
 ### Frontend (`frontend/src/`)
 - **React 18** with TypeScript, Vite, and TailwindCSS
@@ -78,7 +79,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 - **Components**: `components/` - Reusable UI:
   - `Layout.tsx` - Main layout wrapper with navigation
   - `AIAssistant.tsx` - AI assistant chat component
-- **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding
+- **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
 - **Utils**:
   - `utils/format.ts` - Date/currency formatting helpers
   - `utils/api.ts` - API client and request utilities
@@ -130,7 +131,9 @@ cd frontend && pnpm vitest run src/utils/format.test.ts
 Requires `.env` file in root (copy from `.env.example`). Key variables:
 - `JWT_SECRET` - Required for authentication
 - `DB_*` - PostgreSQL connection settings
-- SMTP/IMAP configured in-app via Settings page
+- `GLOBAL_SMTP_*` - Global SMTP configuration for system emails (welcome, password reset). Separate from per-user SMTP
+- `FRONTEND_URL` - Frontend URL for constructing email links (default: `http://localhost:8080`)
+- Per-user SMTP/IMAP configured in-app via Settings page
 
 ## Documentation Maintenance
 

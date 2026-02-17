@@ -71,6 +71,28 @@ backend:
     # -- CORS is not needed and this value is ignored by browsers.
     # -- For cross-origin setups, set to your frontend URL (e.g. "https://invoices.example.com").
     CORS_ORIGIN: "*"
+    # -- Frontend URL for constructing links in emails (password reset, etc.)
+    # -- Set to your ingress URL in production (e.g. "https://invoices.example.com")
+    FRONTEND_URL: ""
+
+  # -- Global SMTP configuration for system emails (welcome, password reset)
+  # -- These are separate from per-user SMTP settings configured in the app UI
+  # -- To use, provide values directly or reference an existing secret via extraEnv/extraEnvFrom
+  globalSmtp:
+    # -- SMTP server host (leave empty to disable system emails)
+    host: ""
+    # -- SMTP server port
+    port: "587"
+    # -- SMTP username
+    user: ""
+    # -- SMTP password (prefer using existingSecret for production)
+    password: ""
+    # -- Use TLS (true/false)
+    secure: "false"
+    # -- Sender email address
+    fromEmail: ""
+    # -- Sender display name
+    fromName: "essentialInvoice"
 
   # -- Additional environment variables as a list (for secrets, configmaps, etc.)
   # Example:
