@@ -42,6 +42,14 @@ helm uninstall essential-invoice -n essential-invoice
 
 ## Configuration Reference
 
+### Service Account
+
+| Parameter | Description | Default |
+|---|---|---|
+| `serviceAccount.create` | Create a dedicated ServiceAccount | `true` |
+| `serviceAccount.name` | ServiceAccount name (auto-generated if empty) | `""` |
+| `serviceAccount.annotations` | Annotations (e.g. IRSA role ARN) | `{}` |
+
 ### Backend
 
 | Parameter | Description | Default |
@@ -50,6 +58,11 @@ helm uninstall essential-invoice -n essential-invoice
 | `backend.image.tag` | Image tag | `latest` |
 | `backend.replicas` | Number of replicas | `1` |
 | `backend.port` | Container port | `3001` |
+| `backend.service.type` | Service type | `ClusterIP` |
+| `backend.strategy` | Deployment strategy | `{}` |
+| `backend.podAnnotations` | Additional pod annotations | `{}` |
+| `backend.podSecurityContext` | Pod security context | `{runAsNonRoot: true, runAsUser: 1000, ...}` |
+| `backend.securityContext` | Container security context | `{allowPrivilegeEscalation: false, ...}` |
 | `backend.resources.requests.memory` | Memory request | `128Mi` |
 | `backend.resources.requests.cpu` | CPU request | `100m` |
 | `backend.resources.limits.memory` | Memory limit | `512Mi` |
@@ -57,6 +70,14 @@ helm uninstall essential-invoice -n essential-invoice
 | `backend.env.NODE_ENV` | Node environment | `production` |
 | `backend.env.EMAIL_POLLING_INTERVAL` | Email polling interval (ms) | `300000` |
 | `backend.env.CORS_ORIGIN` | Allowed CORS origin | `*` |
+| `backend.extraEnv` | Additional env vars (list) | `[]` |
+| `backend.extraEnvFrom` | Additional envFrom sources | `[]` |
+| `backend.autoscaling.enabled` | Enable HPA | `false` |
+| `backend.autoscaling.minReplicas` | Min replicas | `1` |
+| `backend.autoscaling.maxReplicas` | Max replicas | `5` |
+| `backend.autoscaling.targetCPUUtilizationPercentage` | Target CPU % | `80` |
+| `backend.pdb.enabled` | Enable PodDisruptionBudget | `false` |
+| `backend.pdb.minAvailable` | Min available pods | `1` |
 
 ### Frontend
 
@@ -66,10 +87,21 @@ helm uninstall essential-invoice -n essential-invoice
 | `frontend.image.tag` | Image tag | `latest` |
 | `frontend.replicas` | Number of replicas | `1` |
 | `frontend.port` | Container port | `80` |
+| `frontend.service.type` | Service type | `ClusterIP` |
+| `frontend.strategy` | Deployment strategy | `{}` |
+| `frontend.podAnnotations` | Additional pod annotations | `{}` |
+| `frontend.podSecurityContext` | Pod security context | `{runAsNonRoot: true, runAsUser: 101, ...}` |
+| `frontend.securityContext` | Container security context | `{readOnlyRootFilesystem: true, ...}` |
 | `frontend.resources.requests.memory` | Memory request | `64Mi` |
 | `frontend.resources.requests.cpu` | CPU request | `50m` |
 | `frontend.resources.limits.memory` | Memory limit | `256Mi` |
 | `frontend.resources.limits.cpu` | CPU limit | `200m` |
+| `frontend.autoscaling.enabled` | Enable HPA | `false` |
+| `frontend.autoscaling.minReplicas` | Min replicas | `1` |
+| `frontend.autoscaling.maxReplicas` | Max replicas | `5` |
+| `frontend.autoscaling.targetCPUUtilizationPercentage` | Target CPU % | `80` |
+| `frontend.pdb.enabled` | Enable PodDisruptionBudget | `false` |
+| `frontend.pdb.minAvailable` | Min available pods | `1` |
 
 ### Ingress
 
@@ -79,6 +111,7 @@ helm uninstall essential-invoice -n essential-invoice
 | `ingress.className` | Ingress class name | `""` |
 | `ingress.annotations` | Ingress annotations | `{}` |
 | `ingress.host` | Hostname | `""` |
+| `ingress.pathType` | Path type for ingress rules | `Prefix` |
 | `ingress.tls` | TLS configuration | `[]` |
 
 ### Secrets
@@ -162,4 +195,29 @@ helm install essential-invoice . \
   --set existingSecret=essential-invoice-app \
   --set postgresql.auth.existingSecret=essential-invoice-db \
   -n essential-invoice
+```
+
+### With extra environment variables
+
+```yaml
+backend:
+  extraEnv:
+    - name: SMTP_HOST
+      value: "smtp.example.com"
+    - name: SMTP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: smtp-secret
+          key: password
+  extraEnvFrom:
+    - secretRef:
+        name: smtp-credentials
+```
+
+### With IRSA (AWS)
+
+```yaml
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789:role/essential-invoice
 ```

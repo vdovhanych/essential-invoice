@@ -153,6 +153,17 @@ PostgreSQL secret key for DB password.
 {{- end }}
 
 {{/*
+Service account name.
+*/}}
+{{- define "essential-invoice.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "essential-invoice.fullname" .) .Values.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
 Backend service name (used by frontend nginx proxy).
 */}}
 {{- define "essential-invoice.backend.serviceName" -}}

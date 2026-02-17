@@ -1,0 +1,37 @@
+{{- if .Values.backend.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "essential-invoice.backend.serviceName" . }}
+  labels:
+    {{- include "essential-invoice.backend.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.backend.pdb.minAvailable }}
+  minAvailable: {{ .Values.backend.pdb.minAvailable }}
+  {{- end }}
+  {{- if .Values.backend.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.backend.pdb.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "essential-invoice.backend.selectorLabels" . | nindent 6 }}
+{{- end }}
+---
+{{- if .Values.frontend.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "essential-invoice.frontend.serviceName" . }}
+  labels:
+    {{- include "essential-invoice.frontend.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.frontend.pdb.minAvailable }}
+  minAvailable: {{ .Values.frontend.pdb.minAvailable }}
+  {{- end }}
+  {{- if .Values.frontend.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.frontend.pdb.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "essential-invoice.frontend.selectorLabels" . | nindent 6 }}
+{{- end }}

@@ -1,3 +1,13 @@
+# -- Service account configuration
+# Useful for IAM Roles for Service Accounts (IRSA) on AWS or Workload Identity on GCP
+serviceAccount:
+  # -- Create a dedicated ServiceAccount
+  create: true
+  # -- ServiceAccount name (auto-generated if empty)
+  name: ""
+  # -- Annotations to add to the ServiceAccount (e.g. eks.amazonaws.com/role-arn)
+  annotations: {}
+
 # -- Backend (Express API) configuration
 backend:
   # -- Backend container image
@@ -12,6 +22,36 @@ backend:
 
   # -- Backend service port
   port: 3001
+
+  # -- Backend service configuration
+  service:
+    # -- Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+
+  # -- Deployment strategy
+  strategy: {}
+    # type: RollingUpdate
+    # rollingUpdate:
+    #   maxSurge: 1
+    #   maxUnavailable: 0
+
+  # -- Additional pod annotations (e.g. for Prometheus scraping)
+  podAnnotations: {}
+
+  # -- Pod-level security context
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+
+  # -- Container-level security context
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop:
+        - ALL
 
   # -- Resource requests and limits
   resources:
@@ -31,6 +71,46 @@ backend:
     # -- CORS is not needed and this value is ignored by browsers.
     # -- For cross-origin setups, set to your frontend URL (e.g. "https://invoices.example.com").
     CORS_ORIGIN: "*"
+
+  # -- Additional environment variables as a list (for secrets, configmaps, etc.)
+  # Example:
+  #   - name: SMTP_HOST
+  #     value: "smtp.example.com"
+  #   - name: SMTP_PASSWORD
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: smtp-secret
+  #         key: password
+  extraEnv: []
+
+  # -- Additional envFrom sources (mount entire ConfigMaps/Secrets as env vars)
+  # Example:
+  #   - secretRef:
+  #       name: smtp-credentials
+  #   - configMapRef:
+  #       name: app-config
+  extraEnvFrom: []
+
+  # -- Horizontal Pod Autoscaler configuration
+  autoscaling:
+    # -- Enable HPA for backend
+    enabled: false
+    # -- Minimum number of replicas
+    minReplicas: 1
+    # -- Maximum number of replicas
+    maxReplicas: 5
+    # -- Target CPU utilization percentage
+    targetCPUUtilizationPercentage: 80
+    # -- Target memory utilization percentage (optional)
+    # targetMemoryUtilizationPercentage: 80
+
+  # -- Pod Disruption Budget configuration
+  pdb:
+    # -- Enable PDB for backend
+    enabled: false
+    # -- Minimum number of pods that must be available
+    minAvailable: 1
+    # maxUnavailable: 1
 
   # -- Node selector for backend pods
   nodeSelector: {}
@@ -56,6 +136,36 @@ frontend:
   # -- Frontend service port
   port: 80
 
+  # -- Frontend service configuration
+  service:
+    # -- Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+
+  # -- Deployment strategy
+  strategy: {}
+    # type: RollingUpdate
+    # rollingUpdate:
+    #   maxSurge: 1
+    #   maxUnavailable: 0
+
+  # -- Additional pod annotations
+  podAnnotations: {}
+
+  # -- Pod-level security context
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 101
+    fsGroup: 101
+
+  # -- Container-level security context
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
   # -- Resource requests and limits
   resources:
     requests:
@@ -64,6 +174,24 @@ frontend:
     limits:
       memory: "256Mi"
       cpu: "200m"
+
+  # -- Horizontal Pod Autoscaler configuration
+  autoscaling:
+    # -- Enable HPA for frontend
+    enabled: false
+    # -- Minimum number of replicas
+    minReplicas: 1
+    # -- Maximum number of replicas
+    maxReplicas: 5
+    # -- Target CPU utilization percentage
+    targetCPUUtilizationPercentage: 80
+
+  # -- Pod Disruption Budget configuration
+  pdb:
+    # -- Enable PDB for frontend
+    enabled: false
+    # -- Minimum number of pods that must be available
+    minAvailable: 1
 
   # -- Node selector for frontend pods
   nodeSelector: {}
@@ -89,6 +217,9 @@ ingress:
 
   # -- Hostname for the ingress
   host: ""
+
+  # -- Path type for ingress rules (Prefix, Exact, ImplementationSpecific)
+  pathType: Prefix
 
   # -- TLS configuration
   tls: []

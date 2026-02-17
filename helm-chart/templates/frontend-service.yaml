@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "essential-invoice.frontend.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.frontend.service.type }}
   ports:
     - port: {{ .Values.frontend.port }}
       targetPort: http

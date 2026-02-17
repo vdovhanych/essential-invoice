@@ -22,14 +22,14 @@ spec:
       http:
         paths:
           - path: /api
-            pathType: Prefix
+            pathType: {{ .Values.ingress.pathType }}
             backend:
               service:
                 name: {{ include "essential-invoice.backend.serviceName" . }}
                 port:
                   number: {{ .Values.backend.port }}
           - path: /
-            pathType: Prefix
+            pathType: {{ .Values.ingress.pathType }}
             backend:
               service:
                 name: {{ include "essential-invoice.frontend.serviceName" . }}
