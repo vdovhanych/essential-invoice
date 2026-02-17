@@ -76,7 +76,7 @@ Database host — subchart or external.
 */}}
 {{- define "essential-invoice.databaseHost" -}}
 {{- if .Values.postgresql.enabled }}
-{{- printf "%s-postgresql" .Release.Name }}
+{{- printf "%s-postgresql" (include "essential-invoice.fullname" .) }}
 {{- else }}
 {{- .Values.postgresql.external.host }}
 {{- end }}
@@ -134,7 +134,7 @@ PostgreSQL secret name for DB password.
 {{- if .Values.postgresql.auth.existingSecret }}
 {{- .Values.postgresql.auth.existingSecret }}
 {{- else }}
-{{- printf "%s-postgresql" .Release.Name }}
+{{- printf "%s-postgresql" (include "essential-invoice.fullname" .) }}
 {{- end }}
 {{- else }}
 {{- include "essential-invoice.secretName" . }}
@@ -146,7 +146,7 @@ PostgreSQL secret key for DB password.
 */}}
 {{- define "essential-invoice.databaseSecretKey" -}}
 {{- if .Values.postgresql.enabled }}
-{{- "postgres-password" }}
+{{- "POSTGRES_PASSWORD" }}
 {{- else }}
 {{- "DB_PASSWORD" }}
 {{- end }}

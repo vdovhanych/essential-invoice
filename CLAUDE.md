@@ -38,7 +38,6 @@ docker compose logs backend    # View backend logs
 ### Helm (Kubernetes)
 ```bash
 cd helm-chart
-helm dependency update                          # Download PostgreSQL subchart
 helm lint .                                     # Validate chart
 helm template essential-invoice .               # Dry-run render
 helm install essential-invoice . \              # Install
@@ -86,7 +85,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 - **Path alias**: `@/*` maps to `src/*`
 
 ### Helm Chart (`helm-chart/`)
-- **Chart.yaml**: Chart metadata with Bitnami PostgreSQL subchart dependency
+- **Chart.yaml**: Chart metadata (no external dependencies)
 - **values.yaml**: All configurable values (backend, frontend, ingress, postgresql, secrets, security contexts, autoscaling, PDBs)
 - **templates/**: Kubernetes manifests:
   - `serviceaccount.yaml` - ServiceAccount with configurable annotations (IRSA/Workload Identity)
@@ -96,8 +95,9 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `secret.yaml` - JWT and optional DB password secrets
   - `hpa.yaml` - HorizontalPodAutoscaler (optional, disabled by default)
   - `pdb.yaml` - PodDisruptionBudget (optional, disabled by default)
-  - `frontend-configmap.yaml` - Nginx reverse-proxy config
-- PostgreSQL deployed via Bitnami subchart with PVC persistence; can be disabled in favor of external DB
+  - `frontend-configmap.yaml` - Nginx reverse-proxy config and main nginx.conf
+  - `postgresql.yaml` - PostgreSQL StatefulSet, Service, and Secret (conditional)
+- PostgreSQL deployed via built-in StatefulSet with PVC persistence; can be disabled in favor of external DB
 - Ingress disabled by default; supports TLS via cert-manager annotations
 - Secrets managed via k8s Secret or existing secret reference
 - Security hardened: `runAsNonRoot`, `readOnlyRootFilesystem` (frontend), `drop ALL` capabilities

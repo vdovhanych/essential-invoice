@@ -1,0 +1,131 @@
+{{- if .Values.postgresql.enabled }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "essential-invoice.fullname" . }}-postgresql
+  labels:
+    {{- include "essential-invoice.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+type: Opaque
+data:
+  POSTGRES_PASSWORD: {{ required "postgresql.auth.password is required" .Values.postgresql.auth.password | b64enc | quote }}
+  POSTGRES_USER: {{ .Values.postgresql.auth.username | b64enc | quote }}
+  POSTGRES_DB: {{ .Values.postgresql.auth.database | b64enc | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "essential-invoice.fullname" . }}-postgresql
+  labels:
+    {{- include "essential-invoice.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: postgresql
+      protocol: TCP
+      name: postgresql
+  selector:
+    app.kubernetes.io/name: {{ include "essential-invoice.name" . }}-postgresql
+    app.kubernetes.io/instance: {{ .Release.Name }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "essential-invoice.fullname" . }}-postgresql
+  labels:
+    {{- include "essential-invoice.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  serviceName: {{ include "essential-invoice.fullname" . }}-postgresql
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "essential-invoice.name" . }}-postgresql
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "essential-invoice.name" . }}-postgresql
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: postgresql
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext: {}
+      containers:
+        - name: postgresql
+          image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          imagePullPolicy: {{ .Values.postgresql.image.pullPolicy }}
+          ports:
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: {{ include "essential-invoice.fullname" . }}-postgresql
+          {{- with .Values.postgresql.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+              subPath: pgdata
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.postgresql.auth.username }}
+                - -d
+                - {{ .Values.postgresql.auth.database }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.postgresql.auth.username }}
+                - -d
+                - {{ .Values.postgresql.auth.database }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.postgresql.resources | nindent 12 }}
+      {{- with .Values.postgresql.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.postgresql.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.postgresql.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if .Values.postgresql.persistence.storageClass }}
+        storageClassName: {{ .Values.postgresql.persistence.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.postgresql.persistence.size }}
+  {{- else }}
+      volumes:
+        - name: data
+          emptyDir: {}
+  {{- end }}
+{{- end }}

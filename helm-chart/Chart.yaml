@@ -11,9 +11,3 @@ sources:
 
 maintainers:
   - name: vdovhanych
-
-dependencies:
-  - name: postgresql
-    version: "~16.4.0"
-    repository: https://charts.bitnami.com/bitnami
-    condition: postgresql.enabled
