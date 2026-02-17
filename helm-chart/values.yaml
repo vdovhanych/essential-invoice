@@ -256,10 +256,9 @@ jwtSecret: ""
 # -- Use an existing Kubernetes secret for JWT (and optional external DB credentials)
 # The secret must contain: JWT_SECRET
 # When postgresql.enabled=false (external DB), it must also contain: DB_PASSWORD
-# When postgresql.enabled=true, DB password is read from the Bitnami subchart secret (key: postgres-password)
 existingSecret: ""
 
-# -- Image pull secrets for private registries
+# -- Image pull secrets for private registries needed for the included PostgreSQL chart
 imagePullSecrets: []
 
 # -- Override the full name of resources
@@ -268,11 +267,16 @@ fullnameOverride: ""
 # -- Override the chart name
 nameOverride: ""
 
-# -- PostgreSQL subchart configuration (Bitnami)
-# See: https://github.com/bitnami/charts/tree/main/bitnami/postgresql
+# -- PostgreSQL configuration
 postgresql:
-  # -- Enable the PostgreSQL subchart
+  # -- Enable the built-in PostgreSQL StatefulSet
   enabled: true
+
+  # -- PostgreSQL container image
+  image:
+    repository: dhi.io/postgres
+    tag: "18"
+    pullPolicy: IfNotPresent
 
   auth:
     # -- PostgreSQL database name
@@ -282,15 +286,35 @@ postgresql:
     # -- REQUIRED: PostgreSQL password (unless using auth.existingSecret)
     password: ""
     # -- Use an existing secret for PostgreSQL credentials
-    # The secret should contain key: postgres-password
+    # The secret must contain keys: POSTGRES_PASSWORD, POSTGRES_USER, POSTGRES_DB
     existingSecret: ""
 
-  primary:
-    persistence:
-      # -- Enable persistent storage for PostgreSQL
-      enabled: true
-      # -- Storage size for PostgreSQL PVC
-      size: 5Gi
+  # -- Persistent storage configuration
+  persistence:
+    # -- Enable persistent storage for PostgreSQL
+    enabled: true
+    # -- Storage size for PostgreSQL PVC
+    size: 5Gi
+    # -- Storage class for PostgreSQL PVC (leave empty for default)
+    storageClass: ""
+
+  # -- Resource requests and limits for PostgreSQL
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  # -- Additional environment variables for PostgreSQL
+  extraEnv: []
+
+  # -- Node selector for PostgreSQL pod
+  nodeSelector: {}
+
+  # -- Tolerations for PostgreSQL pod
+  tolerations: []
 
   # -- External database connection (only used when postgresql.enabled=false)
   # Set postgresql.enabled=false and configure these:

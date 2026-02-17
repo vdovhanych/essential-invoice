@@ -30,7 +30,7 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
     if (!token) return;
 
     try {
-      const response = await fetch('http://localhost:3001/api/ai/status', {
+      const response = await fetch('/api/ai/status', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -53,7 +53,7 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       try {
-        const response = await fetch('http://localhost:3001/api/ai/match-payment', {
+        const response = await fetch('/api/ai/match-payment', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -87,7 +87,7 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       try {
-        const response = await fetch('http://localhost:3001/api/ai/tax-advisor', {
+        const response = await fetch('/api/ai/tax-advisor', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

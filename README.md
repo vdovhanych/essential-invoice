@@ -22,7 +22,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 - **Dashboard**: Overview of revenue, outstanding payments, and recent activity
 - **Multi-currency**: Support for CZK and EUR
 - **Docker Ready**: Single command deployment with docker compose
-- **Helm Chart**: Kubernetes deployment with Helm chart (PostgreSQL via Bitnami subchart, ingress support)
+- **Helm Chart**: Kubernetes deployment with Helm chart (built-in PostgreSQL StatefulSet, ingress support)
 
 ## Quick Start
 
@@ -68,7 +68,6 @@ docker compose up -d
 
 ```bash
 cd helm-chart
-helm dependency update
 helm install essential-invoice . \
   --namespace essential-invoice \
   --create-namespace \
