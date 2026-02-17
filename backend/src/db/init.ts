@@ -269,6 +269,28 @@ export async function initializeDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      -- Migration: Change invoice_number and expense_number from global UNIQUE to per-user UNIQUE
+      -- This fixes multi-user support where different users could not have the same invoice/expense numbers
+      DO $$
+      BEGIN
+        -- Drop global unique constraint on invoice_number if it exists
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'invoices_invoice_number_key') THEN
+          ALTER TABLE invoices DROP CONSTRAINT invoices_invoice_number_key;
+        END IF;
+        -- Create composite unique constraint (user_id, invoice_number) if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'invoices_user_invoice_number_key') THEN
+          ALTER TABLE invoices ADD CONSTRAINT invoices_user_invoice_number_key UNIQUE (user_id, invoice_number);
+        END IF;
+        -- Drop global unique constraint on expense_number if it exists
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'expenses_expense_number_key') THEN
+          ALTER TABLE expenses DROP CONSTRAINT expenses_expense_number_key;
+        END IF;
+        -- Create composite unique constraint (user_id, expense_number) if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'expenses_user_expense_number_key') THEN
+          ALTER TABLE expenses ADD CONSTRAINT expenses_user_expense_number_key UNIQUE (user_id, expense_number);
+        END IF;
+      END $$;
+
       -- Create indexes
       CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
       CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);

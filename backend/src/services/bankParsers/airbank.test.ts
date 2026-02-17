@@ -31,7 +31,7 @@ Kód transakce: 146872844641`;
     });
 
     it('should export correct expected sender', () => {
-      expect(EXPECTED_SENDER).toBe('noreply@airbank.cz');
+      expect(EXPECTED_SENDER).toBe('info@airbank.cz');
     });
   });
 

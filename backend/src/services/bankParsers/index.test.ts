@@ -13,19 +13,19 @@ zůstatek na účtu DOVH číslo 2752089019/3030 se snížil o částku 500,00 C
 
   describe('detectBank', () => {
     it('should detect Air Bank by sender email', () => {
-      const parser = detectBank('noreply@airbank.cz');
+      const parser = detectBank('info@airbank.cz');
       expect(parser).not.toBeNull();
       expect(parser!.type).toBe('airbank');
     });
 
     it('should detect Air Bank with different case', () => {
-      const parser = detectBank('NoReply@AirBank.CZ');
+      const parser = detectBank('Info@AirBank.CZ');
       expect(parser).not.toBeNull();
       expect(parser!.type).toBe('airbank');
     });
 
     it('should detect Air Bank with leading/trailing spaces', () => {
-      const parser = detectBank('  noreply@airbank.cz  ');
+      const parser = detectBank('  info@airbank.cz  ');
       expect(parser).not.toBeNull();
     });
 
@@ -44,7 +44,7 @@ zůstatek na účtu DOVH číslo 2752089019/3030 se snížil o částku 500,00 C
     const testDate = new Date('2025-06-15');
 
     it('should parse Air Bank incoming payment', () => {
-      const result = parsePaymentEmail('noreply@airbank.cz', sampleIncomingEmail, testDate);
+      const result = parsePaymentEmail('info@airbank.cz', sampleIncomingEmail, testDate);
 
       expect(result.bankType).toBe('airbank');
       expect(result.payment).not.toBeNull();
@@ -53,7 +53,7 @@ zůstatek na účtu DOVH číslo 2752089019/3030 se snížil o částku 500,00 C
     });
 
     it('should return null payment for outgoing transaction', () => {
-      const result = parsePaymentEmail('noreply@airbank.cz', sampleOutgoingEmail, testDate);
+      const result = parsePaymentEmail('info@airbank.cz', sampleOutgoingEmail, testDate);
 
       expect(result.bankType).toBe('airbank');
       expect(result.payment).toBeNull();
@@ -77,7 +77,7 @@ zůstatek na účtu DOVH číslo 2752089019/3030 se snížil o částku 500,00 C
       // Air Bank should be in the list
       const airBank = banks.find(b => b.type === 'airbank');
       expect(airBank).toBeDefined();
-      expect(airBank!.sender).toBe('noreply@airbank.cz');
+      expect(airBank!.sender).toBe('info@airbank.cz');
     });
   });
 });

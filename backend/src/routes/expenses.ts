@@ -6,7 +6,7 @@ import { AuthRequest } from '../middleware/auth.js';
 export const expenseRouter: ReturnType<typeof Router> = Router();
 
 // Generate expense number based on issue date
-async function generateExpenseNumber(userId: string, issueDate: string): Promise<string> {
+async function generateExpenseNumber(userId: string, issueDate: string, attempt: number = 0): Promise<string> {
   const date = new Date(issueDate);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -19,7 +19,7 @@ async function generateExpenseNumber(userId: string, issueDate: string): Promise
     [userId, `${datePrefix}%`]
   );
 
-  const count = parseInt(result.rows[0].count) + 1;
+  const count = parseInt(result.rows[0].count) + 1 + attempt;
   return `${datePrefix}${String(count).padStart(2, '0')}`;
 }
 
@@ -190,26 +190,41 @@ expenseRouter.post('/',
         }
       }
 
-      const expenseNumber = await generateExpenseNumber(req.userId!, issueDate);
-
       const vatAmount = parseFloat(amount) * (parseFloat(vatRate) / 100);
       const total = parseFloat(amount) + vatAmount;
 
-      const result = await query(
-        `INSERT INTO expenses (user_id, client_id, expense_number, supplier_invoice_number,
-         status, currency, issue_date, due_date, delivery_date,
-         amount, vat_rate, vat_amount, total,
-         description, notes, file_data, file_name, file_mime_type)
-         VALUES ($1, $2, $3, $4, 'unpaid', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-         RETURNING *`,
-        [req.userId, clientId || null, expenseNumber, supplierInvoiceNumber || null,
-         currency, issueDate, dueDate, deliveryDate || null,
-         amount, vatRate, vatAmount, total,
-         description || null, notes || null,
-         fileData || null, fileName || null, fileMimeType || null]
-      );
+      // Retry loop to handle race conditions with expense number generation
+      const MAX_RETRIES = 3;
+      let row;
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          const expenseNumber = await generateExpenseNumber(req.userId!, issueDate, attempt);
 
-      const row = result.rows[0];
+          const result = await query(
+            `INSERT INTO expenses (user_id, client_id, expense_number, supplier_invoice_number,
+             status, currency, issue_date, due_date, delivery_date,
+             amount, vat_rate, vat_amount, total,
+             description, notes, file_data, file_name, file_mime_type)
+             VALUES ($1, $2, $3, $4, 'unpaid', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+             RETURNING *`,
+            [req.userId, clientId || null, expenseNumber, supplierInvoiceNumber || null,
+             currency, issueDate, dueDate, deliveryDate || null,
+             amount, vatRate, vatAmount, total,
+             description || null, notes || null,
+             fileData || null, fileName || null, fileMimeType || null]
+          );
+
+          row = result.rows[0];
+          break; // Success, exit retry loop
+        } catch (err: any) {
+          // Retry on duplicate key violation (race condition between concurrent requests)
+          if (err.code === '23505' && err.constraint === 'expenses_user_expense_number_key' && attempt < MAX_RETRIES) {
+            continue;
+          }
+          throw err;
+        }
+      }
+
       res.status(201).json({
         id: row.id,
         expenseNumber: row.expense_number,
