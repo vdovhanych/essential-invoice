@@ -9,7 +9,7 @@ import { generateSpayd } from '../utils/validation.js';
 export const invoiceRouter: ReturnType<typeof Router> = Router();
 
 // Generate invoice number based on issue date
-async function generateInvoiceNumber(userId: string, issueDate: string): Promise<{ invoiceNumber: string; variableSymbol: string }> {
+async function generateInvoiceNumber(userId: string, issueDate: string, attempt: number = 0): Promise<{ invoiceNumber: string; variableSymbol: string }> {
   const date = new Date(issueDate);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -30,7 +30,7 @@ async function generateInvoiceNumber(userId: string, issueDate: string): Promise
     [userId, `%${datePrefix}%`]
   );
 
-  const count = parseInt(result.rows[0].count) + 1;
+  const count = parseInt(result.rows[0].count) + 1 + attempt;
   const invoiceNumber = `${userPrefix}${datePrefix}${String(count).padStart(2, '0')}`;
 
   // Variable symbol should be numeric only for bank payments
@@ -204,9 +204,6 @@ invoiceRouter.post('/',
         return res.status(400).json({ error: 'Invalid client' });
       }
 
-      // Generate invoice number based on issue date
-      const { invoiceNumber, variableSymbol } = await generateInvoiceNumber(req.userId!, issueDate);
-
       // Calculate totals
       let subtotal = 0;
       for (const item of items) {
@@ -222,28 +219,45 @@ invoiceRouter.post('/',
       );
       const user = userResult.rows[0];
 
-      // Generate QR payment data (SPAYD format) for CZK invoices
-      let qrPaymentData = null;
-      if (currency === 'CZK' && user.bank_account && user.bank_code) {
-        qrPaymentData = generateSpayd(
-          user.bank_account,
-          user.bank_code,
-          total,
-          currency,
-          variableSymbol,
-          `Faktura ${invoiceNumber}`
-        );
+      // Retry loop to handle race conditions with invoice number generation
+      const MAX_RETRIES = 3;
+      let invoice;
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          // Generate invoice number based on issue date
+          const { invoiceNumber, variableSymbol } = await generateInvoiceNumber(req.userId!, issueDate, attempt);
+
+          // Generate QR payment data (SPAYD format) for CZK invoices
+          let qrPaymentData = null;
+          if (currency === 'CZK' && user.bank_account && user.bank_code) {
+            qrPaymentData = generateSpayd(
+              user.bank_account,
+              user.bank_code,
+              total,
+              currency,
+              variableSymbol,
+              `Faktura ${invoiceNumber}`
+            );
+          }
+
+          // Create invoice
+          const invoiceResult = await query(
+            `INSERT INTO invoices (user_id, client_id, invoice_number, variable_symbol, status, currency, issue_date, due_date, delivery_date, subtotal, vat_rate, vat_amount, total, notes, qr_payment_data)
+             VALUES ($1, $2, $3, $4, 'draft', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+             RETURNING *`,
+            [req.userId, clientId, invoiceNumber, variableSymbol, currency, issueDate, dueDate, deliveryDate || issueDate, subtotal, vatRate, vatAmount, total, notes, qrPaymentData]
+          );
+
+          invoice = invoiceResult.rows[0];
+          break; // Success, exit retry loop
+        } catch (err: any) {
+          // Retry on duplicate key violation (race condition between concurrent requests)
+          if (err.code === '23505' && err.constraint === 'invoices_user_invoice_number_key' && attempt < MAX_RETRIES) {
+            continue;
+          }
+          throw err;
+        }
       }
-
-      // Create invoice
-      const invoiceResult = await query(
-        `INSERT INTO invoices (user_id, client_id, invoice_number, variable_symbol, status, currency, issue_date, due_date, delivery_date, subtotal, vat_rate, vat_amount, total, notes, qr_payment_data)
-         VALUES ($1, $2, $3, $4, 'draft', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-         RETURNING *`,
-        [req.userId, clientId, invoiceNumber, variableSymbol, currency, issueDate, dueDate, deliveryDate || issueDate, subtotal, vatRate, vatAmount, total, notes, qrPaymentData]
-      );
-
-      const invoice = invoiceResult.rows[0];
 
       // Create invoice items
       for (let i = 0; i < items.length; i++) {
