@@ -24,3 +24,14 @@ to the backend service inside the cluster.
 For production use, enable ingress in your values.yaml.
 
 {{- end }}
+
+{{- if .Values.serviceAccount.create }}
+
+A ServiceAccount "{{ include "essential-invoice.serviceAccountName" . }}" has been created.
+{{- if .Values.serviceAccount.annotations }}
+With annotations:
+{{- range $key, $value := .Values.serviceAccount.annotations }}
+  {{ $key }}: {{ $value }}
+{{- end }}
+{{- end }}
+{{- end }}

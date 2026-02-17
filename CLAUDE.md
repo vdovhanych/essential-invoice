@@ -86,11 +86,20 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 
 ### Helm Chart (`helm-chart/`)
 - **Chart.yaml**: Chart metadata with Bitnami PostgreSQL subchart dependency
-- **values.yaml**: All configurable values (backend, frontend, ingress, postgresql, secrets)
-- **templates/**: Kubernetes manifests for backend deployment/service, frontend deployment/service, ingress (optional), secrets
+- **values.yaml**: All configurable values (backend, frontend, ingress, postgresql, secrets, security contexts, autoscaling, PDBs)
+- **templates/**: Kubernetes manifests:
+  - `serviceaccount.yaml` - ServiceAccount with configurable annotations (IRSA/Workload Identity)
+  - `backend-deployment.yaml` / `frontend-deployment.yaml` - Deployments with security contexts, checksum annotations for auto-rollout, extraEnv/extraEnvFrom support
+  - `backend-service.yaml` / `frontend-service.yaml` - Configurable service types
+  - `ingress.yaml` - Ingress with configurable pathType and ingressClassName
+  - `secret.yaml` - JWT and optional DB password secrets
+  - `hpa.yaml` - HorizontalPodAutoscaler (optional, disabled by default)
+  - `pdb.yaml` - PodDisruptionBudget (optional, disabled by default)
+  - `frontend-configmap.yaml` - Nginx reverse-proxy config
 - PostgreSQL deployed via Bitnami subchart with PVC persistence; can be disabled in favor of external DB
 - Ingress disabled by default; supports TLS via cert-manager annotations
 - Secrets managed via k8s Secret or existing secret reference
+- Security hardened: `runAsNonRoot`, `readOnlyRootFilesystem` (frontend), `drop ALL` capabilities
 
 ### Key Integrations
 - **ARES API**: Czech company registry lookup by IČO (`routes/ares.ts`)
