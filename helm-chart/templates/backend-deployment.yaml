@@ -73,6 +73,26 @@ spec:
                   key: JWT_SECRET
             - name: CORS_ORIGIN
               value: {{ .Values.backend.env.CORS_ORIGIN | quote }}
+            {{- if .Values.backend.env.FRONTEND_URL }}
+            - name: FRONTEND_URL
+              value: {{ .Values.backend.env.FRONTEND_URL | quote }}
+            {{- end }}
+            {{- if .Values.backend.globalSmtp.host }}
+            - name: GLOBAL_SMTP_HOST
+              value: {{ .Values.backend.globalSmtp.host | quote }}
+            - name: GLOBAL_SMTP_PORT
+              value: {{ .Values.backend.globalSmtp.port | quote }}
+            - name: GLOBAL_SMTP_USER
+              value: {{ .Values.backend.globalSmtp.user | quote }}
+            - name: GLOBAL_SMTP_PASSWORD
+              value: {{ .Values.backend.globalSmtp.password | quote }}
+            - name: GLOBAL_SMTP_SECURE
+              value: {{ .Values.backend.globalSmtp.secure | quote }}
+            - name: GLOBAL_SMTP_FROM_EMAIL
+              value: {{ .Values.backend.globalSmtp.fromEmail | quote }}
+            - name: GLOBAL_SMTP_FROM_NAME
+              value: {{ .Values.backend.globalSmtp.fromName | quote }}
+            {{- end }}
             {{- with .Values.backend.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

@@ -17,6 +17,8 @@ import ExpenseDetail from './pages/ExpenseDetail';
 import Calculator from './pages/Calculator';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -85,6 +87,8 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+      <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
 
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>

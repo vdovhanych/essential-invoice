@@ -15,6 +15,8 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 - **PDF Generation**: Professional Czech invoice templates with QR payment codes (SPAYD format), VAT/non-VAT payer support
 - **Email Integration**: Send invoices via SMTP, receive bank notifications via IMAP
 - **Bank Payment Matching**: Automatic matching of Air Bank payment notifications to invoices, with manual matching, unmatching, and deletion capabilities
+- **Password Reset**: Email-based password recovery with secure token flow
+- **Welcome Emails**: Automatic welcome email on registration (when global SMTP is configured)
 - **Onboarding Wizard**: Guided 2-step setup after registration to collect company and bank details
 - **Paušální Daň Tracking**: Monitor invoiced amounts against paušální daň limits (3 tiers)
 - **Dashboard**: Overview of revenue, outstanding payments, and recent activity
@@ -92,6 +94,14 @@ See [helm-chart/README.md](helm-chart/README.md) for full configuration referenc
 | `BACKEND_PORT` | `3001` | Backend API port |
 | `FRONTEND_PORT` | `80` | Frontend web port |
 | `EMAIL_POLLING_INTERVAL` | `300000` | Email check interval (ms) |
+| `FRONTEND_URL` | `http://localhost:8080` | Frontend URL for email links (password reset) |
+| `GLOBAL_SMTP_HOST` | - | Global SMTP server host (enables system emails) |
+| `GLOBAL_SMTP_PORT` | `587` | Global SMTP server port |
+| `GLOBAL_SMTP_USER` | - | Global SMTP username |
+| `GLOBAL_SMTP_PASSWORD` | - | Global SMTP password |
+| `GLOBAL_SMTP_SECURE` | `false` | Use TLS for global SMTP |
+| `GLOBAL_SMTP_FROM_EMAIL` | - | Sender email for system emails |
+| `GLOBAL_SMTP_FROM_NAME` | `essentialInvoice` | Sender name for system emails |
 
 ### SMTP Configuration (In-App)
 
@@ -184,11 +194,13 @@ Payments can be matched in two ways:
 ## API Reference
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
+- `POST /api/auth/register` - Register new user (sends welcome email if global SMTP configured)
 - `POST /api/auth/login` - Login
 - `GET /api/auth/me` - Get current user
 - `PUT /api/auth/me` - Update profile
-- `POST /api/auth/change-password` - Change password
+- `POST /api/auth/change-password` - Change password (requires current password)
+- `POST /api/auth/forgot-password` - Request password reset email
+- `POST /api/auth/reset-password` - Reset password with token
 
 ### Clients
 - `GET /api/clients` - List all clients
@@ -313,8 +325,9 @@ essential-invoice/
 │   │   ├── services/        # Business logic
 │   │   │   ├── bankParsers/ # Bank email parsers (Air Bank)
 │   │   │   ├── emailPoller.ts
-│   │   │   ├── emailSender.ts
-│   │   │   ├── pdfGenerator.ts  # Uses pdfmake library
+│   │   │   ├── emailSender.ts       # Per-user SMTP for invoices
+│   │   │   ├── globalEmailSender.ts  # Global SMTP for system emails
+│   │   │   ├── pdfGenerator.ts       # Uses pdfmake library
 │   │   │   └── perplexityAI.ts
 │   │   ├── utils/           # Validation utilities (IČO, IBAN, SPAYD)
 │   │   └── index.ts         # Express app entry point
@@ -327,7 +340,7 @@ essential-invoice/
 │   │   ├── context/         # AuthContext, AIContext
 │   │   ├── pages/           # Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail,
 │   │   │                    # Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile,
-│   │   │                    # Calculator, Login, Register, Onboarding
+│   │   │                    # Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
 │   │   ├── utils/           # API client, formatting helpers
 │   │   └── test/            # Test setup (Vitest/jsdom)
 │   ├── Dockerfile
