@@ -50,12 +50,13 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
-app.use(limiter);
 
-// Health check
+// Health check - placed before rate limiter so Kubernetes probes are not throttled
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+app.use(limiter);
 
 // Public routes
 app.use('/api/auth', authRouter);
