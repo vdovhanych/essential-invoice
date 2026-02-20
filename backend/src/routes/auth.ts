@@ -5,9 +5,9 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import multer from 'multer';
 import rateLimit from 'express-rate-limit';
-import { query } from '../db/init.js';
-import { authenticateToken, AuthRequest } from '../middleware/auth.js';
-import { isGlobalSmtpConfigured, sendWelcomeEmail, sendPasswordResetEmail } from '../services/globalEmailSender.js';
+import { query } from '../db/init';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { isGlobalSmtpConfigured, sendWelcomeEmail, sendPasswordResetEmail } from '../services/globalEmailSender';
 
 // Configure multer for logo uploads (memory storage for base64 conversion)
 const upload = multer({

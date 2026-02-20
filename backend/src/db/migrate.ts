@@ -1,4 +1,4 @@
-import { initializeDatabase, pool } from './init.js';
+import { initializeDatabase, pool } from './init';
 
 async function migrate() {
   try {

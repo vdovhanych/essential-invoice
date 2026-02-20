@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseAirBankEmail, isIncomingPayment, BANK_TYPE, EXPECTED_SENDER } from './airbank.js';
+import { parseAirBankEmail, isIncomingPayment, BANK_TYPE, EXPECTED_SENDER } from './airbank';
 
 describe('Air Bank Email Parser', () => {
   // Sample incoming payment email from the requirements

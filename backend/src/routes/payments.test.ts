@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import express, { Express } from 'express';
-import { paymentRouter } from './payments.js';
-import * as db from '../db/init.js';
+import { paymentRouter } from './payments';
+import * as db from '../db/init';
 
 // Mock the database module
 vi.mock('../db/init.js', () => ({

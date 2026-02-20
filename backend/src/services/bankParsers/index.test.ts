@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectBank, parsePaymentEmail, getSupportedBanks } from './index.js';
+import { detectBank, parsePaymentEmail, getSupportedBanks } from './index';
 
 describe('Bank Parser Factory', () => {
   const sampleIncomingEmail = `Dobrý den,

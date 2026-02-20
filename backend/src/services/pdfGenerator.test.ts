@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as dbInit from '../db/init.js';
+import * as dbInit from '../db/init';
 
 // Mock database query
 vi.mock('../db/init.js', () => ({

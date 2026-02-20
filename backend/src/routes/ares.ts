@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { AuthRequest } from '../middleware/auth.js';
+import { AuthRequest } from '../middleware/auth';
 
 export const aresRouter: ReturnType<typeof Router> = Router();
 

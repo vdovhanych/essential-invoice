@@ -10,7 +10,7 @@ vi.mock('nodemailer', () => ({
   },
 }));
 
-import { isGlobalSmtpConfigured, sendWelcomeEmail, sendPasswordResetEmail } from './globalEmailSender.js';
+import { isGlobalSmtpConfigured, sendWelcomeEmail, sendPasswordResetEmail } from './globalEmailSender';
 import nodemailer from 'nodemailer';
 
 describe('globalEmailSender', () => {

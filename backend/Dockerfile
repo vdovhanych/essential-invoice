@@ -1,17 +1,11 @@
-# Build stage
-FROM dhi.io/bun:1-debian13-dev AS builder
+# Install dependencies
+FROM dhi.io/bun:1-debian13-dev AS deps
 
 WORKDIR /app
 
 COPY package.json bun.lock ./
 
-RUN bun install --frozen-lockfile
-
-COPY . .
-
-RUN bun run build
-
-RUN bun install --production --frozen-lockfile
+RUN bun install --frozen-lockfile --production
 
 
 # Production
@@ -19,12 +13,12 @@ FROM dhi.io/bun:1
 
 WORKDIR /app
 
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
 
-COPY --from=builder /app/dist ./dist
+COPY src ./src
 
 COPY package.json ./
 
 EXPOSE 3001
 
-CMD ["bun", "dist/index.js"]
+CMD ["bun", "src/index.ts"]

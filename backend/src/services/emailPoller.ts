@@ -1,7 +1,8 @@
 import Imap from 'imap';
 import { simpleParser, ParsedMail } from 'mailparser';
-import { query } from '../db/init.js';
-import { parsePaymentEmail, ParsedPayment } from './bankParsers/index.js';
+import { query } from '../db/init';
+import { parsePaymentEmail } from './bankParsers/index';
+import type { ParsedPayment } from './bankParsers/index';
 
 let pollingInterval: NodeJS.Timeout | null = null;
 

@@ -1,10 +1,10 @@
 import { Router, Response } from 'express';
 import { body, validationResult } from 'express-validator';
-import { query } from '../db/init.js';
-import { AuthRequest } from '../middleware/auth.js';
-import { generateInvoicePDF } from '../services/pdfGenerator.js';
-import { sendInvoiceEmail } from '../services/emailSender.js';
-import { generateSpayd } from '../utils/validation.js';
+import { query } from '../db/init';
+import { AuthRequest } from '../middleware/auth';
+import { generateInvoicePDF } from '../services/pdfGenerator';
+import { sendInvoiceEmail } from '../services/emailSender';
+import { generateSpayd } from '../utils/validation';
 
 export const invoiceRouter: ReturnType<typeof Router> = Router();
 

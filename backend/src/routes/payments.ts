@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
-import { query } from '../db/init.js';
-import { AuthRequest } from '../middleware/auth.js';
-import { triggerPoll } from '../services/emailPoller.js';
+import { query } from '../db/init';
+import { AuthRequest } from '../middleware/auth';
+import { triggerPoll } from '../services/emailPoller';
 
 export const paymentRouter: ReturnType<typeof Router> = Router();
 

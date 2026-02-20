@@ -7,7 +7,7 @@ vi.mock('../db/init.js', () => ({
 }));
 
 // Import after mocking
-import { dashboardRouter } from './dashboard.js';
+import { dashboardRouter } from './dashboard';
 import express from 'express';
 import request from 'supertest';
 

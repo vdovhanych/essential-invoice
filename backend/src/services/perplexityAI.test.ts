@@ -6,7 +6,7 @@ import {
   getCzechTaxAdvice,
   isPerplexityConfigured 
 } from './perplexityAI';
-import * as dbInit from '../db/init.js';
+import * as dbInit from '../db/init';
 
 // Mock fetch
 global.fetch = vi.fn();

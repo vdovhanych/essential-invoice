@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
-import { query } from '../db/init.js';
-import { generateInvoicePDF } from './pdfGenerator.js';
+import { query } from '../db/init';
+import { generateInvoicePDF } from './pdfGenerator';
 
 interface SendResult {
   success: boolean;

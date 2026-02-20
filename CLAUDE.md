@@ -9,9 +9,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 cd backend
 bun install             # Install dependencies
 bun run dev             # Start dev server with hot reload (bun --watch)
-bun run build           # Compile TypeScript
-bun run start           # Run production build
-bun test                # Run tests
+bun run start           # Run production server (runs .ts directly via Bun)
+bun run test            # Run tests (use 'bun run test', not 'bun test')
 bun run test:watch      # Run tests in watch mode
 bun run test:coverage   # Run tests with coverage
 ```
@@ -22,7 +21,7 @@ cd frontend
 bun install             # Install dependencies
 bun run dev             # Start Vite dev server
 bun run build           # TypeScript check + Vite build
-bun test                # Run tests
+bun run test            # Run tests (use 'bun run test', not 'bun test')
 bun run test:watch      # Run tests in watch mode
 bun run test:coverage   # Run tests with coverage
 ```

@@ -1,11 +1,11 @@
 import { Router, Response } from 'express';
-import { query } from '../db/init.js';
-import { AuthRequest } from '../middleware/auth.js';
+import { query } from '../db/init';
+import { AuthRequest } from '../middleware/auth';
 import {
   isPerplexityConfigured,
   matchPaymentToInvoice,
   getCzechTaxAdvice,
-} from '../services/perplexityAI.js';
+} from '../services/perplexityAI';
 
 export const aiRouter: ReturnType<typeof Router> = Router();
 

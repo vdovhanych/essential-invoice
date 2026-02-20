@@ -17,9 +17,9 @@ vi.mock('../services/globalEmailSender.js', () => ({
 }));
 
 // Import after mocking
-import { authRouter } from './auth.js';
-import { query } from '../db/init.js';
-import { isGlobalSmtpConfigured, sendWelcomeEmail, sendPasswordResetEmail } from '../services/globalEmailSender.js';
+import { authRouter } from './auth';
+import { query } from '../db/init';
+import { isGlobalSmtpConfigured, sendWelcomeEmail, sendPasswordResetEmail } from '../services/globalEmailSender';
 
 const mockedQuery = vi.mocked(query);
 const mockedIsGlobalSmtpConfigured = vi.mocked(isGlobalSmtpConfigured);

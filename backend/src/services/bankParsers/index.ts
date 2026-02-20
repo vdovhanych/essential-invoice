@@ -1,9 +1,10 @@
 // Bank parser factory
 // Extensible system for parsing payment notifications from different banks
 
-import { parseAirBankEmail, isIncomingPayment as isAirBankIncoming, BANK_TYPE as AIRBANK_TYPE, EXPECTED_SENDER as AIRBANK_SENDER, ParsedPayment } from './airbank.js';
+import { parseAirBankEmail, isIncomingPayment as isAirBankIncoming, BANK_TYPE as AIRBANK_TYPE, EXPECTED_SENDER as AIRBANK_SENDER } from './airbank';
+import type { ParsedPayment } from './airbank';
 
-export { ParsedPayment } from './airbank.js';
+export type { ParsedPayment } from './airbank';
 
 interface BankParser {
   type: string;

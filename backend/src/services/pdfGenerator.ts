@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { query } from '../db/init.js';
+import { query } from '../db/init';
 
 // pdfmake is a CJS module – require it
 // eslint-disable-next-line @typescript-eslint/no-var-requires

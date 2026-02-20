@@ -6,7 +6,7 @@ import {
   generateSpayd,
   czechAccountToIban,
   generateInvoiceNumber
-} from './validation.js';
+} from './validation';
 
 describe('Validation Utilities', () => {
   describe('validateIco', () => {

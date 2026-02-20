@@ -7,7 +7,7 @@ vi.mock('../db/init.js', () => ({
 }));
 
 // Import after mocking
-import { expenseRouter } from './expenses.js';
+import { expenseRouter } from './expenses';
 import express from 'express';
 import request from 'supertest';
 
