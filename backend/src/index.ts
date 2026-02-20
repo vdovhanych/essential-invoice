@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
 import { authRouter } from './routes/auth';
 import { clientRouter } from './routes/clients';
 import { invoiceRouter } from './routes/invoices';
@@ -14,8 +13,6 @@ import { expenseRouter } from './routes/expenses';
 import { authenticateToken } from './middleware/auth';
 import { startEmailPolling } from './services/emailPoller';
 import { initializeDatabase } from './db/init';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

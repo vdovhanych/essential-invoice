@@ -1,7 +1,4 @@
-import dotenv from 'dotenv';
 import { query } from '../db/init';
-
-dotenv.config();
 
 const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
 
