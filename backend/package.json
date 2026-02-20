@@ -4,11 +4,11 @@
   "description": "Self-hosted invoicing application backend",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "bun --watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "migrate": "tsx src/db/migrate.ts",
-    "seed": "tsx src/db/seed.ts",
+    "start": "bun dist/index.js",
+    "migrate": "bun src/db/migrate.ts",
+    "seed": "bun src/db/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
@@ -47,18 +47,13 @@
     "@types/uuid": "^9.0.7",
     "@vitest/coverage-v8": "^3.1.0",
     "supertest": "^7.1.0",
-    "tsx": "^4.19.0",
     "typescript": "^5.3.3",
     "vitest": "^3.1.0"
   },
-  "pnpm": {
-    "overrides": {
-      "semver@<7.0.0": "^7.7.0",
-      "lodash@<4.17.23": "^4.17.23",
-      "esbuild@<0.25.0": "^0.25.0"
-    },
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  }
+  "overrides": {
+    "semver": "^7.7.0",
+    "lodash": "^4.17.23",
+    "esbuild": "^0.25.0"
+  },
+  "trustedDependencies": ["esbuild"]
 }

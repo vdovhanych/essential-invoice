@@ -272,17 +272,17 @@ docker compose up -d db
 2. Backend:
 ```bash
 cd backend
-pnpm install
+bun install
 cp ../.env.example .env
 # Edit .env - ensure CORS_ORIGIN=http://localhost:5173 for local dev
-pnpm run dev
+bun run dev
 ```
 
 3. Frontend:
 ```bash
 cd frontend
-pnpm install
-pnpm run dev
+bun install
+bun run dev
 ```
 
 ### Running Tests
@@ -292,17 +292,17 @@ Both backend and frontend include comprehensive test suites using Vitest.
 **Backend tests:**
 ```bash
 cd backend
-pnpm test              # Run all tests
-pnpm test:watch        # Watch mode
-pnpm test:coverage     # With coverage report
+bun test               # Run all tests
+bun run test:watch     # Watch mode
+bun run test:coverage  # With coverage report
 ```
 
 **Frontend tests:**
 ```bash
 cd frontend
-pnpm test              # Run all tests
-pnpm test:watch        # Watch mode
-pnpm test:coverage     # With coverage report
+bun test               # Run all tests
+bun run test:watch     # Watch mode
+bun run test:coverage  # With coverage report
 ```
 
 **Test coverage includes:**

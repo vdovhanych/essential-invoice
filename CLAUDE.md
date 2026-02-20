@@ -7,24 +7,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Backend (Express/TypeScript)
 ```bash
 cd backend
-pnpm install            # Install dependencies
-pnpm run dev            # Start dev server with hot reload (tsx watch)
-pnpm run build          # Compile TypeScript
-pnpm run start          # Run production build
-pnpm test               # Run tests
-pnpm test:watch         # Run tests in watch mode
-pnpm test:coverage      # Run tests with coverage
+bun install             # Install dependencies
+bun run dev             # Start dev server with hot reload (bun --watch)
+bun run build           # Compile TypeScript
+bun run start           # Run production build
+bun test                # Run tests
+bun run test:watch      # Run tests in watch mode
+bun run test:coverage   # Run tests with coverage
 ```
 
 ### Frontend (React/Vite/TypeScript)
 ```bash
 cd frontend
-pnpm install            # Install dependencies
-pnpm run dev            # Start Vite dev server
-pnpm run build          # TypeScript check + Vite build
-pnpm test               # Run tests
-pnpm test:watch         # Run tests in watch mode
-pnpm test:coverage      # Run tests with coverage
+bun install             # Install dependencies
+bun run dev             # Start Vite dev server
+bun run build           # TypeScript check + Vite build
+bun test                # Run tests
+bun run test:watch      # Run tests in watch mode
+bun run test:coverage   # Run tests with coverage
 ```
 
 ### Docker
@@ -48,7 +48,7 @@ helm install essential-invoice . \              # Install
 ### Database
 ```bash
 cd backend
-pnpm run migrate        # Run database migrations
+bun run migrate         # Run database migrations
 ```
 
 ## Architecture
@@ -114,16 +114,16 @@ Both projects use Vitest. Tests are co-located with source files (`*.test.ts`).
 
 Run a single test file:
 ```bash
-cd backend && pnpm vitest run src/utils/validation.test.ts
-cd frontend && pnpm vitest run src/utils/format.test.ts
+cd backend && bun vitest run src/utils/validation.test.ts
+cd frontend && bun vitest run src/utils/format.test.ts
 ```
 
 **Important**: Before submitting any code changes:
 1. Write comprehensive tests for new functionality
 2. Run all tests in both frontend and backend to ensure no regressions:
    ```bash
-   cd backend && pnpm test
-   cd frontend && pnpm test
+   cd backend && bun test
+   cd frontend && bun test
    ```
 
 ## Environment

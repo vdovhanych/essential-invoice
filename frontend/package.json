@@ -34,14 +34,9 @@
     "vite": "^6.0.11",
     "vitest": "^3.1.0"
   },
-  "pnpm": {
-    "overrides": {
-      "esbuild@<0.25.0": "^0.25.0",
-      "lodash@<4.17.23": "^4.17.23",
-      "semver@<7.0.0": "^7.7.0"
-    },
-    "allowedDeprecatedVersions": {
-      "whatwg-encoding": "3.1.1"
-    }
+  "overrides": {
+    "esbuild": "^0.25.0",
+    "lodash": "^4.17.23",
+    "semver": "^7.7.0"
   }
 }

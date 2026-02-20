@@ -1,16 +1,14 @@
-FROM dhi.io/node:24-debian13-dev AS builder
-
-RUN corepack enable && corepack prepare pnpm@latest --activate
+FROM dhi.io/bun:1-debian13-dev AS builder
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json bun.lock ./
 
-RUN pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 COPY . .
 
-RUN pnpm run build
+RUN bun run build
 
 # Production
 FROM dhi.io/nginx:1.28
