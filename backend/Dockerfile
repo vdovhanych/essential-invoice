@@ -1,23 +1,21 @@
 # Build stage
-FROM dhi.io/node:24-debian13-dev AS builder
-
-RUN corepack enable && corepack prepare pnpm@latest --activate
+FROM dhi.io/bun:1-debian13-dev AS builder
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json bun.lock ./
 
-RUN pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 COPY . .
 
-RUN pnpm run build
+RUN bun run build
 
-RUN pnpm install --frozen-lockfile --prod
+RUN bun install --production --frozen-lockfile
 
 
 # Production
-FROM dhi.io/node:24
+FROM dhi.io/bun:1
 
 WORKDIR /app
 
@@ -29,4 +27,4 @@ COPY package.json ./
 
 EXPOSE 3001
 
-CMD ["node", "dist/index.js"]
+CMD ["bun", "dist/index.js"]
