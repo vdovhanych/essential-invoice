@@ -13,6 +13,15 @@ import { expenseRouter } from './routes/expenses';
 import { authenticateToken } from './middleware/auth';
 import { startEmailPolling } from './services/emailPoller';
 import { initializeDatabase } from './db/init';
+import { validateEncryptionKey } from './utils/encryption';
+
+// Prevent IMAP/socket errors from crashing the process in Bun
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception (non-fatal):', err.message);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection (non-fatal):', err);
+});
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -77,6 +86,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 // Start server
 async function start() {
   try {
+    validateEncryptionKey();
     await initializeDatabase();
 
     app.listen(PORT, () => {

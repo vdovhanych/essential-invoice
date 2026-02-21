@@ -1,4 +1,5 @@
 import { query } from '../db/init';
+import { decrypt } from '../utils/encryption';
 
 const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
 
@@ -17,7 +18,7 @@ async function getUserApiKey(userId: string): Promise<string | null> {
       return null;
     }
     
-    return result.rows[0].perplexity_api_key;
+    return decrypt(result.rows[0].perplexity_api_key);
   } catch (error) {
     console.error('Error getting Perplexity API key:', error);
     return null;

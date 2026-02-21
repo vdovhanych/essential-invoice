@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { query } from '../db/init';
 import { generateInvoicePDF } from './pdfGenerator';
+import { decrypt } from '../utils/encryption';
 
 interface SendResult {
   success: boolean;
@@ -53,7 +54,7 @@ export async function sendInvoiceEmail(
       secure: settings.smtp_secure,
       auth: {
         user: settings.smtp_user,
-        pass: settings.smtp_password
+        pass: decrypt(settings.smtp_password)
       }
     });
 

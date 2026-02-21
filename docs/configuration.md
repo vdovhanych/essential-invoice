@@ -12,6 +12,7 @@ Copy `.env.example` to `.env` in the project root and configure:
 | `DB_USER` | `postgres` | Database user |
 | `DB_PASSWORD` | `postgres` | Database password |
 | `JWT_SECRET` | - | JWT signing secret (required) |
+| `ENCRYPTION_KEY` | - | AES-256 key for encrypting secrets at rest (required, 64-char hex). Generate with `openssl rand -hex 32` |
 | `CORS_ORIGIN` | `http://localhost:5173` (dev) / `http://localhost:8080` (Docker) | Allowed CORS origins (comma-separated) |
 | `BACKEND_PORT` | `3001` | Backend API port |
 | `FRONTEND_PORT` | `80` | Frontend web port |

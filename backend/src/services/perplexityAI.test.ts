@@ -16,6 +16,12 @@ vi.mock('../db/init.js', () => ({
   query: vi.fn(),
 }));
 
+// Mock encryption module
+vi.mock('../utils/encryption.js', () => ({
+  encrypt: (value: string) => `encrypted:${value}`,
+  decrypt: (value: string) => value.replace('encrypted:', ''),
+}));
+
 const mockQuery = vi.mocked(dbInit.query);
 
 describe('Perplexity AI Service', () => {

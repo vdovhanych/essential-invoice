@@ -89,6 +89,11 @@ spec:
                 secretKeyRef:
                   name: {{ include "essential-invoice.secretName" . }}
                   key: JWT_SECRET
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "essential-invoice.secretName" . }}
+                  key: ENCRYPTION_KEY
             - name: CORS_ORIGIN
               value: {{ .Values.backend.env.CORS_ORIGIN | quote }}
             {{- if .Values.backend.env.FRONTEND_URL }}

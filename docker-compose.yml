@@ -37,6 +37,7 @@ services:
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-aee02347fb6401e6d1c5d3c068d1a2f2873cd7263629a297abf6b999bb568068}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
       EMAIL_POLLING_INTERVAL: ${EMAIL_POLLING_INTERVAL:-300000}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
