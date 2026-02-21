@@ -48,6 +48,8 @@ helm install essential-invoice . \              # Install
 ```bash
 cd backend
 bun run migrate         # Run database migrations
+bun run seed            # Seed test data (default: test@test.com / password123)
+bun run seed <email> <password>  # Seed with custom credentials
 bun run delete-user <email>  # Delete a user account by email (admin CLI)
 ```
 
@@ -68,6 +70,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
 - **Utils**: `utils/validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
 - **Scripts**: `scripts/delete-user.ts` - Admin CLI script to delete a user by email
+- **Seed**: `db/seed.ts` - Seeds test data (user, clients, invoices, expenses, payments) for development. Run with `bun run seed [email] [password]`
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
 - **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow.
 

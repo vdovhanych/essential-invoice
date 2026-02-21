@@ -66,6 +66,16 @@ cd frontend && bun vitest run src/utils/format.test.ts
 
 ## Admin Scripts
 
+### Seed Test Data
+
+Seed a test user with clients, invoices, expenses, and payments for development:
+```bash
+cd backend
+bun run seed                           # Default: test@test.com / password123
+bun run seed user@example.com mypass   # Custom credentials
+```
+The script refuses to run if the user already exists. Use `bun run delete-user` to remove them first.
+
 ### Delete User
 
 Delete a user and all associated data (invoices, clients, expenses, payments, settings) by email:
@@ -81,7 +91,7 @@ The script will show user details and prompt for confirmation before deleting.
 essential-invoice/
 ├── backend/
 │   ├── src/
-│   │   ├── db/              # Database init (init.ts) and migrations (migrate.ts)
+│   │   ├── db/              # Database init (init.ts), migrations (migrate.ts), seed (seed.ts)
 │   │   ├── middleware/      # Auth middleware (auth.ts)
 │   │   ├── routes/          # API routes (auth, clients, invoices, expenses, payments, settings, ares, dashboard, ai)
 │   │   ├── services/        # Business logic
@@ -91,6 +101,7 @@ essential-invoice/
 │   │   │   ├── globalEmailSender.ts  # Global SMTP for system emails
 │   │   │   ├── pdfGenerator.ts       # Uses pdfmake library
 │   │   │   └── perplexityAI.ts
+│   │   ├── scripts/          # Admin CLI scripts (delete-user.ts)
 │   │   ├── utils/           # Validation utilities (IČO, IBAN, SPAYD)
 │   │   └── index.ts         # Express app entry point
 │   ├── uploads/             # File uploads (logos, expense attachments)
