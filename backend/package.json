@@ -8,6 +8,7 @@
     "start": "bun src/index.ts",
     "migrate": "bun src/db/migrate.ts",
     "seed": "bun src/db/seed.ts",
+    "delete-user": "bun src/scripts/delete-user.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

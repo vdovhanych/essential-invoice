@@ -4,6 +4,7 @@ import Profile from './Profile';
 
 const mockUpdateProfile = vi.fn();
 const mockRefreshUser = vi.fn();
+const mockLogout = vi.fn();
 
 vi.mock('../context/AuthContext', () => ({
   useAuth: () => ({
@@ -11,6 +12,7 @@ vi.mock('../context/AuthContext', () => ({
     token: 'test-token',
     updateProfile: mockUpdateProfile,
     refreshUser: mockRefreshUser,
+    logout: mockLogout,
   })
 }));
 
@@ -31,6 +33,7 @@ vi.mock('lucide-react', () => ({
   Trash2: () => <span data-testid="trash-icon" />,
   Image: () => <span data-testid="image-icon" />,
   Landmark: () => <span data-testid="landmark-icon" />,
+  ShieldAlert: () => <span data-testid="shield-alert-icon" />,
 }));
 
 describe('Profile Component', () => {

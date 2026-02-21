@@ -547,6 +547,76 @@ describe('Auth Routes', () => {
     });
   });
 
+  describe('DELETE /auth/me', () => {
+    it('should return 401 if no token provided', async () => {
+      const response = await request(app)
+        .delete('/auth/me')
+        .send({ password: 'password123' });
+
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 400 if password is missing', async () => {
+      const userId = 'test-user-id';
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+
+      const response = await request(app)
+        .delete('/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .send({});
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 401 if password is incorrect', async () => {
+      const userId = 'test-user-id';
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+
+      const bcrypt = await import('bcryptjs');
+      const hash = await bcrypt.hash('correctpassword', 12);
+
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{ password_hash: hash }]
+      } as any);
+
+      const response = await request(app)
+        .delete('/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ password: 'wrongpassword' });
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe('Incorrect password');
+    });
+
+    it('should delete account with correct password', async () => {
+      const userId = 'test-user-id';
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+
+      const bcrypt = await import('bcryptjs');
+      const hash = await bcrypt.hash('correctpassword', 12);
+
+      // SELECT password_hash
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{ password_hash: hash }]
+      } as any);
+      // DELETE FROM users
+      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+
+      const response = await request(app)
+        .delete('/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ password: 'correctpassword' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe('Account deleted');
+
+      // Verify DELETE query was called
+      const deleteCall = mockedQuery.mock.calls[1];
+      expect(deleteCall[0]).toContain('DELETE FROM users');
+      expect(deleteCall[1]).toEqual([userId]);
+    });
+  });
+
   describe('POST /auth/forgot-password', () => {
     it('should return success even if email does not exist', async () => {
       mockedIsGlobalSmtpConfigured.mockReturnValue(true);

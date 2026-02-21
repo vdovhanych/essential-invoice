@@ -18,6 +18,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 - **Password Reset**: Email-based password recovery with secure token flow
 - **Welcome Emails**: Automatic welcome email on registration (when global SMTP is configured)
 - **Onboarding Wizard**: Guided 2-step setup after registration to collect company and bank details
+- **Account Deletion**: Self-service account deletion with password confirmation (cascades all user data)
 - **Paušální Daň Tracking**: Monitor invoiced amounts against paušální daň limits (3 tiers)
 - **Dashboard**: Overview of revenue, outstanding payments, and recent activity
 - **Multi-currency**: Support for CZK and EUR
@@ -200,6 +201,7 @@ Payments can be matched in two ways:
 - `POST /api/auth/change-password` - Change password (requires current password)
 - `POST /api/auth/forgot-password` - Request password reset email
 - `POST /api/auth/reset-password` - Reset password with token
+- `DELETE /api/auth/me` - Delete account (requires password confirmation)
 
 ### Clients
 - `GET /api/clients` - List all clients
@@ -377,6 +379,16 @@ The bank parsing system is designed to be extensible. To add support for another
 - HTTPS recommended for production (configure via reverse proxy)
 - Environment-based configuration (no hardcoded secrets)
 - Input validation on all endpoints
+
+## Admin Scripts
+
+### Delete User
+Delete a user and all associated data (invoices, clients, expenses, payments, settings) by email:
+```bash
+cd backend
+bun run delete-user user@example.com
+```
+The script will show user details and prompt for confirmation before deleting.
 
 ## Troubleshooting
 

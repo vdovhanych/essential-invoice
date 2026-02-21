@@ -51,8 +51,9 @@ export const api = {
     body: data ? JSON.stringify(data) : undefined,
   }),
 
-  delete: (endpoint: string) => request(endpoint, {
+  delete: (endpoint: string, data?: unknown) => request(endpoint, {
     method: 'DELETE',
+    body: data ? JSON.stringify(data) : undefined,
   }),
 
   // Special method for downloading files
