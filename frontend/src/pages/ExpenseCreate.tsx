@@ -25,7 +25,7 @@ export default function ExpenseCreate() {
     issueDate: new Date().toISOString().split('T')[0],
     dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     currency: 'CZK',
-    amount: 0,
+    amount: '' as unknown as number,
     vatRate: 21,
     description: '',
     notes: '',

@@ -40,7 +40,7 @@ export default function InvoiceCreate() {
   });
 
   const [items, setItems] = useState<InvoiceItem[]>([
-    { description: '', quantity: 1, unit: 'ks', unitPrice: 0 }
+    { description: '', quantity: 1, unit: 'ks', unitPrice: '' as unknown as number }
   ]);
 
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function InvoiceCreate() {
   }
 
   function addItem() {
-    setItems(prev => [...prev, { description: '', quantity: 1, unit: 'ks', unitPrice: 0 }]);
+    setItems(prev => [...prev, { description: '', quantity: 1, unit: 'ks', unitPrice: '' as unknown as number }]);
   }
 
   function removeItem(index: number) {
@@ -111,7 +111,7 @@ export default function InvoiceCreate() {
   }
 
   function calculateSubtotal(): number {
-    return items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    return items.reduce((sum, item) => sum + ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)), 0);
   }
 
   function calculateVat(): number {
@@ -307,7 +307,7 @@ export default function InvoiceCreate() {
                   <input
                     type="number"
                     value={item.quantity}
-                    onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
+                    onChange={(e) => handleItemChange(index, 'quantity', e.target.value === '' ? '' as unknown as number : parseFloat(e.target.value))}
                     className="input"
                     min="0.01"
                     step="0.01"
@@ -329,7 +329,7 @@ export default function InvoiceCreate() {
                   <input
                     type="number"
                     value={item.unitPrice}
-                    onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                    onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value === '' ? '' as unknown as number : parseFloat(e.target.value))}
                     className="input"
                     min="0"
                     step="0.01"

@@ -101,7 +101,7 @@ export default function Settings() {
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked :
-              (type === 'number' || numericFields.includes(name)) ? parseInt(value) || 0 : value
+              (type === 'number' || numericFields.includes(name)) ? (value === '' ? '' : parseInt(value)) : value
     }));
   }
 

@@ -15,7 +15,7 @@ function loadSavedValues() {
   } catch (e) {
     console.error('Failed to load calculator values:', e);
   }
-  return { hourlyRate: 0, hoursWorked: 0, kpiBonusPercent: 0 };
+  return { hourlyRate: '', hoursWorked: '', kpiBonusPercent: '' };
 }
 
 export default function Calculator() {
@@ -25,9 +25,9 @@ export default function Calculator() {
 
   // Calculator inputs - load from localStorage
   const savedValues = loadSavedValues();
-  const [hourlyRate, setHourlyRate] = useState<number>(savedValues.hourlyRate);
-  const [hoursWorked, setHoursWorked] = useState<number>(savedValues.hoursWorked);
-  const [kpiBonusPercent, setKpiBonusPercent] = useState<number>(savedValues.kpiBonusPercent);
+  const [hourlyRate, setHourlyRate] = useState<number | string>(savedValues.hourlyRate);
+  const [hoursWorked, setHoursWorked] = useState<number | string>(savedValues.hoursWorked);
+  const [kpiBonusPercent, setKpiBonusPercent] = useState<number | string>(savedValues.kpiBonusPercent);
 
   // Save to localStorage whenever values change
   useEffect(() => {
@@ -59,9 +59,12 @@ export default function Calculator() {
 
   // Real-time calculations using useMemo
   const calculations = useMemo(() => {
-    const kpiBonusHours = (hoursWorked * kpiBonusPercent) / 100;
-    const kpiBonusAmount = hourlyRate * kpiBonusHours;
-    const hoursTotal = hourlyRate * hoursWorked;
+    const rate = Number(hourlyRate) || 0;
+    const hours = Number(hoursWorked) || 0;
+    const bonus = Number(kpiBonusPercent) || 0;
+    const kpiBonusHours = (hours * bonus) / 100;
+    const kpiBonusAmount = rate * kpiBonusHours;
+    const hoursTotal = rate * hours;
     const grandTotal = hoursTotal + kpiBonusAmount;
 
     return {
@@ -101,8 +104,8 @@ export default function Calculator() {
             <label className="label">Hodinová sazba</label>
             <input
               type="number"
-              value={hourlyRate || ''}
-              onChange={(e) => setHourlyRate(parseFloat(e.target.value) || 0)}
+              value={hourlyRate}
+              onChange={(e) => setHourlyRate(e.target.value === '' ? '' : parseFloat(e.target.value))}
               className="input"
               min="0"
               step="0.01"
@@ -113,8 +116,8 @@ export default function Calculator() {
             <label className="label">Odpracované hodiny</label>
             <input
               type="number"
-              value={hoursWorked || ''}
-              onChange={(e) => setHoursWorked(parseFloat(e.target.value) || 0)}
+              value={hoursWorked}
+              onChange={(e) => setHoursWorked(e.target.value === '' ? '' : parseFloat(e.target.value))}
               className="input"
               min="0"
               step="0.01"
@@ -125,8 +128,8 @@ export default function Calculator() {
             <label className="label">KPI bonus (%)</label>
             <input
               type="number"
-              value={kpiBonusPercent || ''}
-              onChange={(e) => setKpiBonusPercent(parseFloat(e.target.value) || 0)}
+              value={kpiBonusPercent}
+              onChange={(e) => setKpiBonusPercent(e.target.value === '' ? '' : parseFloat(e.target.value))}
               className="input"
               min="0"
               max="100"
