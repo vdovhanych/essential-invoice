@@ -53,7 +53,7 @@ bun run delete-user <email>  # Delete a user account by email (admin CLI)
 
 ## Architecture
 
-This is a self-hosted invoicing application for Czech freelancers with frontend/backend separation.
+This is a self-hosted invoicing application for Czech freelancers with frontend/backend separation. See [docs/architecture.md](docs/architecture.md) for full details.
 
 ### Backend (`backend/src/`)
 - **Express API** with JWT authentication and rate limiting
@@ -88,20 +88,8 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 ### Helm Chart (`helm-chart/`)
 - **Chart.yaml**: Chart metadata (no external dependencies)
 - **values.yaml**: All configurable values (backend, frontend, ingress, postgresql, secrets, security contexts, autoscaling, PDBs)
-- **templates/**: Kubernetes manifests:
-  - `serviceaccount.yaml` - ServiceAccount with configurable annotations (IRSA/Workload Identity)
-  - `backend-deployment.yaml` / `frontend-deployment.yaml` - Deployments with security contexts, checksum annotations for auto-rollout, extraEnv/extraEnvFrom support
-  - `backend-service.yaml` / `frontend-service.yaml` - Configurable service types
-  - `ingress.yaml` - Ingress with configurable pathType and ingressClassName
-  - `secret.yaml` - JWT and optional DB password secrets
-  - `hpa.yaml` - HorizontalPodAutoscaler (optional, disabled by default)
-  - `pdb.yaml` - PodDisruptionBudget (optional, disabled by default)
-  - `frontend-configmap.yaml` - Nginx reverse-proxy config and main nginx.conf
-  - `postgresql.yaml` - PostgreSQL StatefulSet, Service, and Secret (conditional)
+- **templates/**: Kubernetes manifests (see [docs/architecture.md](docs/architecture.md) for full list)
 - PostgreSQL deployed via built-in StatefulSet with PVC persistence; can be disabled in favor of external DB
-- Ingress disabled by default; supports TLS via cert-manager annotations
-- Secrets managed via k8s Secret or existing secret reference
-- Security hardened: `runAsNonRoot`, `readOnlyRootFilesystem` (frontend), `drop ALL` capabilities
 
 ### Key Integrations
 - **ARES API**: Czech company registry lookup by IČO (`routes/ares.ts`)
@@ -136,73 +124,26 @@ Requires `.env` file in root (copy from `.env.example`). Key variables:
 - `FRONTEND_URL` - Frontend URL for constructing email links (default: `http://localhost:8080`)
 - Per-user SMTP/IMAP configured in-app via Settings page
 
+See [docs/configuration.md](docs/configuration.md) for the full environment variables reference.
+
 ## Documentation Maintenance
 
-**CRITICAL**: When making ANY changes to the codebase, you MUST update the relevant documentation files to reflect those changes. This ensures the documentation stays accurate and useful.
-
-### When to Update Documentation
-
-Update documentation immediately when you:
-
-1. **Add new features or endpoints**:
-   - Add to README.md "Features" section
-   - Add to README.md "API Reference" section (with full endpoint details)
-   - Update CLAUDE.md architecture section with new routes/pages/services
-   - Update project structure in README.md if new directories/files are added
-
-2. **Change existing functionality**:
-   - Update descriptions in README.md and CLAUDE.md
-   - Update API endpoint documentation if signatures change
-   - Update usage examples if behavior changes
-
-3. **Add/change dependencies**:
-   - If switching libraries (e.g., Puppeteer → pdfmake), update all mentions
-   - Document new key dependencies in architecture sections
-
-4. **Add new pages or routes**:
-   - Update CLAUDE.md Frontend pages list
-   - Update CLAUDE.md Backend routes list
-   - Update README.md project structure tree
-
-5. **Change configuration**:
-   - Update .env.example with new environment variables
-   - Document new config options in README.md "Configuration" section
-   - Update CLAUDE.md "Environment" section
-
-6. **Remove features or files**:
-   - Remove from all documentation
-   - Remove broken references (e.g., links to deleted files)
+When making changes to the codebase, update the relevant documentation files:
 
 ### Files to Keep Updated
+- **CLAUDE.md** - Architecture overview, commands, testing (this file)
+- **README.md** - Features list, quick start
+- **docs/api-reference.md** - API endpoints
+- **docs/architecture.md** - Backend/frontend/helm structure, integrations, security
+- **docs/configuration.md** - Environment variables, SMTP/IMAP/AI setup
+- **docs/deployment.md** - Docker, Helm, backup procedures
+- **docs/development.md** - Local setup, testing, project structure, contributing
+- **docs/troubleshooting.md** - Common issues
+- **.env.example** - All environment variables with comments
 
-- **CLAUDE.md**: Technical architecture, commands, file locations, testing instructions
-- **README.md**: User-facing features, setup guide, API reference, troubleshooting
-- **.env.example**: All environment variables with comments
-
-### Documentation Update Checklist
-
-Before completing any task that modifies code, ask yourself:
-
-- [ ] Did I add/remove/change any API endpoints? → Update README.md API Reference
-- [ ] Did I add/remove any frontend pages? → Update CLAUDE.md pages list
-- [ ] Did I add/remove any backend routes? → Update CLAUDE.md routes list
-- [ ] Did I change how a feature works? → Update README.md features and usage guide
-- [ ] Did I switch or add major libraries? → Update both README.md and CLAUDE.md
-- [ ] Did I add new environment variables? → Update .env.example and README.md configuration section
-- [ ] Did I change the project structure? → Update README.md project structure tree
-
-### Example: Adding a New Feature
-
-If you add an "Expenses" feature:
-
-1. Add route: `backend/src/routes/expenses.ts`
-2. Mount in: `backend/src/index.ts`
-3. Add pages: `frontend/src/pages/Expenses.tsx`, `ExpenseCreate.tsx`, `ExpenseDetail.tsx`
-4. **Immediately update documentation**:
-   - README.md: Add "Expense Tracking" to Features list
-   - README.md: Add Expenses API endpoints to API Reference
-   - README.md: Update project structure to include expenses routes and pages
-   - CLAUDE.md: Add `expenses` to Backend routes list
-   - CLAUDE.md: Add expense pages to Frontend pages list
-
-**Remember**: Documentation is part of the deliverable. A feature is not complete until its documentation is updated.
+### Quick Checklist
+- API endpoints changed? → `docs/api-reference.md`
+- New pages/routes/services? → CLAUDE.md architecture + `docs/architecture.md`
+- New env vars? → `.env.example` + `docs/configuration.md`
+- New features? → README.md features list
+- Project structure changed? → `docs/development.md`

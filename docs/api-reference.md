@@ -1,0 +1,78 @@
+# API Reference
+
+All endpoints require JWT authentication unless noted otherwise. Include the token in the `Authorization: Bearer <token>` header.
+
+## Authentication
+
+- `POST /api/auth/register` - Register new user (sends welcome email if global SMTP configured)
+- `POST /api/auth/login` - Login
+- `GET /api/auth/me` - Get current user
+- `PUT /api/auth/me` - Update profile
+- `POST /api/auth/change-password` - Change password (requires current password)
+- `POST /api/auth/forgot-password` - Request password reset email
+- `POST /api/auth/reset-password` - Reset password with token
+- `DELETE /api/auth/me` - Delete account (requires password confirmation)
+
+## Clients
+
+- `GET /api/clients` - List all clients
+- `GET /api/clients/:id` - Get client details
+- `GET /api/clients/:id/invoices` - Get client's invoices
+- `POST /api/clients` - Create client
+- `PUT /api/clients/:id` - Update client
+- `DELETE /api/clients/:id` - Delete client
+
+## Invoices
+
+- `GET /api/invoices` - List invoices (filters: status, clientId, from, to)
+- `GET /api/invoices/:id` - Get invoice with items
+- `GET /api/invoices/:id/pdf` - Download PDF
+- `POST /api/invoices` - Create invoice
+- `PUT /api/invoices/:id` - Update invoice
+- `DELETE /api/invoices/:id` - Delete draft invoice
+- `POST /api/invoices/:id/send` - Send via email
+- `POST /api/invoices/:id/mark-paid` - Mark as paid
+- `POST /api/invoices/:id/cancel` - Cancel invoice
+
+## Expenses
+
+- `GET /api/expenses` - List expenses (filters: status, clientId, from, to)
+- `GET /api/expenses/:id` - Get expense details
+- `GET /api/expenses/:id/file` - Download attached file
+- `POST /api/expenses` - Create expense with optional file upload
+- `PUT /api/expenses/:id` - Update expense
+- `DELETE /api/expenses/:id` - Delete expense
+- `POST /api/expenses/:id/mark-paid` - Mark as paid
+- `POST /api/expenses/:id/cancel` - Cancel expense
+
+## Payments
+
+- `GET /api/payments` - List payments (filter: matched)
+- `GET /api/payments/unmatched` - List unmatched payments
+- `GET /api/payments/:id/matches` - Get potential invoice matches
+- `POST /api/payments/:id/match` - Match to invoice
+- `POST /api/payments/:id/unmatch` - Remove match
+- `DELETE /api/payments/:id` - Delete unmatched payment
+- `POST /api/payments/check-emails` - Check for new payments from email
+
+## ARES
+
+- `GET /api/ares/lookup/:ico` - Lookup company by ICO
+- `GET /api/ares/validate/:ico` - Validate ICO checksum
+
+## Dashboard
+
+- `GET /api/dashboard` - Get dashboard statistics
+
+## Settings
+
+- `GET /api/settings` - Get user settings
+- `PUT /api/settings` - Update settings
+- `POST /api/settings/test-smtp` - Test SMTP connection
+- `POST /api/settings/test-imap` - Test IMAP connection
+
+## AI (Perplexity)
+
+- `GET /api/ai/status` - Check AI feature availability
+- `POST /api/ai/match-payment` - AI-powered payment matching
+- `POST /api/ai/tax-advisor` - Czech tax advisor chat
