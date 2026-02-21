@@ -165,7 +165,7 @@ export default function Clients() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Kontakty</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Kontakty</h1>
         <button onClick={openCreateModal} className="btn btn-primary flex items-center space-x-2">
           <Plus className="h-4 w-4" />
           <span>Nový kontakt</span>
@@ -175,7 +175,7 @@ export default function Clients() {
       {/* Message */}
       {message && (
         <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
         }`}>
           {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
           <span>{message.text}</span>
@@ -201,53 +201,53 @@ export default function Clients() {
             <div key={client.id} className="card hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Building className="h-5 w-5 text-blue-600" />
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <Building className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
                     <Link
                       to={`/clients/${client.id}`}
-                      className="font-semibold text-gray-900 hover:text-blue-600"
+                      className="font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600"
                     >
                       {client.companyName}
                     </Link>
                     {client.ico && (
-                      <p className="text-sm text-gray-500">ICO: {client.ico}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">ICO: {client.ico}</p>
                     )}
                   </div>
                 </div>
                 <div className="flex space-x-1">
                   <button
                     onClick={() => openEditModal(client)}
-                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
                   >
                     <Edit className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(client)}
-                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
               <div className="space-y-1 text-sm">
-                <p className="text-gray-600">{client.primaryEmail}</p>
+                <p className="text-gray-600 dark:text-gray-300">{client.primaryEmail}</p>
                 {client.contactPerson && (
-                  <p className="text-gray-500">Kontakt: {client.contactPerson}</p>
+                  <p className="text-gray-500 dark:text-gray-400">Kontakt: {client.contactPerson}</p>
                 )}
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between text-sm">
-                <span className="text-gray-500">{client.invoiceCount} faktur</span>
-                <span className="font-medium text-gray-900">{formatCurrency(client.totalPaid)}</span>
+              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">{client.invoiceCount} faktur</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(client.totalPaid)}</span>
               </div>
             </div>
           ))}
         </div>
       ) : (
         <div className="card text-center py-12">
-          <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Žádné kontakty nenalezeny</p>
+          <Users className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-500 dark:text-gray-400">Žádné kontakty nenalezeny</p>
           <button onClick={openCreateModal} className="btn btn-primary mt-4 inline-flex items-center space-x-2">
             <Plus className="h-4 w-4" />
             <span>Přidat první kontakt</span>
@@ -258,12 +258,12 @@ export default function Clients() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {editingClient ? 'Upravit kontakt' : 'Nový kontakt'}
               </h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                 <X className="h-5 w-5" />
               </button>
             </div>

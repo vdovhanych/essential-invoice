@@ -26,24 +26,24 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <FileText className="h-12 w-12 text-blue-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">essentialInvoice</h1>
-          <p className="text-gray-600 mt-2">Obnovení hesla</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Obnovení hesla</p>
         </div>
 
         <div className="card">
           {success ? (
             <div>
-              <div className="flex items-center space-x-2 p-3 bg-green-50 text-green-700 rounded-lg mb-4">
+              <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg mb-4">
                 <CheckCircle className="h-5 w-5 flex-shrink-0" />
                 <span>Pokud účet s tímto emailem existuje, byl odeslán odkaz pro obnovení hesla.</span>
               </div>
-              <p className="text-center text-gray-600 mt-4">
+              <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
                 <Link to="/login" className="text-blue-600 hover:underline">
                   Zpět na přihlášení
                 </Link>
@@ -52,13 +52,13 @@ export default function ForgotPassword() {
           ) : (
             <>
               {error && (
-                <div className="flex items-center space-x-2 p-3 bg-red-50 text-red-700 rounded-lg mb-4">
+                <div className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-4">
                   <AlertCircle className="h-5 w-5 flex-shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
 
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
                 Zadejte svůj email a my vám pošleme odkaz pro obnovení hesla.
               </p>
 
@@ -84,7 +84,7 @@ export default function ForgotPassword() {
                 </button>
               </form>
 
-              <p className="text-center text-gray-600 mt-4">
+              <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
                 <Link to="/login" className="text-blue-600 hover:underline">
                   Zpět na přihlášení
                 </Link>

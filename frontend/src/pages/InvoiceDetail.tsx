@@ -139,7 +139,6 @@ export default function InvoiceDetail() {
 
   function openMarkPaidModal() {
     if (!invoice) return;
-    // Default to due date
     setPaidDate(invoice.dueDate);
     setShowMarkPaidModal(true);
   }
@@ -185,7 +184,7 @@ export default function InvoiceDetail() {
   }
 
   if (!invoice) {
-    return <div className="text-center text-gray-500">Faktura nenalezena</div>;
+    return <div className="text-center text-gray-500 dark:text-gray-400">Faktura nenalezena</div>;
   }
 
   return (
@@ -195,12 +194,12 @@ export default function InvoiceDetail() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate('/invoices')}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Faktura {invoice.invoiceNumber}
             </h1>
             <span className={`badge ${getStatusColor(invoice.status)}`}>
@@ -243,7 +242,7 @@ export default function InvoiceDetail() {
       {/* Message */}
       {message && (
         <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
         }`}>
           {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
           <span>{message.text}</span>
@@ -255,35 +254,35 @@ export default function InvoiceDetail() {
         <div className="lg:col-span-2 space-y-6">
           {/* Client info */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Odběratel</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Odběratel</h2>
             <div className="space-y-2">
-              <p className="font-medium text-gray-900">{invoice.clientName}</p>
-              {invoice.clientAddress && <p className="text-gray-600">{invoice.clientAddress}</p>}
-              {invoice.clientIco && <p className="text-gray-600">ICO: {invoice.clientIco}</p>}
-              {invoice.clientDic && <p className="text-gray-600">DIC: {invoice.clientDic}</p>}
-              <p className="text-gray-600">Email: {invoice.clientEmail}</p>
+              <p className="font-medium text-gray-900 dark:text-gray-100">{invoice.clientName}</p>
+              {invoice.clientAddress && <p className="text-gray-600 dark:text-gray-300">{invoice.clientAddress}</p>}
+              {invoice.clientIco && <p className="text-gray-600 dark:text-gray-300">ICO: {invoice.clientIco}</p>}
+              {invoice.clientDic && <p className="text-gray-600 dark:text-gray-300">DIC: {invoice.clientDic}</p>}
+              <p className="text-gray-600 dark:text-gray-300">Email: {invoice.clientEmail}</p>
               {invoice.clientSecondaryEmail && (
-                <p className="text-gray-600">Sekundární email: {invoice.clientSecondaryEmail}</p>
+                <p className="text-gray-600 dark:text-gray-300">Sekundární email: {invoice.clientSecondaryEmail}</p>
               )}
             </div>
           </div>
 
           {/* Items */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Položky</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Položky</h2>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 font-medium text-gray-500">Popis</th>
-                    <th className="text-right py-2 font-medium text-gray-500">Množství</th>
-                    <th className="text-right py-2 font-medium text-gray-500">Cena/ks</th>
-                    <th className="text-right py-2 font-medium text-gray-500">Celkem</th>
+                  <tr className="border-b border-gray-200 dark:border-gray-700">
+                    <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">Popis</th>
+                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Množství</th>
+                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Cena/ks</th>
+                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Celkem</th>
                   </tr>
                 </thead>
                 <tbody>
                   {invoice.items.map((item) => (
-                    <tr key={item.id} className="border-b border-gray-100">
+                    <tr key={item.id} className="border-b border-gray-100 dark:border-gray-700">
                       <td className="py-3">{item.description}</td>
                       <td className="py-3 text-right">{item.quantity} {item.unit}</td>
                       <td className="py-3 text-right">{formatCurrency(item.unitPrice, invoice.currency)}</td>
@@ -292,7 +291,7 @@ export default function InvoiceDetail() {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t border-gray-200">
+                  <tr className="border-t border-gray-200 dark:border-gray-700">
                     <td colSpan={3} className="py-2 text-right font-medium">Základ daně:</td>
                     <td className="py-2 text-right">{formatCurrency(invoice.subtotal, invoice.currency)}</td>
                   </tr>
@@ -314,8 +313,8 @@ export default function InvoiceDetail() {
           {/* Notes */}
           {invoice.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznámky</h2>
-              <p className="text-gray-600 whitespace-pre-wrap">{invoice.notes}</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Poznámky</h2>
+              <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{invoice.notes}</p>
             </div>
           )}
         </div>
@@ -324,29 +323,29 @@ export default function InvoiceDetail() {
         <div className="space-y-6">
           {/* Dates */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Údaje</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Údaje</h2>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-gray-500">Variabilní symbol:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">Variabilní symbol:</dt>
                 <dd className="font-medium">{invoice.variableSymbol}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Datum vystavení:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">Datum vystavení:</dt>
                 <dd className="font-medium">{formatDate(invoice.issueDate)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Datum splatnosti:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">Datum splatnosti:</dt>
                 <dd className="font-medium">{formatDate(invoice.dueDate)}</dd>
               </div>
               {invoice.sentAt && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">Odesláno:</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">Odesláno:</dt>
                   <dd className="font-medium">{formatDate(invoice.sentAt)}</dd>
                 </div>
               )}
               {invoice.paidAt && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">Zaplaceno:</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">Zaplaceno:</dt>
                   <dd className="font-medium">{formatDate(invoice.paidAt)}</dd>
                 </div>
               )}
@@ -355,7 +354,7 @@ export default function InvoiceDetail() {
 
           {/* Actions */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Akce</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Akce</h2>
             <div className="space-y-2">
               {invoice.status !== 'cancelled' && invoice.status !== 'paid' && (
                 <button
@@ -381,15 +380,15 @@ export default function InvoiceDetail() {
       {/* Send preview modal */}
       {showSendModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-6xl max-h-[90vh] flex flex-col">
+          <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-6xl max-h-[90vh] flex flex-col">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Náhled a odeslání faktury
               </h2>
               <button
                 onClick={() => { setShowSendModal(false); setPreviewData(null); }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 disabled={sending}
               >
                 <XCircle className="h-6 w-6" />
@@ -404,14 +403,14 @@ export default function InvoiceDetail() {
             ) : previewData ? (
               <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                 {/* PDF Preview */}
-                <div className="lg:w-1/2 p-4 border-b lg:border-b-0 lg:border-r border-gray-200 overflow-auto">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Náhled PDF</h3>
+                <div className="lg:w-1/2 p-4 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700 overflow-auto">
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Náhled PDF</h3>
                   <object
                     data={`data:application/pdf;base64,${previewData.pdfBase64}`}
                     type="application/pdf"
-                    className="w-full h-[400px] lg:h-[calc(100%-2rem)] rounded border border-gray-200"
+                    className="w-full h-[400px] lg:h-[calc(100%-2rem)] rounded border border-gray-200 dark:border-gray-700"
                   >
-                    <p className="p-4 text-gray-500 text-center">
+                    <p className="p-4 text-gray-500 dark:text-gray-400 text-center">
                       Váš prohlížeč nepodporuje zobrazení PDF.{' '}
                       <a
                         href={`data:application/pdf;base64,${previewData.pdfBase64}`}
@@ -426,27 +425,27 @@ export default function InvoiceDetail() {
 
                 {/* Email Editor */}
                 <div className="lg:w-1/2 p-4 flex flex-col overflow-auto">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">E-mail</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">E-mail</h3>
 
                   {/* Subject */}
                   <div className="mb-4">
-                    <label className="block text-sm text-gray-500 mb-1">Předmět</label>
-                    <div className="px-3 py-2 bg-gray-50 rounded border border-gray-200 text-gray-700">
+                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Předmět</label>
+                    <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">
                       {previewData.subject}
                     </div>
                   </div>
 
                   {/* Recipients */}
                   <div className="mb-4">
-                    <label className="block text-sm text-gray-500 mb-1">Primární e-mail</label>
-                    <div className="px-3 py-2 bg-gray-50 rounded border border-gray-200 text-gray-700">
+                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Primární e-mail</label>
+                    <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">
                       {previewData.recipients.primary}
                     </div>
                   </div>
 
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-sm text-gray-500">Sekundární e-mail</label>
+                      <label className="block text-sm text-gray-500 dark:text-gray-400">Sekundární e-mail</label>
                       <label className="flex items-center space-x-2">
                         <input
                           type="checkbox"
@@ -454,31 +453,31 @@ export default function InvoiceDetail() {
                           onChange={(e) => setSendToSecondary(e.target.checked)}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
-                        <span className="text-sm text-gray-600">Odeslat</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Odeslat</span>
                       </label>
                     </div>
                     <input
                       type="email"
                       value={secondaryEmail}
                       onChange={(e) => setSecondaryEmail(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="input"
                       placeholder="sekundarni@email.cz"
                     />
                   </div>
 
                   {/* Message */}
                   <div className="flex-1 flex flex-col mb-4">
-                    <label className="block text-sm text-gray-500 mb-1">Zpráva</label>
+                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Zpráva</label>
                     <textarea
                       value={customMessage}
                       onChange={(e) => setCustomMessage(e.target.value)}
-                      className="flex-1 min-h-[200px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      className="input flex-1 min-h-[200px] resize-none"
                       placeholder="Text e-mailu..."
                     />
                   </div>
 
                   {/* Actions */}
-                  <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
+                  <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <button
                       onClick={() => { setShowSendModal(false); setPreviewData(null); }}
                       className="btn btn-secondary"
@@ -505,22 +504,22 @@ export default function InvoiceDetail() {
       {/* Mark as paid modal */}
       {showMarkPaidModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-md p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Označit fakturu jako zaplacenou
             </h2>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Datum zaplacení
               </label>
               <input
                 type="date"
                 value={paidDate}
                 onChange={(e) => setPaidDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="input"
               />
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Výchozí datum je datum splatnosti faktury
               </p>
             </div>

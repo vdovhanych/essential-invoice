@@ -175,17 +175,17 @@ export default function ExpenseCreate() {
       <div className="flex items-center space-x-4 mb-6">
         <button
           onClick={() => navigate('/expenses')}
-          className="p-2 hover:bg-gray-100 rounded-lg"
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
           {isEdit ? 'Upravit náklad' : 'Nový náklad'}
         </h1>
       </div>
 
       {error && (
-        <div className="flex items-center space-x-2 p-4 bg-red-50 text-red-700 rounded-lg mb-6">
+        <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-6">
           <AlertCircle className="h-5 w-5 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -194,7 +194,7 @@ export default function ExpenseCreate() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Supplier selection */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Dodavatel</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Dodavatel</h2>
           <div>
             <label htmlFor="clientId" className="label">Vyberte dodavatele</label>
             <select
@@ -216,7 +216,7 @@ export default function ExpenseCreate() {
 
         {/* Expense details */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Údaje nákladu</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Údaje nákladu</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label htmlFor="supplierInvoiceNumber" className="label">Číslo faktury dodavatele</label>
@@ -273,7 +273,7 @@ export default function ExpenseCreate() {
 
         {/* Amount */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Částka</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Částka</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label htmlFor="amount" className="label">Základ daně *</label>
@@ -305,14 +305,14 @@ export default function ExpenseCreate() {
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex flex-col items-end space-y-2">
               <div className="flex justify-between w-full max-w-xs">
-                <span className="text-gray-600">Základ daně:</span>
+                <span className="text-gray-600 dark:text-gray-300">Základ daně:</span>
                 <span className="font-medium">{formatCurrencyLocal(Number(formData.amount))}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs">
-                <span className="text-gray-600">DPH ({formData.vatRate}%):</span>
+                <span className="text-gray-600 dark:text-gray-300">DPH ({formData.vatRate}%):</span>
                 <span className="font-medium">{formatCurrencyLocal(calculateVatAmount())}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs text-lg">
@@ -325,23 +325,23 @@ export default function ExpenseCreate() {
 
         {/* File attachment */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Příloha</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Příloha</h2>
           {fileName ? (
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-gray-700">{fileName}</span>
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <span className="text-gray-700 dark:text-gray-300">{fileName}</span>
               <button
                 type="button"
                 onClick={removeFile}
-                className="p-1 text-gray-400 hover:text-red-600"
+                className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
           ) : (
-            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-500">
+                <Upload className="h-8 w-8 text-gray-400 dark:text-gray-500 mb-2" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Klikněte pro nahrání souboru (PDF, JPEG, PNG, max 5 MB)
                 </p>
               </div>
@@ -357,7 +357,7 @@ export default function ExpenseCreate() {
 
         {/* Description */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Popis</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Popis</h2>
           <textarea
             name="description"
             value={formData.description}
@@ -367,14 +367,14 @@ export default function ExpenseCreate() {
             maxLength={300}
             placeholder="Za co je náklad..."
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {formData.description.length}/300 znaků
           </p>
         </div>
 
         {/* Notes */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznámky</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Poznámky</h2>
           <textarea
             name="notes"
             value={formData.notes}
@@ -384,7 +384,7 @@ export default function ExpenseCreate() {
             maxLength={300}
             placeholder="Doplňující poznámky..."
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {formData.notes.length}/300 znaků
           </p>
         </div>

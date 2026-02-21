@@ -59,7 +59,7 @@ export default function Expenses() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Náklady</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Náklady</h1>
         <Link to="/expenses/new" className="btn btn-primary flex items-center space-x-2">
           <Plus className="h-4 w-4" />
           <span>Nový náklad</span>
@@ -98,19 +98,19 @@ export default function Expenses() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Číslo</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Dodavatel</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Číslo faktury</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Datum přijetí</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Splatnost</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500">Částka</th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-500">Stav</th>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Číslo</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Dodavatel</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Číslo faktury</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Datum přijetí</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Splatnost</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Částka</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Stav</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredExpenses.map((expense) => (
-                  <tr key={expense.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={expense.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <td className="py-3 px-4">
                       <Link
                         to={`/expenses/${expense.id}`}
@@ -123,19 +123,19 @@ export default function Expenses() {
                       {expense.clientId && expense.clientName ? (
                         <Link
                           to={`/clients/${expense.clientId}`}
-                          className="text-gray-900 hover:underline"
+                          className="text-gray-900 dark:text-gray-100 hover:underline"
                         >
                           {expense.clientName}
                         </Link>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-gray-600">
+                    <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
                       {expense.supplierInvoiceNumber || '-'}
                     </td>
-                    <td className="py-3 px-4 text-gray-600">{formatDate(expense.issueDate)}</td>
-                    <td className="py-3 px-4 text-gray-600">{formatDate(expense.dueDate)}</td>
+                    <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{formatDate(expense.issueDate)}</td>
+                    <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{formatDate(expense.dueDate)}</td>
                     <td className="py-3 px-4 text-right font-medium">
                       {formatCurrency(expense.total, expense.currency)}
                     </td>
@@ -151,8 +151,8 @@ export default function Expenses() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <Receipt className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Žádné náklady nenalezeny</p>
+            <Receipt className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-500 dark:text-gray-400">Žádné náklady nenalezeny</p>
             <Link to="/expenses/new" className="btn btn-primary mt-4 inline-flex items-center space-x-2">
               <Plus className="h-4 w-4" />
               <span>Přidat první náklad</span>

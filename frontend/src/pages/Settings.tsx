@@ -147,12 +147,12 @@ export default function Settings() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Nastavení</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nastavení</h1>
 
       {/* Message */}
       {message && (
         <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
         }`}>
           {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
           <span>{message.text}</span>
@@ -163,10 +163,10 @@ export default function Settings() {
         {/* SMTP Settings */}
         <div className="card">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Mail className="h-5 w-5 text-blue-600" />
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Odesílání emailů (SMTP)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Odesílání emailů (SMTP)</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -215,7 +215,7 @@ export default function Settings() {
                 <button
                   type="button"
                   onClick={() => setShowPasswords(p => ({ ...p, smtp: !p.smtp }))}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   {showPasswords.smtp ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -254,7 +254,7 @@ export default function Settings() {
                 onChange={handleChange}
                 className="rounded border-gray-300 text-blue-600"
               />
-              <span className="text-sm text-gray-600">Použít TLS/SSL</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Použít TLS/SSL</span>
             </label>
             <button
               type="button"
@@ -270,13 +270,13 @@ export default function Settings() {
         {/* IMAP Settings */}
         <div className="card">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Server className="h-5 w-5 text-green-600" />
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <Server className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Přijímání emailů (IMAP)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Přijímání emailů (IMAP)</h2>
           </div>
 
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Nastavte IMAP pro automatické načítání bankovních notifikací o platbách.
           </p>
 
@@ -326,7 +326,7 @@ export default function Settings() {
                 <button
                   type="button"
                   onClick={() => setShowPasswords(p => ({ ...p, imap: !p.imap }))}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   {showPasswords.imap ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -342,7 +342,7 @@ export default function Settings() {
                 className="input"
                 placeholder="noreply@airbank.cz"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Pokud vyplníte, budou se načítat pouze emaily od této adresy
               </p>
             </div>
@@ -357,7 +357,7 @@ export default function Settings() {
                 onChange={handleChange}
                 className="rounded border-gray-300 text-blue-600"
               />
-              <span className="text-sm text-gray-600">Použít TLS</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Použít TLS</span>
             </label>
             <button
               type="button"
@@ -373,13 +373,13 @@ export default function Settings() {
         {/* AI Features Settings */}
         <div className="card">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Sparkles className="h-5 w-5 text-purple-600" />
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+              <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">AI funkce (Perplexity)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">AI funkce (Perplexity)</h2>
           </div>
 
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Aktivujte AI asistenta pro český daňový poradenství, inteligentní párování plateb a další funkce.
           </p>
 
@@ -397,16 +397,16 @@ export default function Settings() {
               <button
                 type="button"
                 onClick={() => setShowPasswords(p => ({ ...p, perplexity: !p.perplexity }))}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 {showPasswords.perplexity ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Získejte API klíč na{' '}
-              <a 
-                href="https://www.perplexity.ai/settings/api" 
-                target="_blank" 
+              <a
+                href="https://www.perplexity.ai/settings/api"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
               >
@@ -418,7 +418,7 @@ export default function Settings() {
 
         {/* Invoice defaults */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Výchozí hodnoty faktur</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Výchozí hodnoty faktur</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -462,13 +462,13 @@ export default function Settings() {
         {/* Calculator Settings */}
         <div className="card">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Calculator className="h-5 w-5 text-purple-600" />
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+              <Calculator className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Kalkulačka</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Kalkulačka</h2>
           </div>
 
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Povolit kalkulačku pro výpočet fakturované částky na základě hodinové sazby a KPI bonusu.
           </p>
 
@@ -480,14 +480,14 @@ export default function Settings() {
               onChange={handleChange}
               className="rounded border-gray-300 text-blue-600"
             />
-            <span className="text-sm text-gray-600">Zapnout kalkulačku</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">Zapnout kalkulačku</span>
           </label>
         </div>
 
         {/* Email template */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Šablona emailu</h2>
-          <p className="text-sm text-gray-500 mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Šablona emailu</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Použijte proměnné: {'{{invoiceNumber}}'}, {'{{total}}'}, {'{{dueDate}}'}, {'{{clientName}}'}, {'{{senderName}}'}
           </p>
           <textarea

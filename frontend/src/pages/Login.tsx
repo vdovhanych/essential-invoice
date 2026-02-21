@@ -26,19 +26,19 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <FileText className="h-12 w-12 text-blue-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">essentialInvoice</h1>
-          <p className="text-gray-600 mt-2">Přihlaste se ke svému účtu</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Přihlaste se ke svému účtu</p>
         </div>
 
         <div className="card">
           {error && (
-            <div className="flex items-center space-x-2 p-3 bg-red-50 text-red-700 rounded-lg mb-4">
+            <div className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-4">
               <AlertCircle className="h-5 w-5 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -84,7 +84,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-center text-gray-600 mt-4">
+          <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
             Nemáte účet?{' '}
             <Link to="/register" className="text-blue-600 hover:underline">
               Registrovat se

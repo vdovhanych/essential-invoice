@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import AIAssistant from './AIAssistant';
 import { api } from '../utils/api';
 import {
@@ -15,7 +16,10 @@ import {
   User,
   ChevronDown,
   Calculator,
-  Receipt
+  Receipt,
+  Sun,
+  Moon,
+  Monitor
 } from 'lucide-react';
 
 const baseNavItems = [
@@ -28,6 +32,7 @@ const baseNavItems = [
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -52,8 +57,14 @@ export default function Layout() {
     { path: '/settings', icon: Settings, label: 'Nastaveni' },
   ];
 
+  const themeOptions = [
+    { value: 'light' as const, icon: Sun, label: 'Světlý' },
+    { value: 'dark' as const, icon: Moon, label: 'Tmavý' },
+    { value: 'system' as const, icon: Monitor, label: 'Systém' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -64,17 +75,17 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
           <Link to="/" className="flex items-center space-x-2">
             <FileText className="h-8 w-8 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">essentialInvoice</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</span>
           </Link>
           <button
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
             onClick={() => setSidebarOpen(false)}
           >
             <X className="h-5 w-5" />
@@ -93,8 +104,8 @@ export default function Layout() {
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
                 }`}
               >
                 <item.icon className="h-5 w-5" />
@@ -108,10 +119,10 @@ export default function Layout() {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
+        <header className="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between h-16 px-4">
             <button
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu className="h-5 w-5" />
@@ -122,16 +133,16 @@ export default function Layout() {
             {/* User menu */}
             <div className="relative">
               <button
-                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
+                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
               >
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-blue-600" />
+                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                  <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
-                <span className="hidden sm:block font-medium text-gray-700">
+                <span className="hidden sm:block font-medium text-gray-700 dark:text-gray-300">
                   {user?.name}
                 </span>
-                <ChevronDown className="h-4 w-4 text-gray-500" />
+                <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               </button>
 
               {userMenuOpen && (
@@ -140,10 +151,10 @@ export default function Layout() {
                     className="fixed inset-0 z-40"
                     onClick={() => setUserMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                     <Link
                       to="/profile"
-                      className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={() => setUserMenuOpen(false)}
                     >
                       <User className="h-4 w-4" />
@@ -151,19 +162,39 @@ export default function Layout() {
                     </Link>
                     <Link
                       to="/settings"
-                      className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={() => setUserMenuOpen(false)}
                     >
                       <Settings className="h-4 w-4" />
                       <span>Nastaveni</span>
                     </Link>
-                    <hr className="my-1" />
+                    <hr className="my-1 dark:border-gray-700" />
+                    <div className="px-4 py-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Vzhled aplikace</p>
+                      <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                        {themeOptions.map(({ value, icon: Icon, label }) => (
+                          <button
+                            key={value}
+                            onClick={() => setTheme(value)}
+                            className={`flex-1 flex items-center justify-center px-2 py-1.5 rounded-md transition-colors ${
+                              theme === value
+                                ? 'bg-white dark:bg-gray-600 shadow-sm text-gray-900 dark:text-gray-100'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                            }`}
+                            title={label}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <hr className="my-1 dark:border-gray-700" />
                     <button
                       onClick={() => {
                         setUserMenuOpen(false);
                         logout();
                       }}
-                      className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-gray-100 w-full"
+                      className="flex items-center space-x-2 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 w-full"
                     >
                       <LogOut className="h-4 w-4" />
                       <span>Odhlásit se</span>
