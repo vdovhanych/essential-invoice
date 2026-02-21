@@ -49,6 +49,29 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
       ORDER BY month ASC
     `, [req.userId]);
 
+    // Get monthly expenses for last 12 months
+    const expensesResult = await query(`
+      SELECT
+        date_trunc('month', issue_date) as month,
+        SUM(total) as expenses,
+        COUNT(*) as expense_count
+      FROM expenses
+      WHERE user_id = $1
+        AND status = 'paid'
+        AND issue_date >= date_trunc('month', CURRENT_DATE - INTERVAL '11 months')
+      GROUP BY date_trunc('month', issue_date)
+      ORDER BY month ASC
+    `, [req.userId]);
+
+    // Get total expenses this year
+    const yearlyExpensesResult = await query(`
+      SELECT COALESCE(SUM(total), 0) as total_expenses
+      FROM expenses
+      WHERE user_id = $1
+        AND status = 'paid'
+        AND issue_date >= date_trunc('year', CURRENT_DATE)
+    `, [req.userId]);
+
     // Check for overdue invoices and update status
     await query(`
       UPDATE invoices
@@ -111,6 +134,12 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
         revenue: parseFloat(row.revenue),
         invoiceCount: parseInt(row.invoice_count)
       })),
+      monthlyExpenses: expensesResult.rows.map(row => ({
+        month: row.month,
+        expenses: parseFloat(row.expenses),
+        expenseCount: parseInt(row.expense_count)
+      })),
+      yearlyExpenses: parseFloat(yearlyExpensesResult.rows[0].total_expenses),
       unmatchedPayments: parseInt(unmatchedPaymentsResult.rows[0].count),
       pausalniDan: {
         enabled: pausalniDanSettings.pausalni_dan_enabled ?? false,

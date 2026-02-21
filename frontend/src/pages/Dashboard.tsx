@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { formatCurrency, getStatusLabel, getStatusColor } from '../utils/format';
@@ -11,9 +11,10 @@ import {
   TrendingUp,
   Plus,
   CreditCard,
-  Landmark
+  Landmark,
+  ChevronDown
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface DashboardData {
   stats: {
@@ -41,6 +42,12 @@ interface DashboardData {
     revenue: number;
     invoiceCount: number;
   }>;
+  monthlyExpenses: Array<{
+    month: string;
+    expenses: number;
+    expenseCount: number;
+  }>;
+  yearlyExpenses: number;
   unmatchedPayments: number;
   pausalniDan: {
     enabled: boolean;
@@ -55,6 +62,7 @@ export default function Dashboard() {
   const { resolvedTheme } = useTheme();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     loadDashboard();
@@ -71,6 +79,49 @@ export default function Dashboard() {
     }
   }
 
+  const availableYears = useMemo(() => {
+    if (!data) return [new Date().getFullYear()];
+    const years = new Set<number>();
+    data.monthlyRevenue.forEach(item => years.add(new Date(item.month).getFullYear()));
+    data.monthlyExpenses.forEach(item => years.add(new Date(item.month).getFullYear()));
+    if (years.size === 0) years.add(new Date().getFullYear());
+    return Array.from(years).sort((a, b) => b - a);
+  }, [data]);
+
+  const chartData = useMemo(() => {
+    if (!data) return [];
+    const months = Array.from({ length: 12 }, (_, i) => {
+      const date = new Date(selectedYear, i, 1);
+      return {
+        key: `${selectedYear}-${String(i + 1).padStart(2, '0')}`,
+        name: date.toLocaleDateString('cs-CZ', { month: 'short' }),
+        income: 0,
+        expenses: 0,
+      };
+    });
+
+    const monthMap = new Map(months.map(m => [m.key, m]));
+
+    data.monthlyRevenue.forEach(item => {
+      const d = new Date(item.month);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const entry = monthMap.get(key);
+      if (entry) entry.income = item.revenue;
+    });
+
+    data.monthlyExpenses.forEach(item => {
+      const d = new Date(item.month);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const entry = monthMap.get(key);
+      if (entry) entry.expenses = item.expenses;
+    });
+
+    return months;
+  }, [data, selectedYear]);
+
+  const yearlyIncome = useMemo(() => chartData.reduce((sum, m) => sum + m.income, 0), [chartData]);
+  const yearlyExpensesTotal = useMemo(() => chartData.reduce((sum, m) => sum + m.expenses, 0), [chartData]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -82,11 +133,6 @@ export default function Dashboard() {
   if (!data) {
     return <div className="text-center text-gray-500 dark:text-gray-400">Nepodařilo se načíst data</div>;
   }
-
-  const chartData = data.monthlyRevenue.map(item => ({
-    name: new Date(item.month).toLocaleDateString('cs-CZ', { month: 'short' }),
-    revenue: item.revenue,
-  }));
 
   return (
     <div className="space-y-6">
@@ -259,28 +305,74 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly revenue chart */}
+        {/* Monthly revenue & expenses chart */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Měsíční tržby</h2>
-          {chartData.length > 0 ? (
-            <div className="h-64">
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Celkové tržby</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {formatCurrency(yearlyIncome - yearlyExpensesTotal)}
+              </p>
+            </div>
+            <div className="relative">
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="appearance-none bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg px-3 py-1.5 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="flex items-center space-x-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Příjmy</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Výdaje</span>
+            </div>
+          </div>
+          {chartData.some(d => d.income > 0 || d.expenses > 0) ? (
+            <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={resolvedTheme === 'dark' ? '#374151' : '#e5e7eb'} />
-                  <XAxis dataKey="name" tick={{ fill: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280' }} />
-                  <YAxis tick={{ fill: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280' }} />
-                  <Tooltip
-                    formatter={(value: number) => formatCurrency(value)}
-                    labelFormatter={(label) => `Měsíc: ${label}`}
-                    contentStyle={resolvedTheme === 'dark' ? { backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', color: '#f3f4f6' } : { backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                <BarChart data={chartData} barGap={2} barCategoryGap="20%">
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280', fontSize: 12 }}
                   />
-                  <Bar dataKey="revenue" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                  <Tooltip
+                    cursor={{ fill: resolvedTheme === 'dark' ? 'rgba(55, 65, 81, 0.3)' : 'rgba(229, 231, 235, 0.5)' }}
+                    content={({ active, payload, label }) => {
+                      if (!active || !payload?.length) return null;
+                      return (
+                        <div className={`rounded-lg px-3 py-2 shadow-lg text-sm ${resolvedTheme === 'dark' ? 'bg-gray-800 border border-gray-700 text-gray-100' : 'bg-white border border-gray-200 text-gray-900'}`}>
+                          <p className="font-medium mb-1">{label}</p>
+                          {payload.map((entry) => (
+                            <p key={entry.dataKey} className="flex items-center space-x-2">
+                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
+                              <span className="text-gray-500 dark:text-gray-400">{entry.dataKey === 'income' ? 'Příjmy' : 'Výdaje'}:</span>
+                              <span className="font-medium">{formatCurrency(entry.value as number)}</span>
+                            </p>
+                          ))}
+                        </div>
+                      );
+                    }}
+                  />
+                  <Bar dataKey="income" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expenses" fill={resolvedTheme === 'dark' ? '#475569' : '#cbd5e1'} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
-              Zatím žádné tržby
+            <div className="h-80 flex items-center justify-center text-gray-500 dark:text-gray-400">
+              Zatím žádná data
             </div>
           )}
         </div>

@@ -42,6 +42,10 @@ describe('Dashboard Routes', () => {
       mockQuery.mockResolvedValueOnce({ rows: [] });
       // Monthly revenue
       mockQuery.mockResolvedValueOnce({ rows: [] });
+      // Monthly expenses
+      mockQuery.mockResolvedValueOnce({ rows: [] });
+      // Yearly expenses
+      mockQuery.mockResolvedValueOnce({ rows: [{ total_expenses: '0' }] });
       // Update overdue
       mockQuery.mockResolvedValueOnce({ rows: [] });
       // Unmatched payments
@@ -70,7 +74,7 @@ describe('Dashboard Routes', () => {
       expect(response.body.pausalniDan.remaining).toBe(1000000);
 
       // Verify the paušální daň query reads from users table, not settings
-      const pausalniDanQuery = mockQuery.mock.calls[5][0];
+      const pausalniDanQuery = mockQuery.mock.calls[7][0];
       expect(pausalniDanQuery).toContain('FROM users');
       expect(pausalniDanQuery).not.toContain('FROM settings');
     });
@@ -88,6 +92,10 @@ describe('Dashboard Routes', () => {
       mockQuery.mockResolvedValueOnce({ rows: [] });
       // Monthly revenue
       mockQuery.mockResolvedValueOnce({ rows: [] });
+      // Monthly expenses
+      mockQuery.mockResolvedValueOnce({ rows: [] });
+      // Yearly expenses
+      mockQuery.mockResolvedValueOnce({ rows: [{ total_expenses: '0' }] });
       // Update overdue
       mockQuery.mockResolvedValueOnce({ rows: [] });
       // Unmatched payments
