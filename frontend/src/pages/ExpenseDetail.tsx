@@ -111,7 +111,7 @@ export default function ExpenseDetail() {
   }
 
   if (!expense) {
-    return <div className="text-center text-gray-500">Náklad nenalezen</div>;
+    return <div className="text-center text-gray-500 dark:text-gray-400">Náklad nenalezen</div>;
   }
 
   return (
@@ -121,12 +121,12 @@ export default function ExpenseDetail() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate('/expenses')}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Náklad {expense.expenseNumber}
             </h1>
             <span className={`badge ${getExpenseStatusColor(expense.status)}`}>
@@ -159,7 +159,7 @@ export default function ExpenseDetail() {
       {/* Message */}
       {message && (
         <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
         }`}>
           {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
           <span>{message.text}</span>
@@ -172,30 +172,30 @@ export default function ExpenseDetail() {
           {/* Supplier info */}
           {expense.clientName && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Dodavatel</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Dodavatel</h2>
               <div className="space-y-2">
-                <p className="font-medium text-gray-900">{expense.clientName}</p>
-                {expense.clientAddress && <p className="text-gray-600">{expense.clientAddress}</p>}
-                {expense.clientIco && <p className="text-gray-600">IČO: {expense.clientIco}</p>}
-                {expense.clientDic && <p className="text-gray-600">DIČ: {expense.clientDic}</p>}
-                {expense.clientEmail && <p className="text-gray-600">Email: {expense.clientEmail}</p>}
+                <p className="font-medium text-gray-900 dark:text-gray-100">{expense.clientName}</p>
+                {expense.clientAddress && <p className="text-gray-600 dark:text-gray-300">{expense.clientAddress}</p>}
+                {expense.clientIco && <p className="text-gray-600 dark:text-gray-300">IČO: {expense.clientIco}</p>}
+                {expense.clientDic && <p className="text-gray-600 dark:text-gray-300">DIČ: {expense.clientDic}</p>}
+                {expense.clientEmail && <p className="text-gray-600 dark:text-gray-300">Email: {expense.clientEmail}</p>}
               </div>
             </div>
           )}
 
           {/* Amount */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Částka</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Částka</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Základ daně:</span>
+                <span className="text-gray-600 dark:text-gray-300">Základ daně:</span>
                 <span className="font-medium">{formatCurrency(expense.amount, expense.currency)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">DPH ({expense.vatRate}%):</span>
+                <span className="text-gray-600 dark:text-gray-300">DPH ({expense.vatRate}%):</span>
                 <span className="font-medium">{formatCurrency(expense.vatAmount, expense.currency)}</span>
               </div>
-              <div className="flex justify-between text-lg border-t border-gray-200 pt-3">
+              <div className="flex justify-between text-lg border-t border-gray-200 dark:border-gray-700 pt-3">
                 <span className="font-bold">Celkem:</span>
                 <span className="font-bold text-blue-600">{formatCurrency(expense.total, expense.currency)}</span>
               </div>
@@ -205,8 +205,8 @@ export default function ExpenseDetail() {
           {/* Description */}
           {expense.description && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Popis</h2>
-              <p className="text-gray-600 whitespace-pre-wrap">{expense.description}</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Popis</h2>
+              <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{expense.description}</p>
             </div>
           )}
 
@@ -214,7 +214,7 @@ export default function ExpenseDetail() {
           {expense.fileData && expense.fileName && (
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Příloha</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Příloha</h2>
                 <button onClick={handleDownloadFile} className="btn btn-secondary flex items-center space-x-2">
                   <Download className="h-4 w-4" />
                   <span>Stáhnout</span>
@@ -224,9 +224,9 @@ export default function ExpenseDetail() {
                 <object
                   data={`data:application/pdf;base64,${expense.fileData}`}
                   type="application/pdf"
-                  className="w-full h-[500px] rounded border border-gray-200"
+                  className="w-full h-[500px] rounded border border-gray-200 dark:border-gray-700"
                 >
-                  <p className="p-4 text-gray-500 text-center">
+                  <p className="p-4 text-gray-500 dark:text-gray-400 text-center">
                     Váš prohlížeč nepodporuje zobrazení PDF.
                   </p>
                 </object>
@@ -234,7 +234,7 @@ export default function ExpenseDetail() {
                 <img
                   src={`data:${expense.fileMimeType};base64,${expense.fileData}`}
                   alt={expense.fileName}
-                  className="max-w-full rounded border border-gray-200"
+                  className="max-w-full rounded border border-gray-200 dark:border-gray-700"
                 />
               )}
             </div>
@@ -243,8 +243,8 @@ export default function ExpenseDetail() {
           {/* Notes */}
           {expense.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznámky</h2>
-              <p className="text-gray-600 whitespace-pre-wrap">{expense.notes}</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Poznámky</h2>
+              <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{expense.notes}</p>
             </div>
           )}
         </div>
@@ -253,29 +253,29 @@ export default function ExpenseDetail() {
         <div className="space-y-6">
           {/* Details */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Údaje</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Údaje</h2>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-gray-500">Číslo nákladu:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">Číslo nákladu:</dt>
                 <dd className="font-medium">{expense.expenseNumber}</dd>
               </div>
               {expense.supplierInvoiceNumber && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">Číslo faktury:</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">Číslo faktury:</dt>
                   <dd className="font-medium">{expense.supplierInvoiceNumber}</dd>
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-gray-500">Datum přijetí:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">Datum přijetí:</dt>
                 <dd className="font-medium">{formatDate(expense.issueDate)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Datum splatnosti:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">Datum splatnosti:</dt>
                 <dd className="font-medium">{formatDate(expense.dueDate)}</dd>
               </div>
               {expense.paidAt && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">Zaplaceno:</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">Zaplaceno:</dt>
                   <dd className="font-medium">{formatDate(expense.paidAt)}</dd>
                 </div>
               )}
@@ -284,7 +284,7 @@ export default function ExpenseDetail() {
 
           {/* Actions */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Akce</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Akce</h2>
             <div className="space-y-2">
               <button
                 onClick={handleDelete}

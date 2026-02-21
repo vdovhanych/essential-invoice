@@ -63,7 +63,7 @@ export default function ClientDetail() {
   }
 
   if (!client) {
-    return <div className="text-center text-gray-500">Kontakt nenalezen</div>;
+    return <div className="text-center text-gray-500 dark:text-gray-400">Kontakt nenalezen</div>;
   }
 
   const totalRevenue = invoices
@@ -81,17 +81,17 @@ export default function ClientDetail() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate('/clients')}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex items-center space-x-3">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Building className="h-6 w-6 text-blue-600" />
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+              <Building className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{client.companyName}</h1>
-              {client.ico && <p className="text-gray-500">ICO: {client.ico}</p>}
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{client.companyName}</h1>
+              {client.ico && <p className="text-gray-500 dark:text-gray-400">ICO: {client.ico}</p>}
             </div>
           </div>
         </div>
@@ -108,12 +108,12 @@ export default function ClientDetail() {
         {/* Client details */}
         <div className="lg:col-span-1 space-y-6">
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Kontaktní údaje</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Kontaktní údaje</h2>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
+                <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Primární email</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Primární email</p>
                   <a href={`mailto:${client.primaryEmail}`} className="text-blue-600 hover:underline">
                     {client.primaryEmail}
                   </a>
@@ -122,9 +122,9 @@ export default function ClientDetail() {
 
               {client.secondaryEmail && (
                 <div className="flex items-start space-x-3">
-                  <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">Sekundární email</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Sekundární email</p>
                     <a href={`mailto:${client.secondaryEmail}`} className="text-blue-600 hover:underline">
                       {client.secondaryEmail}
                     </a>
@@ -134,19 +134,19 @@ export default function ClientDetail() {
 
               {client.contactPerson && (
                 <div className="flex items-start space-x-3">
-                  <Building className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <Building className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">Kontaktní osoba</p>
-                    <p className="text-gray-900">{client.contactPerson}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Kontaktní osoba</p>
+                    <p className="text-gray-900 dark:text-gray-100">{client.contactPerson}</p>
                   </div>
                 </div>
               )}
 
               {client.contactPhone && (
                 <div className="flex items-start space-x-3">
-                  <Phone className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <Phone className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">Telefon</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Telefon</p>
                     <a href={`tel:${client.contactPhone}`} className="text-blue-600 hover:underline">
                       {client.contactPhone}
                     </a>
@@ -156,10 +156,10 @@ export default function ClientDetail() {
 
               {client.address && (
                 <div className="flex items-start space-x-3">
-                  <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <MapPin className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">Adresa</p>
-                    <p className="text-gray-900 whitespace-pre-wrap">{client.address}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Adresa</p>
+                    <p className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{client.address}</p>
                   </div>
                 </div>
               )}
@@ -168,16 +168,16 @@ export default function ClientDetail() {
 
           {client.dic && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Daňové údaje</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Daňové údaje</h2>
               <div className="space-y-2">
                 {client.ico && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">ICO:</span>
+                    <span className="text-gray-500 dark:text-gray-400">ICO:</span>
                     <span className="font-medium">{client.ico}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-500">DIC:</span>
+                  <span className="text-gray-500 dark:text-gray-400">DIC:</span>
                   <span className="font-medium">{client.dic}</span>
                 </div>
               </div>
@@ -186,8 +186,8 @@ export default function ClientDetail() {
 
           {client.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Poznámky</h2>
-              <p className="text-gray-600 whitespace-pre-wrap">{client.notes}</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Poznámky</h2>
+              <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{client.notes}</p>
             </div>
           )}
         </div>
@@ -197,32 +197,32 @@ export default function ClientDetail() {
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4">
             <div className="card">
-              <p className="text-sm text-gray-500">Celkové tržby</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Celkové tržby</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totalRevenue)}</p>
             </div>
             <div className="card">
-              <p className="text-sm text-gray-500">K úhradě</p>
-              <p className="text-2xl font-bold text-yellow-600">{formatCurrency(pendingAmount)}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">K úhradě</p>
+              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{formatCurrency(pendingAmount)}</p>
             </div>
           </div>
 
           {/* Invoice list */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Historie faktur</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Historie faktur</h2>
             {invoices.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-2 font-medium text-gray-500">Číslo</th>
-                      <th className="text-left py-2 font-medium text-gray-500">Datum</th>
-                      <th className="text-right py-2 font-medium text-gray-500">Částka</th>
-                      <th className="text-center py-2 font-medium text-gray-500">Stav</th>
+                    <tr className="border-b border-gray-200 dark:border-gray-700">
+                      <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">Číslo</th>
+                      <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">Datum</th>
+                      <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Částka</th>
+                      <th className="text-center py-2 font-medium text-gray-500 dark:text-gray-400">Stav</th>
                     </tr>
                   </thead>
                   <tbody>
                     {invoices.map(invoice => (
-                      <tr key={invoice.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr key={invoice.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td className="py-3">
                           <Link
                             to={`/invoices/${invoice.id}`}
@@ -231,7 +231,7 @@ export default function ClientDetail() {
                             {invoice.invoiceNumber}
                           </Link>
                         </td>
-                        <td className="py-3 text-gray-600">{formatDate(invoice.issueDate)}</td>
+                        <td className="py-3 text-gray-600 dark:text-gray-300">{formatDate(invoice.issueDate)}</td>
                         <td className="py-3 text-right font-medium">
                           {formatCurrency(invoice.total, invoice.currency)}
                         </td>
@@ -247,8 +247,8 @@ export default function ClientDetail() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">Žádné faktury pro tento kontakt</p>
+                <FileText className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400">Žádné faktury pro tento kontakt</p>
               </div>
             )}
           </div>

@@ -122,29 +122,29 @@ export default function Onboarding() {
   const logoUrl = token ? `/api/auth/me/logo?token=${encodeURIComponent(token)}&v=${Date.now()}` : '';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center py-8 px-4">
       <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <FileText className="h-12 w-12 text-blue-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Vítejte, {user?.name}!</h1>
-          <p className="text-gray-600 mt-2">Nastavte si svůj profil pro fakturaci</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Vítejte, {user?.name}!</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Nastavte si svůj profil pro fakturaci</p>
         </div>
 
         {/* Progress indicator */}
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center space-x-4">
             <div className={`flex items-center space-x-2 ${step === 1 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${step === 1 ? 'bg-blue-600 text-white' : step > 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${step === 1 ? 'bg-blue-600 text-white' : step > 1 ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
                 {step > 1 ? '✓' : '1'}
               </div>
               <span className="hidden sm:inline">Firemní údaje</span>
             </div>
-            <div className="w-8 h-px bg-gray-300" />
+            <div className="w-8 h-px bg-gray-300 dark:bg-gray-600" />
             <div className={`flex items-center space-x-2 ${step === 2 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
                 2
               </div>
               <span className="hidden sm:inline">Bankovní údaje</span>
@@ -154,7 +154,7 @@ export default function Onboarding() {
 
         {/* Error */}
         {error && (
-          <div className="flex items-center space-x-2 p-4 bg-red-50 text-red-700 rounded-lg mb-6">
+          <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-6">
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <span>{error}</span>
           </div>
@@ -164,13 +164,13 @@ export default function Onboarding() {
         {step === 1 && (
           <div className="card space-y-6">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Building className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <Building className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">Firemní a daňové údaje</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Firemní a daňové údaje</h2>
             </div>
 
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Tyto údaje se budou zobrazovat na vašich fakturách.
             </p>
 
@@ -208,7 +208,7 @@ export default function Onboarding() {
                   disabled={!formData.vatPayer}
                 />
                 {!formData.vatPayer && (
-                  <p className="text-xs text-gray-500 mt-1">DIČ není potřeba pro neplátce DPH</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">DIČ není potřeba pro neplátce DPH</p>
                 )}
               </div>
             </div>
@@ -224,7 +224,7 @@ export default function Onboarding() {
               />
             </div>
 
-            <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-start space-x-3 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
               <input
                 type="checkbox"
                 id="vatPayer"
@@ -234,26 +234,26 @@ export default function Onboarding() {
                 className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <div className="flex-1">
-                <label htmlFor="vatPayer" className="text-sm font-medium text-gray-900 cursor-pointer">
+                <label htmlFor="vatPayer" className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">
                   Jsem plátce DPH
                 </label>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   Pokud nejste plátce DPH, na fakturách se zobrazí "Neplátce DPH" místo DIČ
                 </p>
               </div>
             </div>
 
             {/* Paušální daň section */}
-            <hr />
+            <hr className="dark:border-gray-700" />
 
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <Landmark className="h-5 w-5 text-emerald-600" />
+              <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                <Landmark className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">Paušální daň</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Paušální daň</h2>
             </div>
 
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Sledujte, kolik můžete ještě fakturovat v rámci limitu paušální daně.
             </p>
 
@@ -265,7 +265,7 @@ export default function Onboarding() {
                 onChange={handleChange}
                 className="rounded border-gray-300 text-blue-600"
               />
-              <span className="text-sm text-gray-600">Používám paušální daň</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Používám paušální daň</span>
             </label>
 
             {formData.pausalniDanEnabled && (
@@ -330,13 +330,13 @@ export default function Onboarding() {
         {step === 2 && (
           <div className="card space-y-6">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <CreditCard className="h-5 w-5 text-blue-600" />
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">Bankovní údaje</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Bankovní údaje</h2>
             </div>
 
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Bankovní účet pro příjem plateb za faktury.
             </p>
 
@@ -366,10 +366,10 @@ export default function Onboarding() {
               </div>
             </div>
 
-            <hr />
+            <hr className="dark:border-gray-700" />
 
-            <h3 className="text-md font-semibold text-gray-900">Logo firmy (volitelné)</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="text-md font-semibold text-gray-900 dark:text-gray-100">Logo firmy (volitelné)</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Logo se zobrazí na vašich fakturách. Podporované formáty: PNG, JPG, SVG. Max. velikost: 2 MB.
             </p>
 
@@ -379,10 +379,10 @@ export default function Onboarding() {
                   <img
                     src={logoUrl}
                     alt="Logo firmy"
-                    className="w-48 h-24 object-contain border border-gray-200 rounded-lg bg-white p-2"
+                    className="w-48 h-24 object-contain border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-700 p-2"
                   />
                 ) : (
-                  <div className="w-48 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+                  <div className="w-48 h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
                     <span className="text-gray-400 text-sm">Žádné logo</span>
                   </div>
                 )}

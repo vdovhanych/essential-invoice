@@ -13,9 +13,8 @@ export default function Profile() {
   const [deletePassword, setDeletePassword] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [logoKey, setLogoKey] = useState(() => Date.now()); // For cache busting after upload
+  const [logoKey, setLogoKey] = useState(() => Date.now());
 
-  // Build logo URL with token for authentication
   const logoUrl = useMemo(() => {
     if (!token) return '';
     return `/api/auth/me/logo?token=${encodeURIComponent(token)}&v=${logoKey}`;
@@ -112,14 +111,12 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
     if (!allowedTypes.includes(file.type)) {
       setMessage({ type: 'error', text: 'Pouze PNG, JPG a SVG soubory jsou povoleny' });
       return;
     }
 
-    // Validate file size (2MB)
     if (file.size > 2 * 1024 * 1024) {
       setMessage({ type: 'error', text: 'Maximální velikost souboru je 2 MB' });
       return;
@@ -131,7 +128,7 @@ export default function Profile() {
     try {
       await api.uploadFile('/auth/me/logo', file, 'logo');
       await refreshUser();
-      setLogoKey(Date.now()); // Bust cache to show new logo
+      setLogoKey(Date.now());
       setMessage({ type: 'success', text: 'Logo bylo nahráno' });
     } catch (err: unknown) {
       const error = err as Error;
@@ -153,7 +150,7 @@ export default function Profile() {
     try {
       await api.delete('/auth/me/logo');
       await refreshUser();
-      setLogoKey(Date.now()); // Bust cache for future uploads
+      setLogoKey(Date.now());
       setMessage({ type: 'success', text: 'Logo bylo smazáno' });
     } catch (err: unknown) {
       const error = err as Error;
@@ -180,12 +177,12 @@ export default function Profile() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Můj profil</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Můj profil</h1>
 
       {/* Message */}
       {message && (
         <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
         }`}>
           {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
           <span>{message.text}</span>
@@ -195,10 +192,10 @@ export default function Profile() {
       {/* Profile form */}
       <form onSubmit={handleSubmit} className="card space-y-6">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <User className="h-5 w-5 text-blue-600" />
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Osobní údaje</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Osobní údaje</h2>
         </div>
 
         <div>
@@ -218,22 +215,22 @@ export default function Profile() {
           <input
             type="email"
             value={user?.email || ''}
-            className="input bg-gray-50"
+            className="input bg-gray-50 dark:bg-gray-700"
             disabled
           />
-          <p className="text-xs text-gray-500 mt-1">Email nelze změnit</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Email nelze změnit</p>
         </div>
 
-        <hr />
+        <hr className="dark:border-gray-700" />
 
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-green-100 rounded-lg">
-            <Building className="h-5 w-5 text-green-600" />
+          <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+            <Building className="h-5 w-5 text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Firemní údaje</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Firemní údaje</h2>
         </div>
 
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Tyto údaje se budou zobrazovat na vašich fakturách.
         </p>
 
@@ -271,12 +268,12 @@ export default function Profile() {
               disabled={!formData.vatPayer}
             />
             {!formData.vatPayer && (
-              <p className="text-xs text-gray-500 mt-1">DIČ není potřeba pro neplátce DPH</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">DIČ není potřeba pro neplátce DPH</p>
             )}
           </div>
         </div>
 
-        <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="flex items-start space-x-3 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
           <input
             type="checkbox"
             id="vatPayer"
@@ -286,10 +283,10 @@ export default function Profile() {
             className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
           <div className="flex-1">
-            <label htmlFor="vatPayer" className="text-sm font-medium text-gray-900 cursor-pointer">
+            <label htmlFor="vatPayer" className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">
               Jsem plátce DPH
             </label>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Pokud nejste plátce DPH, na fakturách se zobrazí "Neplátce DPH" místo DIČ
             </p>
           </div>
@@ -332,17 +329,17 @@ export default function Profile() {
           </div>
         </div>
 
-        <hr />
+        <hr className="dark:border-gray-700" />
 
         {/* Paušální daň section */}
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-emerald-100 rounded-lg">
-            <Landmark className="h-5 w-5 text-emerald-600" />
+          <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+            <Landmark className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Paušální daň</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Paušální daň</h2>
         </div>
 
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Sledujte, kolik můžete ještě fakturovat v rámci limitu paušální daně.
           Limit závisí na pásmu a typu příjmů (výdajový paušál).
         </p>
@@ -356,7 +353,7 @@ export default function Profile() {
               onChange={handleChange}
               className="rounded border-gray-300 text-blue-600"
             />
-            <span className="text-sm text-gray-600">Používám paušální daň</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">Používám paušální daň</span>
           </label>
 
           {formData.pausalniDanEnabled && (
@@ -373,7 +370,7 @@ export default function Profile() {
                   <option value={2}>2. pásmo (16 745 Kč/měsíc)</option>
                   <option value={3}>3. pásmo (27 139 Kč/měsíc)</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Měsíční platba zahrnuje daň z příjmu, sociální a zdravotní pojištění.
                 </p>
               </div>
@@ -403,7 +400,7 @@ export default function Profile() {
                     <option value={2000000}>2 000 000 Kč</option>
                   )}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Vyšší limity platí, pokud alespoň 75% příjmů pochází ze samostatné výdělečné činnosti
                   s příslušným výdajovým paušálem.
                 </p>
@@ -422,13 +419,13 @@ export default function Profile() {
       {/* Logo upload */}
       <div className="card space-y-6">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <Image className="h-5 w-5 text-purple-600" />
+          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+            <Image className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Logo firmy</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Logo firmy</h2>
         </div>
 
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Logo se zobrazí na vašich fakturách místo firemních údajů v záhlaví. Podporované formáty: PNG, JPG, SVG. Max. velikost: 2 MB.
         </p>
 
@@ -440,11 +437,11 @@ export default function Profile() {
                 <img
                   src={logoUrl}
                   alt="Logo firmy"
-                  className="w-48 h-24 object-contain border border-gray-200 rounded-lg bg-white p-2"
+                  className="w-48 h-24 object-contain border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-700 p-2"
                 />
               </div>
             ) : (
-              <div className="w-48 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+              <div className="w-48 h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
                 <span className="text-gray-400 text-sm">Žádné logo</span>
               </div>
             )}
@@ -480,7 +477,7 @@ export default function Profile() {
                 </button>
               )}
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Doporučená velikost: 200x80 pixelů
             </p>
           </div>
@@ -489,7 +486,7 @@ export default function Profile() {
 
       {/* Password change */}
       <form onSubmit={handlePasswordSubmit} className="card space-y-6">
-        <h2 className="text-lg font-semibold text-gray-900">Změna hesla</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Změna hesla</h2>
 
         <div>
           <label className="label">Současné heslo</label>
@@ -536,15 +533,15 @@ export default function Profile() {
       </form>
 
       {/* Danger Zone */}
-      <div className="border-2 border-red-200 rounded-lg p-6 space-y-4">
+      <div className="border-2 border-red-200 dark:border-red-800 rounded-lg p-6 space-y-4">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-red-100 rounded-lg">
-            <ShieldAlert className="h-5 w-5 text-red-600" />
+          <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+            <ShieldAlert className="h-5 w-5 text-red-600 dark:text-red-400" />
           </div>
-          <h2 className="text-lg font-semibold text-red-900">Nebezpečná zóna</h2>
+          <h2 className="text-lg font-semibold text-red-900 dark:text-red-400">Nebezpečná zóna</h2>
         </div>
 
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Smazání účtu je nevratné. Všechna vaše data (faktury, klienti, výdaje, platby, nastavení) budou trvale odstraněna.
         </p>
 
@@ -560,12 +557,12 @@ export default function Profile() {
       {/* Delete Account Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-red-900">Opravdu chcete smazat účet?</h3>
-            <p className="text-sm text-gray-600">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-red-900 dark:text-red-400">Opravdu chcete smazat účet?</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Tato akce je nevratná. Všechna vaše data budou trvale smazána, včetně:
             </p>
-            <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+            <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1">
               <li>Faktur a jejich položek</li>
               <li>Klientů</li>
               <li>Výdajů</li>
