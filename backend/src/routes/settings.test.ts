@@ -6,6 +6,12 @@ vi.mock('../db/init.js', () => ({
   query: (...args: unknown[]) => mockQuery(...args)
 }));
 
+// Mock encryption module
+vi.mock('../utils/encryption.js', () => ({
+  encrypt: (value: string) => `encrypted:${value}`,
+  decrypt: (value: string) => value.replace('encrypted:', ''),
+}));
+
 // Import after mocking
 import { settingsRouter } from './settings';
 import express from 'express';
@@ -76,6 +82,28 @@ describe('Settings Routes', () => {
       expect(values).toContain(0);
       expect(values).toContain(30);
       expect(values).toContain('INV');
+    });
+
+    it('should encrypt secrets before storing', async () => {
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ id: '1' }]
+      });
+
+      const response = await request(app)
+        .put('/settings')
+        .send({
+          smtpPassword: 'my-smtp-pass',
+          imapPassword: 'my-imap-pass',
+          perplexityApiKey: 'pplx-key-123'
+        });
+
+      expect(response.status).toBe(200);
+
+      const [_sql, values] = mockQuery.mock.calls[0];
+      // Verify that values contain encrypted versions
+      expect(values).toContain('encrypted:my-smtp-pass');
+      expect(values).toContain('encrypted:my-imap-pass');
+      expect(values).toContain('encrypted:pplx-key-123');
     });
 
     it('should not include paušální daň fields in update', async () => {

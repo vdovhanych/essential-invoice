@@ -41,7 +41,8 @@ helm lint .                                     # Validate chart
 helm template essential-invoice .               # Dry-run render
 helm install essential-invoice . \              # Install
   --namespace essential-invoice --create-namespace \
-  --set jwtSecret=<secret> --set postgresql.auth.password=<password>
+  --set jwtSecret=<secret> --set encryptionKey=$(openssl rand -hex 32) \
+  --set postgresql.auth.password=<password>
 ```
 
 ### Database
@@ -122,6 +123,7 @@ cd frontend && bun vitest run src/utils/format.test.ts
 
 Requires `.env` file in root (copy from `.env.example`). Key variables:
 - `JWT_SECRET` - Required for authentication
+- `ENCRYPTION_KEY` - Required for encrypting secrets at rest (64-char hex, generate with `openssl rand -hex 32`)
 - `DB_*` - PostgreSQL connection settings
 - `GLOBAL_SMTP_*` - Global SMTP configuration for system emails (welcome, password reset). Separate from per-user SMTP
 - `FRONTEND_URL` - Frontend URL for constructing email links (default: `http://localhost:8080`)

@@ -144,14 +144,14 @@ export async function initializeDatabase() {
         smtp_host VARCHAR(255),
         smtp_port INTEGER DEFAULT 587,
         smtp_user VARCHAR(255),
-        smtp_password VARCHAR(255),
+        smtp_password TEXT,
         smtp_secure BOOLEAN DEFAULT true,
         smtp_from_email VARCHAR(255),
         smtp_from_name VARCHAR(255),
         imap_host VARCHAR(255),
         imap_port INTEGER DEFAULT 993,
         imap_user VARCHAR(255),
-        imap_password VARCHAR(255),
+        imap_password TEXT,
         imap_tls BOOLEAN DEFAULT true,
         bank_notification_email VARCHAR(255),
         email_polling_interval INTEGER DEFAULT 300,
@@ -191,9 +191,14 @@ export async function initializeDatabase() {
       DO $$
       BEGIN
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='perplexity_api_key') THEN
-          ALTER TABLE settings ADD COLUMN perplexity_api_key VARCHAR(255);
+          ALTER TABLE settings ADD COLUMN perplexity_api_key TEXT;
         END IF;
       END $$;
+
+      -- Migration: Widen secret columns from VARCHAR(255) to TEXT for encrypted values
+      ALTER TABLE settings ALTER COLUMN smtp_password TYPE TEXT;
+      ALTER TABLE settings ALTER COLUMN imap_password TYPE TEXT;
+      ALTER TABLE settings ALTER COLUMN perplexity_api_key TYPE TEXT;
 
       -- Add vat_payer column to users table if it doesn't exist (migration for existing databases)
       DO $$

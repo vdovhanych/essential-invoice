@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import { query } from '../db/init';
 import { AuthRequest } from '../middleware/auth';
+import { encrypt, decrypt } from '../utils/encryption';
 
 export const settingsRouter: ReturnType<typeof Router> = Router();
 
@@ -97,14 +98,14 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     addUpdate('smtp_host', smtpHost);
     addUpdate('smtp_port', smtpPort);
     addUpdate('smtp_user', smtpUser);
-    if (smtpPassword) addUpdate('smtp_password', smtpPassword); // Only update if provided
+    if (smtpPassword) addUpdate('smtp_password', encrypt(smtpPassword)); // Only update if provided
     addUpdate('smtp_secure', smtpSecure);
     addUpdate('smtp_from_email', smtpFromEmail);
     addUpdate('smtp_from_name', smtpFromName);
     addUpdate('imap_host', imapHost);
     addUpdate('imap_port', imapPort);
     addUpdate('imap_user', imapUser);
-    if (imapPassword) addUpdate('imap_password', imapPassword); // Only update if provided
+    if (imapPassword) addUpdate('imap_password', encrypt(imapPassword)); // Only update if provided
     addUpdate('imap_tls', imapTls);
     addUpdate('bank_notification_email', bankNotificationEmail);
     addUpdate('email_polling_interval', emailPollingInterval);
@@ -114,7 +115,7 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     addUpdate('default_payment_terms', defaultPaymentTerms);
     addUpdate('email_template', emailTemplate);
     addUpdate('calculator_enabled', calculatorEnabled);
-    if (perplexityApiKey) addUpdate('perplexity_api_key', perplexityApiKey); // Only update if provided
+    if (perplexityApiKey) addUpdate('perplexity_api_key', encrypt(perplexityApiKey)); // Only update if provided
 
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No settings to update' });
@@ -166,7 +167,7 @@ settingsRouter.post('/test-smtp', async (req: AuthRequest, res: Response) => {
       secure: settings.smtp_secure,
       auth: {
         user: settings.smtp_user,
-        pass: settings.smtp_password
+        pass: decrypt(settings.smtp_password)
       }
     });
 
@@ -196,7 +197,7 @@ settingsRouter.post('/test-imap', async (req: AuthRequest, res: Response) => {
 
     const imap = new Imap({
       user: settings.imap_user,
-      password: settings.imap_password,
+      password: decrypt(settings.imap_password),
       host: settings.imap_host,
       port: settings.imap_port,
       tls: settings.imap_tls

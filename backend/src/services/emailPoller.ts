@@ -3,6 +3,7 @@ import { simpleParser, ParsedMail } from 'mailparser';
 import { query } from '../db/init';
 import { parsePaymentEmail } from './bankParsers/index';
 import type { ParsedPayment } from './bankParsers/index';
+import { decrypt } from '../utils/encryption';
 
 let pollingInterval: NodeJS.Timeout | null = null;
 
@@ -28,9 +29,9 @@ async function getUserSettings(userId: string): Promise<UserSettings | null> {
       bank_notification_email
     FROM settings
     WHERE user_id = $1
-      AND imap_host IS NOT NULL
-      AND imap_user IS NOT NULL
-      AND imap_password IS NOT NULL
+      AND imap_host IS NOT NULL AND imap_host != ''
+      AND imap_user IS NOT NULL AND imap_user != ''
+      AND imap_password IS NOT NULL AND imap_password != ''
   `, [userId]);
 
   if (result.rows.length === 0) {
@@ -43,7 +44,7 @@ async function getUserSettings(userId: string): Promise<UserSettings | null> {
     imapHost: row.imap_host,
     imapPort: row.imap_port,
     imapUser: row.imap_user,
-    imapPassword: row.imap_password,
+    imapPassword: decrypt(row.imap_password),
     imapTls: row.imap_tls,
     bankNotificationEmail: row.bank_notification_email
   };
@@ -60,7 +61,9 @@ async function getAllUserSettings(): Promise<UserSettings[]> {
       imap_tls,
       bank_notification_email
     FROM settings
-    WHERE imap_host IS NOT NULL AND imap_user IS NOT NULL AND imap_password IS NOT NULL
+    WHERE imap_host IS NOT NULL AND imap_host != ''
+      AND imap_user IS NOT NULL AND imap_user != ''
+      AND imap_password IS NOT NULL AND imap_password != ''
   `);
 
   return result.rows.map(row => ({
@@ -68,7 +71,7 @@ async function getAllUserSettings(): Promise<UserSettings[]> {
     imapHost: row.imap_host,
     imapPort: row.imap_port,
     imapUser: row.imap_user,
-    imapPassword: row.imap_password,
+    imapPassword: decrypt(row.imap_password),
     imapTls: row.imap_tls,
     bankNotificationEmail: row.bank_notification_email
   }));
@@ -291,7 +294,11 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
       console.log(`IMAP connection ended for user ${settings.userId}`);
     });
 
-    imap.connect();
+    try {
+      imap.connect();
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -328,10 +335,12 @@ export function startEmailPolling(): void {
   console.log(`Starting email polling with interval ${intervalMs}ms`);
 
   // Initial poll
-  pollAllUsers();
+  pollAllUsers().catch(err => console.error('Initial email poll failed:', err));
 
   // Set up recurring poll
-  pollingInterval = setInterval(pollAllUsers, intervalMs);
+  pollingInterval = setInterval(() => {
+    pollAllUsers().catch(err => console.error('Email poll failed:', err));
+  }, intervalMs);
 }
 
 export function stopEmailPolling(): void {
@@ -360,7 +369,7 @@ export async function triggerPoll(userId: string): Promise<{ processed: number; 
       imapHost: settingsResult.rows[0].imap_host,
       imapPort: settingsResult.rows[0].imap_port,
       imapUser: settingsResult.rows[0].imap_user,
-      imapPassword: settingsResult.rows[0].imap_password,
+      imapPassword: decrypt(settingsResult.rows[0].imap_password),
       imapTls: settingsResult.rows[0].imap_tls,
       bankNotificationEmail: settingsResult.rows[0].bank_notification_email
     };

@@ -15,10 +15,11 @@ cd essential-invoice
 cp .env.example .env
 ```
 
-3. Edit `.env` with your settings (required: `JWT_SECRET`, `DB_PASSWORD`):
+3. Edit `.env` with your settings (required: `JWT_SECRET`, `DB_PASSWORD`, `ENCRYPTION_KEY`):
 ```bash
 JWT_SECRET=your_secure_jwt_secret_here_min_32_chars
 DB_PASSWORD=your_secure_database_password
+ENCRYPTION_KEY=$(openssl rand -hex 32)
 ```
 
 4. Start the application:
@@ -43,6 +44,7 @@ helm install essential-invoice . \
   --namespace essential-invoice \
   --create-namespace \
   --set jwtSecret=$(openssl rand -base64 32) \
+  --set encryptionKey=$(openssl rand -hex 32) \
   --set postgresql.auth.password=$(openssl rand -base64 16)
 ```
 
