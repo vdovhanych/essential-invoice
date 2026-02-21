@@ -1,13 +1,16 @@
 import { useState, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
-import { User, Building, AlertCircle, CheckCircle, Upload, Trash2, Image, Landmark } from 'lucide-react';
+import { User, Building, AlertCircle, CheckCircle, Upload, Trash2, Image, Landmark, ShieldAlert } from 'lucide-react';
 
 export default function Profile() {
-  const { user, token, updateProfile, refreshUser } = useAuth();
+  const { user, token, updateProfile, refreshUser, logout } = useAuth();
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoKey, setLogoKey] = useState(() => Date.now()); // For cache busting after upload
@@ -157,6 +160,21 @@ export default function Profile() {
       setMessage({ type: 'error', text: error.message || 'Nepodařilo se smazat logo' });
     } finally {
       setUploadingLogo(false);
+    }
+  }
+
+  async function handleDeleteAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setDeletingAccount(true);
+    setMessage(null);
+
+    try {
+      await api.delete('/auth/me', { password: deletePassword });
+      logout();
+    } catch (err: unknown) {
+      const error = err as Error;
+      setMessage({ type: 'error', text: error.message || 'Nepodařilo se smazat účet' });
+      setDeletingAccount(false);
     }
   }
 
@@ -516,6 +534,77 @@ export default function Profile() {
           </button>
         </div>
       </form>
+
+      {/* Danger Zone */}
+      <div className="border-2 border-red-200 rounded-lg p-6 space-y-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-red-100 rounded-lg">
+            <ShieldAlert className="h-5 w-5 text-red-600" />
+          </div>
+          <h2 className="text-lg font-semibold text-red-900">Nebezpečná zóna</h2>
+        </div>
+
+        <p className="text-sm text-gray-600">
+          Smazání účtu je nevratné. Všechna vaše data (faktury, klienti, výdaje, platby, nastavení) budou trvale odstraněna.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => setShowDeleteModal(true)}
+          className="btn btn-danger"
+        >
+          Smazat účet
+        </button>
+      </div>
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-red-900">Opravdu chcete smazat účet?</h3>
+            <p className="text-sm text-gray-600">
+              Tato akce je nevratná. Všechna vaše data budou trvale smazána, včetně:
+            </p>
+            <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+              <li>Faktur a jejich položek</li>
+              <li>Klientů</li>
+              <li>Výdajů</li>
+              <li>Plateb</li>
+              <li>Nastavení a loga</li>
+            </ul>
+            <form onSubmit={handleDeleteAccount} className="space-y-4">
+              <div>
+                <label className="label">Pro potvrzení zadejte heslo</label>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="input"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }}
+                  className="btn btn-secondary"
+                  disabled={deletingAccount}
+                >
+                  Zrušit
+                </button>
+                <button
+                  type="submit"
+                  disabled={deletingAccount || !deletePassword}
+                  className="btn btn-danger"
+                >
+                  {deletingAccount ? 'Mažu účet...' : 'Trvale smazat účet'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

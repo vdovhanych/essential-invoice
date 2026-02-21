@@ -48,6 +48,7 @@ helm install essential-invoice . \              # Install
 ```bash
 cd backend
 bun run migrate         # Run database migrations
+bun run delete-user <email>  # Delete a user account by email (admin CLI)
 ```
 
 ## Architecture
@@ -57,7 +58,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 ### Backend (`backend/src/`)
 - **Express API** with JWT authentication and rate limiting
 - **Entry point**: `index.ts` - Express app setup, middleware, route mounting
-- **Routes**: `routes/` - REST endpoints for auth (register, login, forgot-password, reset-password), clients, invoices, expenses, payments, settings, ARES lookup, dashboard, AI
+- **Routes**: `routes/` - REST endpoints for auth (register, login, forgot-password, reset-password, delete account), clients, invoices, expenses, payments, settings, ARES lookup, dashboard, AI
 - **Services**: `services/` - Business logic:
   - `pdfGenerator.ts` - Invoice PDF generation using **pdfmake** library with Czech formatting, QR payment codes (SPAYD), and VAT/non-VAT payer support (hides DIČ and shows "Neplátce DPH" for non-VAT payers, hides DPH line when rate is 0%)
   - `emailSender.ts` - Per-user SMTP email sending for invoice delivery
@@ -66,6 +67,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `perplexityAI.ts` - Perplexity AI integration for tax advice and financial guidance
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
 - **Utils**: `utils/validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
+- **Scripts**: `scripts/delete-user.ts` - Admin CLI script to delete a user by email
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
 - **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow.
 

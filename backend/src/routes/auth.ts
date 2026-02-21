@@ -436,6 +436,39 @@ authRouter.post('/me/logo', authenticateToken, upload.single('logo'), async (req
   }
 });
 
+// Delete account (password-confirmed)
+authRouter.delete('/me', authenticateToken,
+  body('password').notEmpty(),
+  async (req: AuthRequest, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { password } = req.body;
+
+    try {
+      const result = await query('SELECT password_hash FROM users WHERE id = $1', [req.userId]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const validPassword = await bcrypt.compare(password, result.rows[0].password_hash);
+      if (!validPassword) {
+        return res.status(401).json({ error: 'Incorrect password' });
+      }
+
+      await query('DELETE FROM users WHERE id = $1', [req.userId]);
+
+      res.json({ message: 'Account deleted' });
+    } catch (error) {
+      console.error('Delete account error:', error);
+      res.status(500).json({ error: 'Failed to delete account' });
+    }
+  }
+);
+
 // Delete logo
 authRouter.delete('/me/logo', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
