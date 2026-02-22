@@ -1,0 +1,28 @@
+name: "Publish: chart"
+
+# manual trigger only
+on:
+
+jobs:
+  publish-chart:
+    name: Publish chart
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Extract version
+        id: version
+        run: |
+          echo "version=$(cat helm-chart/Chart.yaml | grep 'version:' | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Package and push chart
+        run: |
+          helm package ./helm-chart --version ${{ steps.version.outputs.version }} --destination ./helm-chart/charts
+          helm push ./helm-chart/charts/essential-invoice-${{ steps.version.outputs.version }}.tgz oci://ghcr.io/${{ github.repository_owner }}
