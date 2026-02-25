@@ -7,6 +7,7 @@ import {
   Download,
   Send,
   Edit,
+  Copy,
   Trash2,
   CheckCircle,
   XCircle,
@@ -211,6 +212,13 @@ export default function InvoiceDetail() {
           <button onClick={handleDownloadPDF} className="btn btn-secondary flex items-center space-x-2">
             <Download className="h-4 w-4" />
             <span>PDF</span>
+          </button>
+          <button
+            onClick={() => navigate(`/invoices/new?duplicate=${id}`)}
+            className="btn btn-secondary flex items-center space-x-2"
+          >
+            <Copy className="h-4 w-4" />
+            <span>Duplikovat</span>
           </button>
           {invoice.status === 'draft' && (
             <>
