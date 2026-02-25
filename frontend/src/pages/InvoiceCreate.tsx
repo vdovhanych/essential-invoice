@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../utils/api';
 import { ArrowLeft, Plus, Trash2, AlertCircle } from 'lucide-react';
 
@@ -23,7 +23,9 @@ interface InvoiceItem {
 export default function InvoiceCreate() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isEdit = !!id;
+  const duplicateId = searchParams.get('duplicate');
 
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +64,26 @@ export default function InvoiceCreate() {
           clientId: invoice.clientId,
           issueDate: invoice.issueDate.split('T')[0],
           dueDate: invoice.dueDate.split('T')[0],
+          currency: invoice.currency,
+          vatRate: invoice.vatRate,
+          notes: invoice.notes || '',
+        });
+        setItems(invoice.items.map((item: InvoiceItem) => ({
+          description: item.description,
+          quantity: item.quantity,
+          unit: item.unit,
+          unitPrice: item.unitPrice,
+        })));
+      } else if (duplicateId) {
+        // Duplicate an existing invoice with fresh dates
+        const paymentTerms = settings.defaultPaymentTerms ?? 14;
+        const today = new Date().toISOString().split('T')[0];
+        const dueDate = new Date(Date.now() + paymentTerms * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const invoice = await api.get(`/invoices/${duplicateId}`);
+        setFormData({
+          clientId: invoice.clientId,
+          issueDate: today,
+          dueDate,
           currency: invoice.currency,
           vatRate: invoice.vatRate,
           notes: invoice.notes || '',
