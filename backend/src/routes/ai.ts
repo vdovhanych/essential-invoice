@@ -11,7 +11,14 @@ export const aiRouter: ReturnType<typeof Router> = Router();
 
 // Check if AI features are available
 aiRouter.get('/status', async (req: AuthRequest, res: Response) => {
-  const configured = await isPerplexityConfigured(req.userId!);
+  // Check if AI is enabled in settings
+  const settingsResult = await query(
+    'SELECT ai_enabled FROM settings WHERE user_id = $1',
+    [req.userId]
+  );
+  const aiEnabled = settingsResult.rows.length > 0 ? (settingsResult.rows[0].ai_enabled ?? true) : true;
+
+  const configured = aiEnabled && await isPerplexityConfigured(req.userId!);
   res.json({
     available: configured,
     features: {

@@ -48,6 +48,10 @@ export default function Layout() {
       }
     }
     checkCalculatorEnabled();
+
+    const handleSettingsUpdate = () => checkCalculatorEnabled();
+    window.addEventListener('settings-updated', handleSettingsUpdate);
+    return () => window.removeEventListener('settings-updated', handleSettingsUpdate);
   }, []);
 
   // Build nav items dynamically based on calculator setting
