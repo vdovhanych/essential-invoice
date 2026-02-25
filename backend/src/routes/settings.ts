@@ -35,6 +35,7 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
         defaultPaymentTerms: 14,
         emailTemplate: null,
         calculatorEnabled: false,
+        aiEnabled: true,
         perplexityApiKeySet: false
       });
     }
@@ -61,6 +62,7 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
       defaultPaymentTerms: settings.default_payment_terms,
       emailTemplate: settings.email_template,
       calculatorEnabled: settings.calculator_enabled ?? false,
+      aiEnabled: settings.ai_enabled ?? true,
       perplexityApiKeySet: !!settings.perplexity_api_key
     });
   } catch (error) {
@@ -79,6 +81,7 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     defaultVatRate, defaultPaymentTerms,
     emailTemplate,
     calculatorEnabled,
+    aiEnabled,
     perplexityApiKey
   } = req.body;
 
@@ -115,6 +118,7 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     addUpdate('default_payment_terms', defaultPaymentTerms);
     addUpdate('email_template', emailTemplate);
     addUpdate('calculator_enabled', calculatorEnabled);
+    addUpdate('ai_enabled', aiEnabled);
     if (perplexityApiKey) addUpdate('perplexity_api_key', encrypt(perplexityApiKey)); // Only update if provided
 
     if (updates.length === 0) {

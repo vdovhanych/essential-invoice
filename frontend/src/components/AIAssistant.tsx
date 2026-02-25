@@ -9,6 +9,10 @@ export default function AIAssistant() {
 
   useEffect(() => {
     checkAIStatus();
+
+    const handleSettingsUpdate = () => checkAIStatus();
+    window.addEventListener('settings-updated', handleSettingsUpdate);
+    return () => window.removeEventListener('settings-updated', handleSettingsUpdate);
   }, [checkAIStatus]);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -23,6 +23,7 @@ interface Settings {
   defaultPaymentTerms: number;
   emailTemplate: string | null;
   calculatorEnabled: boolean;
+  aiEnabled: boolean;
   perplexityApiKeySet: boolean;
 }
 
@@ -54,6 +55,7 @@ export default function Settings() {
     defaultPaymentTerms: 14,
     emailTemplate: '',
     calculatorEnabled: false,
+    aiEnabled: true,
     perplexityApiKey: '',
   });
 
@@ -85,6 +87,7 @@ export default function Settings() {
         defaultPaymentTerms: result.defaultPaymentTerms ?? 14,
         emailTemplate: result.emailTemplate || '',
         calculatorEnabled: result.calculatorEnabled ?? false,
+        aiEnabled: result.aiEnabled ?? true,
         perplexityApiKey: '',
       });
     } catch (error) {
@@ -114,6 +117,7 @@ export default function Settings() {
       await api.put('/settings', formData);
       setMessage({ type: 'success', text: 'Nastavení bylo uloženo' });
       loadSettings();
+      window.dispatchEvent(new Event('settings-updated'));
     } catch (err: unknown) {
       const error = err as Error;
       setMessage({ type: 'error', text: error.message || 'Nepodařilo se uložit nastavení' });
@@ -382,6 +386,17 @@ export default function Settings() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Aktivujte AI asistenta pro český daňový poradenství, inteligentní párování plateb a další funkce.
           </p>
+
+          <label className="flex items-center space-x-2 mb-4">
+            <input
+              type="checkbox"
+              name="aiEnabled"
+              checked={formData.aiEnabled}
+              onChange={handleChange}
+              className="rounded border-gray-300 text-blue-600"
+            />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Zapnout AI funkce</span>
+          </label>
 
           <div>
             <label className="label">Perplexity API klíč {settings?.perplexityApiKeySet && '(nastaveno)'}</label>

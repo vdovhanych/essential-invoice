@@ -161,6 +161,7 @@ export async function initializeDatabase() {
         default_payment_terms INTEGER DEFAULT 14,
         email_template TEXT,
         calculator_enabled BOOLEAN DEFAULT false,
+        ai_enabled BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -184,6 +185,14 @@ export async function initializeDatabase() {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='pausalni_dan_limit') THEN
           ALTER TABLE settings ADD COLUMN pausalni_dan_limit INTEGER DEFAULT 1000000;
+        END IF;
+      END $$;
+
+      -- Add ai_enabled column if it doesn't exist (migration for existing databases)
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='ai_enabled') THEN
+          ALTER TABLE settings ADD COLUMN ai_enabled BOOLEAN DEFAULT true;
         END IF;
       END $$;
 
