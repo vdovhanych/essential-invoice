@@ -17,6 +17,8 @@ import ExpenseDetail from './pages/ExpenseDetail';
 import Calculator from './pages/Calculator';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
+import RecurringInvoiceCreate from './pages/RecurringInvoiceCreate';
+import RecurringInvoiceDetail from './pages/RecurringInvoiceDetail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
@@ -97,6 +99,9 @@ export default function App() {
         <Route path="invoices/new" element={<InvoiceCreate />} />
         <Route path="invoices/:id" element={<InvoiceDetail />} />
         <Route path="invoices/:id/edit" element={<InvoiceCreate />} />
+        <Route path="recurring/new" element={<RecurringInvoiceCreate />} />
+        <Route path="recurring/:id" element={<RecurringInvoiceDetail />} />
+        <Route path="recurring/:id/edit" element={<RecurringInvoiceCreate />} />
         <Route path="expenses" element={<Expenses />} />
         <Route path="expenses/new" element={<ExpenseCreate />} />
         <Route path="expenses/:id" element={<ExpenseDetail />} />

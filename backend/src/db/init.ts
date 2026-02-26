@@ -322,6 +322,44 @@ export async function initializeDatabase() {
         END IF;
       END $$;
 
+      -- Recurring invoices table
+      CREATE TABLE IF NOT EXISTS recurring_invoices (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        client_id UUID NOT NULL REFERENCES clients(id) ON DELETE RESTRICT,
+        currency VARCHAR(3) DEFAULT 'CZK' CHECK (currency IN ('CZK', 'EUR')),
+        vat_rate DECIMAL(5, 2) DEFAULT 21,
+        notes TEXT,
+        day_of_month INTEGER NOT NULL DEFAULT 1 CHECK (day_of_month >= 1 AND day_of_month <= 28),
+        start_date DATE NOT NULL,
+        end_date DATE,
+        next_generation_date DATE NOT NULL,
+        payment_terms INTEGER DEFAULT 14,
+        auto_send BOOLEAN DEFAULT false,
+        active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Recurring invoice items table
+      CREATE TABLE IF NOT EXISTS recurring_invoice_items (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        recurring_invoice_id UUID NOT NULL REFERENCES recurring_invoices(id) ON DELETE CASCADE,
+        description TEXT NOT NULL,
+        quantity DECIMAL(10, 2) NOT NULL DEFAULT 1,
+        unit VARCHAR(20) DEFAULT 'ks',
+        unit_price DECIMAL(12, 2) NOT NULL,
+        sort_order INTEGER DEFAULT 0
+      );
+
+      -- Migration: Add recurring_invoice_id to invoices for lineage tracking
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='invoices' AND column_name='recurring_invoice_id') THEN
+          ALTER TABLE invoices ADD COLUMN recurring_invoice_id UUID REFERENCES recurring_invoices(id) ON DELETE SET NULL;
+        END IF;
+      END $$;
+
       -- Create indexes
       CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token_hash ON password_reset_tokens(token_hash);
       CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens(user_id);
@@ -337,6 +375,10 @@ export async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_expenses_user_id ON expenses(user_id);
       CREATE INDEX IF NOT EXISTS idx_expenses_client_id ON expenses(client_id);
       CREATE INDEX IF NOT EXISTS idx_expenses_status ON expenses(status);
+      CREATE INDEX IF NOT EXISTS idx_recurring_invoices_user_id ON recurring_invoices(user_id);
+      CREATE INDEX IF NOT EXISTS idx_recurring_invoices_next_date ON recurring_invoices(next_generation_date);
+      CREATE INDEX IF NOT EXISTS idx_recurring_invoice_items_recurring_id ON recurring_invoice_items(recurring_invoice_id);
+      CREATE INDEX IF NOT EXISTS idx_invoices_recurring_invoice_id ON invoices(recurring_invoice_id);
     `);
 
     console.log('Database initialized successfully');

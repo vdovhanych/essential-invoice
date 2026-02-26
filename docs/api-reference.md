@@ -34,6 +34,16 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 - `POST /api/invoices/:id/mark-paid` - Mark as paid
 - `POST /api/invoices/:id/cancel` - Cancel invoice
 
+## Recurring Invoices
+
+- `GET /api/recurring-invoices` - List all recurring invoice templates
+- `GET /api/recurring-invoices/:id` - Get template with items
+- `POST /api/recurring-invoices` - Create recurring template
+- `PUT /api/recurring-invoices/:id` - Update template
+- `DELETE /api/recurring-invoices/:id` - Delete template
+- `POST /api/recurring-invoices/:id/toggle` - Toggle active/paused
+- `POST /api/recurring-invoices/:id/generate-now` - Generate invoice immediately
+
 ## Expenses
 
 - `GET /api/expenses` - List expenses (filters: status, clientId, from, to)

@@ -10,8 +10,10 @@ import { settingsRouter } from './routes/settings';
 import { aresRouter } from './routes/ares';
 import { aiRouter } from './routes/ai';
 import { expenseRouter } from './routes/expenses';
+import { recurringRouter } from './routes/recurring';
 import { authenticateToken } from './middleware/auth';
 import { startEmailPolling } from './services/emailPoller';
+import { startRecurringInvoiceGeneration } from './services/recurringInvoiceGenerator';
 import { initializeDatabase } from './db/init';
 import { validateEncryptionKey } from './utils/encryption';
 
@@ -76,6 +78,7 @@ app.use('/api/settings', authenticateToken, settingsRouter);
 app.use('/api/ares', authenticateToken, aresRouter);
 app.use('/api/ai', authenticateToken, aiRouter);
 app.use('/api/expenses', authenticateToken, expenseRouter);
+app.use('/api/recurring-invoices', authenticateToken, recurringRouter);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -95,6 +98,9 @@ async function start() {
 
     // Start email polling service (checks database for users with IMAP configured)
     startEmailPolling();
+
+    // Start recurring invoice generation service
+    startRecurringInvoiceGeneration();
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

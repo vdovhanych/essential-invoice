@@ -330,9 +330,10 @@ async function pollAllUsers(): Promise<void> {
 }
 
 export function startEmailPolling(): void {
-  const intervalMs = parseInt(process.env.EMAIL_POLLING_INTERVAL || '300000'); // Default 5 minutes
+  const intervalSeconds = parseInt(process.env.EMAIL_POLLING_INTERVAL || '600'); // Default 10 minutes (in seconds)
+  const intervalMs = intervalSeconds * 1000;
 
-  console.log(`Starting email polling with interval ${intervalMs}ms`);
+  console.log(`Starting email polling with interval ${intervalSeconds}s`);
 
   // Initial poll
   pollAllUsers().catch(err => console.error('Initial email poll failed:', err));

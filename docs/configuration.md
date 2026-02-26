@@ -16,7 +16,8 @@ Copy `.env.example` to `.env` in the project root and configure:
 | `CORS_ORIGIN` | `http://localhost:5173` (dev) / `http://localhost:8080` (Docker) | Allowed CORS origins (comma-separated) |
 | `BACKEND_PORT` | `3001` | Backend API port |
 | `FRONTEND_PORT` | `80` | Frontend web port |
-| `EMAIL_POLLING_INTERVAL` | `300000` | Email check interval (ms) |
+| `EMAIL_POLLING_INTERVAL` | `600` | Email check interval (seconds, default 10 minutes) |
+| `RECURRING_INVOICE_INTERVAL` | `86400` | Recurring invoice generation check interval (seconds, default 24 hours) |
 | `FRONTEND_URL` | `http://localhost:8080` | Frontend URL for email links (password reset) |
 | `GLOBAL_SMTP_HOST` | - | Global SMTP server host (enables system emails) |
 | `GLOBAL_SMTP_PORT` | `587` | Global SMTP server port |
