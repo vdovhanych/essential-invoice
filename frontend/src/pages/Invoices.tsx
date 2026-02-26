@@ -36,6 +36,7 @@ export default function Invoices() {
   }, [statusFilter, activeTab]);
 
   async function loadInvoices() {
+    setLoading(true);
     try {
       const params = new URLSearchParams();
       if (statusFilter) params.append('status', statusFilter);

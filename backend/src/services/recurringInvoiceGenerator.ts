@@ -112,10 +112,17 @@ export async function generateInvoiceFromRecurring(template: RecurringInvoiceRow
       );
     }
 
-    // Advance next_generation_date by one month
-    const currentNext = new Date(template.next_generation_date);
-    const nextGen = new Date(currentNext.getFullYear(), currentNext.getMonth() + 1, template.day_of_month);
-    const nextGenStr = nextGen.toISOString().split('T')[0];
+    // Advance next_generation_date by one month (day_of_month is 1-28, safe for all months)
+    // Use string parsing to avoid timezone issues with Date objects
+    const nextDateStr = template.next_generation_date instanceof Date
+      ? template.next_generation_date.toISOString().split('T')[0]
+      : String(template.next_generation_date);
+    const [curYear, curMonth] = nextDateStr.split('-').map(Number);
+    const newMonth = curMonth === 12 ? 1 : curMonth + 1;
+    const newYear = curMonth === 12 ? curYear + 1 : curYear;
+    const daysInNewMonth = new Date(Date.UTC(newYear, newMonth, 0)).getDate();
+    const safeDay = Math.min(template.day_of_month, daysInNewMonth);
+    const nextGenStr = `${newYear}-${String(newMonth).padStart(2, '0')}-${String(safeDay).padStart(2, '0')}`;
 
     await query(
       'UPDATE recurring_invoices SET next_generation_date = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',

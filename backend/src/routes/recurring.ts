@@ -127,6 +127,11 @@ recurringRouter.post('/',
         return res.status(400).json({ error: 'Invalid client' });
       }
 
+      // Validate endDate > startDate if provided
+      if (endDate && new Date(endDate) <= new Date(startDate)) {
+        return res.status(400).json({ error: 'End date must be after start date' });
+      }
+
       // Calculate next generation date
       const start = new Date(startDate);
       let nextGenDate: Date;
