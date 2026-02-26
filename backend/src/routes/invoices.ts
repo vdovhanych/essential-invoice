@@ -42,7 +42,7 @@ export async function generateInvoiceNumber(userId: string, issueDate: string, a
 // Get all invoices
 invoiceRouter.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    const { status, clientId, from, to } = req.query;
+    const { status, clientId, from, to, recurringId } = req.query;
 
     let sql = `
       SELECT i.*, c.company_name as client_name, c.primary_email as client_email
@@ -73,6 +73,11 @@ invoiceRouter.get('/', async (req: AuthRequest, res: Response) => {
       params.push(to);
     }
 
+    if (recurringId) {
+      sql += ` AND i.recurring_invoice_id = $${paramIndex++}`;
+      params.push(recurringId);
+    }
+
     sql += ' ORDER BY i.issue_date DESC, i.created_at DESC';
 
     const result = await query(sql, params);
@@ -96,6 +101,7 @@ invoiceRouter.get('/', async (req: AuthRequest, res: Response) => {
       notes: row.notes,
       sentAt: row.sent_at,
       paidAt: row.paid_at,
+      recurringInvoiceId: row.recurring_invoice_id,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }));

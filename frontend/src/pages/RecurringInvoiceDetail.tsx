@@ -65,10 +65,10 @@ export default function RecurringInvoiceDetail() {
     try {
       const [templateData, invoicesData] = await Promise.all([
         api.get(`/recurring-invoices/${id}`),
-        api.get(`/invoices?recurringId=${id}`).catch(() => []),
+        api.get(`/invoices?recurringId=${id}`),
       ]);
       setTemplate(templateData);
-      setGeneratedInvoices(invoicesData.filter ? invoicesData.filter((inv: any) => inv.recurringInvoiceId === id) : []);
+      setGeneratedInvoices(invoicesData);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
