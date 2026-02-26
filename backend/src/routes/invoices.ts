@@ -9,7 +9,7 @@ import { generateSpayd } from '../utils/validation';
 export const invoiceRouter: ReturnType<typeof Router> = Router();
 
 // Generate invoice number based on issue date
-async function generateInvoiceNumber(userId: string, issueDate: string, attempt: number = 0): Promise<{ invoiceNumber: string; variableSymbol: string }> {
+export async function generateInvoiceNumber(userId: string, issueDate: string, attempt: number = 0): Promise<{ invoiceNumber: string; variableSymbol: string }> {
   const date = new Date(issueDate);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
