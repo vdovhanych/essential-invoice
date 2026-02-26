@@ -65,8 +65,10 @@ backend:
   # -- Environment variables for the backend
   env:
     NODE_ENV: production
-    # -- Email polling interval in milliseconds (default: 5 minutes)
-    EMAIL_POLLING_INTERVAL: "300000"
+    # -- Email polling interval in seconds (default: 10 minutes)
+    EMAIL_POLLING_INTERVAL: "600"
+    # -- Recurring invoice generation check interval in seconds (default: 24 hours)
+    RECURRING_INVOICE_INTERVAL: "86400"
     # -- CORS allowed origin(s), comma-separated. With ingress (same-origin),
     # -- CORS is not needed and this value is ignored by browsers.
     # -- For cross-origin setups, set to your frontend URL (e.g. "https://invoices.example.com").
