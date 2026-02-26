@@ -71,6 +71,8 @@ spec:
               value: {{ .Values.backend.env.NODE_ENV | quote }}
             - name: EMAIL_POLLING_INTERVAL
               value: {{ .Values.backend.env.EMAIL_POLLING_INTERVAL | quote }}
+            - name: RECURRING_INVOICE_INTERVAL
+              value: {{ .Values.backend.env.RECURRING_INVOICE_INTERVAL | quote }}
             - name: DB_HOST
               value: {{ include "essential-invoice.databaseHost" . | quote }}
             - name: DB_PORT

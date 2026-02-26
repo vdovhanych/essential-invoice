@@ -68,7 +68,8 @@ helm uninstall essential-invoice -n essential-invoice
 | `backend.resources.limits.memory` | Memory limit | `512Mi` |
 | `backend.resources.limits.cpu` | CPU limit | `500m` |
 | `backend.env.NODE_ENV` | Node environment | `production` |
-| `backend.env.EMAIL_POLLING_INTERVAL` | Email polling interval (ms) | `300000` |
+| `backend.env.EMAIL_POLLING_INTERVAL` | Email polling interval (seconds) | `600` |
+| `backend.env.RECURRING_INVOICE_INTERVAL` | Recurring invoice check interval (seconds) | `86400` |
 | `backend.env.CORS_ORIGIN` | Allowed CORS origin | `*` |
 | `backend.extraEnv` | Additional env vars (list) | `[]` |
 | `backend.extraEnvFrom` | Additional envFrom sources | `[]` |

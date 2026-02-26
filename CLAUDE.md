@@ -116,8 +116,8 @@ cd frontend && bun vitest run src/utils/format.test.ts
 1. Write comprehensive tests for new functionality
 2. Run all tests in both frontend and backend to ensure no regressions:
    ```bash
-   cd backend && bun test
-   cd frontend && bun test
+   cd backend && bun run test
+   cd frontend && bun runtest
    ```
 
 ## Environment
@@ -146,6 +146,8 @@ When making changes to the codebase, update the relevant documentation files:
 - **docs/development.md** - Local setup, testing, project structure, contributing
 - **docs/troubleshooting.md** - Common issues
 - **.env.example** - All environment variables with comments
+- **helm-chart/** - Helm chart configuration, templates, README, values.yaml, Chart.yaml
+
 
 ### Quick Checklist
 - API endpoints changed? → `docs/api-reference.md`
@@ -153,3 +155,4 @@ When making changes to the codebase, update the relevant documentation files:
 - New env vars? → `.env.example` + `docs/configuration.md`
 - New features? → README.md features list
 - Project structure changed? → `docs/development.md`
+`
