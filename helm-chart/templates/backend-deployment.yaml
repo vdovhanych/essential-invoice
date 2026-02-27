@@ -110,7 +110,10 @@ spec:
             - name: GLOBAL_SMTP_USER
               value: {{ .Values.backend.globalSmtp.user | quote }}
             - name: GLOBAL_SMTP_PASSWORD
-              value: {{ .Values.backend.globalSmtp.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "essential-invoice.secretName" . }}
+                  key: GLOBAL_SMTP_PASSWORD
             - name: GLOBAL_SMTP_SECURE
               value: {{ .Values.backend.globalSmtp.secure | quote }}
             - name: GLOBAL_SMTP_FROM_EMAIL

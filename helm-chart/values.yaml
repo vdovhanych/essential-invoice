@@ -261,6 +261,7 @@ encryptionKey: ""
 
 # -- Use an existing Kubernetes secret for JWT (and optional external DB credentials)
 # The secret must contain: JWT_SECRET, ENCRYPTION_KEY
+# When backend.globalSmtp.host is set, it must also contain: GLOBAL_SMTP_PASSWORD
 # When postgresql.enabled=false (external DB), it must also contain: DB_PASSWORD
 existingSecret: ""
 
