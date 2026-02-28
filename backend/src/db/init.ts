@@ -27,24 +27,14 @@ export async function initializeDatabase() {
         bank_code VARCHAR(10),
         logo_data TEXT,
         logo_mime_type VARCHAR(50),
+        vat_payer BOOLEAN DEFAULT false,
+        onboarding_completed BOOLEAN DEFAULT false,
+        pausalni_dan_enabled BOOLEAN DEFAULT false,
+        pausalni_dan_tier INTEGER DEFAULT 1,
+        pausalni_dan_limit INTEGER DEFAULT 1000000,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-
-      -- Migration: Add logo_data and logo_mime_type columns if they don't exist
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='logo_data') THEN
-          ALTER TABLE users ADD COLUMN logo_data TEXT;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='logo_mime_type') THEN
-          ALTER TABLE users ADD COLUMN logo_mime_type VARCHAR(50);
-        END IF;
-        -- Drop old logo_url column if it exists
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='logo_url') THEN
-          ALTER TABLE users DROP COLUMN logo_url;
-        END IF;
-      END $$;
 
       -- Clients table
       CREATE TABLE IF NOT EXISTS clients (
@@ -68,7 +58,8 @@ export async function initializeDatabase() {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         client_id UUID NOT NULL REFERENCES clients(id) ON DELETE RESTRICT,
-        invoice_number VARCHAR(50) UNIQUE NOT NULL,
+        recurring_invoice_id UUID,
+        invoice_number VARCHAR(50) NOT NULL,
         variable_symbol VARCHAR(20) NOT NULL,
         status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'paid', 'overdue', 'cancelled')),
         currency VARCHAR(3) DEFAULT 'CZK' CHECK (currency IN ('CZK', 'EUR')),
@@ -87,7 +78,8 @@ export async function initializeDatabase() {
         primary_email_sent_at TIMESTAMP,
         secondary_email_sent_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT invoices_user_invoice_number_key UNIQUE (user_id, invoice_number)
       );
 
       -- Invoice items table
@@ -128,7 +120,7 @@ export async function initializeDatabase() {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         invoice_id UUID REFERENCES invoices(id) ON DELETE SET NULL,
-        email_type VARCHAR(20) NOT NULL CHECK (email_type IN ('invoice_sent', 'bank_notification')),
+        email_type VARCHAR(20) NOT NULL CHECK (email_type IN ('invoice_sent', 'bank_notification', 'welcome', 'password_reset')),
         recipient_email VARCHAR(255),
         subject VARCHAR(500),
         status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed')),
@@ -162,104 +154,27 @@ export async function initializeDatabase() {
         email_template TEXT,
         calculator_enabled BOOLEAN DEFAULT false,
         ai_enabled BOOLEAN DEFAULT true,
+        perplexity_api_key TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      -- Add calculator_enabled column if it doesn't exist (migration for existing databases)
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='calculator_enabled') THEN
-          ALTER TABLE settings ADD COLUMN calculator_enabled BOOLEAN DEFAULT false;
-        END IF;
-      END $$;
-
-      -- Add paušální daň columns if they don't exist (migration for existing databases)
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='pausalni_dan_enabled') THEN
-          ALTER TABLE settings ADD COLUMN pausalni_dan_enabled BOOLEAN DEFAULT false;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='pausalni_dan_tier') THEN
-          ALTER TABLE settings ADD COLUMN pausalni_dan_tier INTEGER DEFAULT 1;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='pausalni_dan_limit') THEN
-          ALTER TABLE settings ADD COLUMN pausalni_dan_limit INTEGER DEFAULT 1000000;
-        END IF;
-      END $$;
-
-      -- Add ai_enabled column if it doesn't exist (migration for existing databases)
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='ai_enabled') THEN
-          ALTER TABLE settings ADD COLUMN ai_enabled BOOLEAN DEFAULT true;
-        END IF;
-      END $$;
-
-      -- Add perplexity_api_key column if it doesn't exist (migration for existing databases)
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='settings' AND column_name='perplexity_api_key') THEN
-          ALTER TABLE settings ADD COLUMN perplexity_api_key TEXT;
-        END IF;
-      END $$;
-
-      -- Migration: Widen secret columns from VARCHAR(255) to TEXT for encrypted values
-      ALTER TABLE settings ALTER COLUMN smtp_password TYPE TEXT;
-      ALTER TABLE settings ALTER COLUMN imap_password TYPE TEXT;
-      ALTER TABLE settings ALTER COLUMN perplexity_api_key TYPE TEXT;
-
-      -- Add vat_payer column to users table if it doesn't exist (migration for existing databases)
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='vat_payer') THEN
-          ALTER TABLE users ADD COLUMN vat_payer BOOLEAN DEFAULT false;
-        END IF;
-      END $$;
-
-      -- Migration: Change vat_payer default from true to false
-      ALTER TABLE users ALTER COLUMN vat_payer SET DEFAULT false;
-
-      -- Add onboarding_completed column to users table if it doesn't exist
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='onboarding_completed') THEN
-          ALTER TABLE users ADD COLUMN onboarding_completed BOOLEAN DEFAULT false;
-        END IF;
-      END $$;
-
-      -- Add paušální daň columns to users table if they don't exist
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='pausalni_dan_enabled') THEN
-          ALTER TABLE users ADD COLUMN pausalni_dan_enabled BOOLEAN DEFAULT false;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='pausalni_dan_tier') THEN
-          ALTER TABLE users ADD COLUMN pausalni_dan_tier INTEGER DEFAULT 1;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='pausalni_dan_limit') THEN
-          ALTER TABLE users ADD COLUMN pausalni_dan_limit INTEGER DEFAULT 1000000;
-        END IF;
-      END $$;
-
-      -- Migrate paušální daň data from settings to users
-      UPDATE users SET
-        pausalni_dan_enabled = s.pausalni_dan_enabled,
-        pausalni_dan_tier = s.pausalni_dan_tier,
-        pausalni_dan_limit = s.pausalni_dan_limit
-      FROM settings s WHERE s.user_id = users.id
-        AND users.pausalni_dan_enabled = false
-        AND s.pausalni_dan_enabled = true;
-
-      -- Mark existing users as having completed onboarding (they already have data)
-      UPDATE users SET onboarding_completed = true WHERE onboarding_completed = false AND company_name IS NOT NULL AND company_name != '';
+      -- Password reset tokens table
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token_hash VARCHAR(64) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        used_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
 
       -- Expenses table (received invoices / náklady)
       CREATE TABLE IF NOT EXISTS expenses (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
-        expense_number VARCHAR(50) UNIQUE NOT NULL,
+        expense_number VARCHAR(50) NOT NULL,
         supplier_invoice_number VARCHAR(100),
         status VARCHAR(20) DEFAULT 'unpaid' CHECK (status IN ('unpaid', 'paid')),
         currency VARCHAR(3) DEFAULT 'CZK' CHECK (currency IN ('CZK', 'EUR')),
@@ -277,50 +192,9 @@ export async function initializeDatabase() {
         file_mime_type VARCHAR(100),
         paid_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT expenses_user_expense_number_key UNIQUE (user_id, expense_number)
       );
-
-      -- Migration: Change invoice_number and expense_number from global UNIQUE to per-user UNIQUE
-      -- This fixes multi-user support where different users could not have the same invoice/expense numbers
-      DO $$
-      BEGIN
-        -- Drop global unique constraint on invoice_number if it exists
-        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'invoices_invoice_number_key') THEN
-          ALTER TABLE invoices DROP CONSTRAINT invoices_invoice_number_key;
-        END IF;
-        -- Create composite unique constraint (user_id, invoice_number) if it doesn't exist
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'invoices_user_invoice_number_key') THEN
-          ALTER TABLE invoices ADD CONSTRAINT invoices_user_invoice_number_key UNIQUE (user_id, invoice_number);
-        END IF;
-        -- Drop global unique constraint on expense_number if it exists
-        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'expenses_expense_number_key') THEN
-          ALTER TABLE expenses DROP CONSTRAINT expenses_expense_number_key;
-        END IF;
-        -- Create composite unique constraint (user_id, expense_number) if it doesn't exist
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'expenses_user_expense_number_key') THEN
-          ALTER TABLE expenses ADD CONSTRAINT expenses_user_expense_number_key UNIQUE (user_id, expense_number);
-        END IF;
-      END $$;
-
-      -- Password reset tokens table
-      CREATE TABLE IF NOT EXISTS password_reset_tokens (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        token_hash VARCHAR(64) NOT NULL,
-        expires_at TIMESTAMP NOT NULL,
-        used_at TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      -- Migration: expand email_type check constraint to include system email types
-      DO $$
-      BEGIN
-        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'email_logs_email_type_check') THEN
-          ALTER TABLE email_logs DROP CONSTRAINT email_logs_email_type_check;
-          ALTER TABLE email_logs ADD CONSTRAINT email_logs_email_type_check
-            CHECK (email_type IN ('invoice_sent', 'bank_notification', 'welcome', 'password_reset'));
-        END IF;
-      END $$;
 
       -- Recurring invoices table
       CREATE TABLE IF NOT EXISTS recurring_invoices (
@@ -352,11 +226,14 @@ export async function initializeDatabase() {
         sort_order INTEGER DEFAULT 0
       );
 
-      -- Migration: Add recurring_invoice_id to invoices for lineage tracking
+      -- Add FK for recurring_invoice_id (can't be in CREATE TABLE due to table ordering)
       DO $$
       BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='invoices' AND column_name='recurring_invoice_id') THEN
-          ALTER TABLE invoices ADD COLUMN recurring_invoice_id UUID REFERENCES recurring_invoices(id) ON DELETE SET NULL;
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'invoices_recurring_invoice_id_fkey'
+        ) THEN
+          ALTER TABLE invoices ADD CONSTRAINT invoices_recurring_invoice_id_fkey
+            FOREIGN KEY (recurring_invoice_id) REFERENCES recurring_invoices(id) ON DELETE SET NULL;
         END IF;
       END $$;
 
@@ -371,6 +248,7 @@ export async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice_id ON invoice_items(invoice_id);
       CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments(user_id);
       CREATE INDEX IF NOT EXISTS idx_payments_variable_symbol ON payments(variable_symbol);
+      CREATE INDEX IF NOT EXISTS idx_payments_invoice_id ON payments(invoice_id);
       CREATE INDEX IF NOT EXISTS idx_email_logs_invoice_id ON email_logs(invoice_id);
       CREATE INDEX IF NOT EXISTS idx_expenses_user_id ON expenses(user_id);
       CREATE INDEX IF NOT EXISTS idx_expenses_client_id ON expenses(client_id);

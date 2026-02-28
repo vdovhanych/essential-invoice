@@ -86,8 +86,16 @@ authRouter.post('/register',
   }
 );
 
+// Rate limiter for login
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Příliš mnoho pokusů o přihlášení, zkuste to prosím později.' }
+});
+
 // Login
 authRouter.post('/login',
+  loginLimiter,
   body('email').isEmail().normalizeEmail(),
   body('password').notEmpty(),
   async (req: Request, res: Response) => {
