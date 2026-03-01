@@ -245,7 +245,7 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
-            <Link to="/settings" className="text-sm text-blue-600 hover:underline">
+            <Link to="/profile#pausalni-dan" className="text-sm text-blue-600 hover:underline">
               Nastavení
             </Link>
           </div>

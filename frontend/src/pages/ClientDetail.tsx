@@ -77,7 +77,7 @@ export default function ClientDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate('/clients')}
@@ -97,7 +97,7 @@ export default function ClientDetail() {
         </div>
         <Link
           to={`/invoices/new?clientId=${client.id}`}
-          className="btn btn-primary flex items-center space-x-2"
+          className="btn btn-primary flex items-center space-x-2 self-start sm:self-auto"
         >
           <Plus className="h-4 w-4" />
           <span>Nová faktura</span>

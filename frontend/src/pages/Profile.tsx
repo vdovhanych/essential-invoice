@@ -332,7 +332,7 @@ export default function Profile() {
         <hr className="dark:border-gray-700" />
 
         {/* Paušální daň section */}
-        <div className="flex items-center space-x-3">
+        <div id="pausalni-dan" className="flex items-center space-x-3 scroll-mt-6">
           <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
             <Landmark className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
@@ -429,7 +429,7 @@ export default function Profile() {
           Logo se zobrazí na vašich fakturách místo firemních údajů v záhlaví. Podporované formáty: PNG, JPG, SVG. Max. velikost: 2 MB.
         </p>
 
-        <div className="flex items-start space-x-6">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
           {/* Logo preview */}
           <div className="flex-shrink-0">
             {user?.hasLogo ? (
@@ -437,11 +437,11 @@ export default function Profile() {
                 <img
                   src={logoUrl}
                   alt="Logo firmy"
-                  className="w-48 h-24 object-contain border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-700 p-2"
+                  className="w-32 sm:w-48 h-24 object-contain border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-700 p-2"
                 />
               </div>
             ) : (
-              <div className="w-48 h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+              <div className="w-32 sm:w-48 h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
                 <span className="text-gray-400 text-sm">Žádné logo</span>
               </div>
             )}
@@ -457,7 +457,7 @@ export default function Profile() {
               className="hidden"
               id="logo-upload"
             />
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               <label
                 htmlFor="logo-upload"
                 className={`btn btn-secondary flex items-center space-x-2 cursor-pointer ${uploadingLogo ? 'opacity-50 pointer-events-none' : ''}`}
@@ -533,7 +533,7 @@ export default function Profile() {
       </form>
 
       {/* Danger Zone */}
-      <div className="border-2 border-red-200 dark:border-red-800 rounded-lg p-6 space-y-4">
+      <div className="border-2 border-red-200 dark:border-red-800 rounded-lg p-4 sm:p-6 space-y-4">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
             <ShieldAlert className="h-5 w-5 text-red-600 dark:text-red-400" />
