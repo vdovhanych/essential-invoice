@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency } from '../utils/format';
@@ -21,6 +22,7 @@ interface Client {
 }
 
 export default function Clients() {
+  const { t } = useTranslation('clients');
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -61,7 +63,7 @@ export default function Clients() {
 
   async function handleAresLookup() {
     if (!formData.ico || formData.ico.length !== 8) {
-      toast.error('IČO musí mít 8 číslic');
+      toast.error(t('modal.ares.icoValidation'));
       return;
     }
 
@@ -74,10 +76,10 @@ export default function Clients() {
         address: result.address || prev.address,
         dic: result.dic || prev.dic,
       }));
-      toast.success('Údaje načteny z ARES');
+      toast.success(t('modal.ares.success'));
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Nepodařilo se načíst údaje z ARES');
+      toast.error(error.message || t('modal.ares.failed'));
     } finally {
       setAresLoading(false);
     }
@@ -120,29 +122,29 @@ export default function Clients() {
     try {
       if (editingClient) {
         await api.put(`/clients/${editingClient.id}`, formData);
-        toast.success('Kontakt byl aktualizován');
+        toast.success(t('list.toast.updated'));
       } else {
         await api.post('/clients', formData);
-        toast.success('Kontakt byl vytvořen');
+        toast.success(t('list.toast.created'));
       }
       setShowModal(false);
       loadClients();
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Operace selhala');
+      toast.error(error.message || t('list.toast.operationFailed'));
     }
   }
 
   async function handleDelete(client: Client) {
-    if (!confirm(`Opravdu chcete smazat kontakt "${client.companyName}"?`)) return;
+    if (!confirm(t('list.confirm.delete', { name: client.companyName }))) return;
 
     try {
       await api.delete(`/clients/${client.id}`);
-      toast.success('Kontakt byl smazán');
+      toast.success(t('list.toast.deleted'));
       loadClients();
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Nepodařilo se smazat kontakt');
+      toast.error(error.message || t('list.toast.deleteFailed'));
     }
   }
 
@@ -163,10 +165,10 @@ export default function Clients() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Kontakty</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('list.title')}</h1>
         <button onClick={openCreateModal} className="btn btn-primary flex items-center space-x-2">
           <Plus className="h-4 w-4" />
-          <span>Nový kontakt</span>
+          <span>{t('list.newClient')}</span>
         </button>
       </div>
 
@@ -175,7 +177,7 @@ export default function Clients() {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
         <input
           type="text"
-          placeholder="Hledat kontakty..."
+          placeholder={t('list.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="input pl-10"
@@ -222,11 +224,11 @@ export default function Clients() {
               <div className="space-y-1 text-sm">
                 <p className="text-gray-600 dark:text-gray-300">{client.primaryEmail}</p>
                 {client.contactPerson && (
-                  <p className="text-gray-500 dark:text-gray-400">Kontakt: {client.contactPerson}</p>
+                  <p className="text-gray-500 dark:text-gray-400">{t('list.contactLabel', { name: client.contactPerson })}</p>
                 )}
               </div>
               <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">{client.invoiceCount} faktur</span>
+                <span className="text-gray-500 dark:text-gray-400">{t('list.invoiceCount', { count: client.invoiceCount })}</span>
                 <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(client.totalPaid)}</span>
               </div>
             </div>
@@ -235,10 +237,10 @@ export default function Clients() {
       ) : (
         <div className="card text-center py-12">
           <Users className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">Žádné kontakty nenalezeny</p>
+          <p className="text-gray-500 dark:text-gray-400">{t('list.empty')}</p>
           <button onClick={openCreateModal} className="btn btn-primary mt-4 inline-flex items-center space-x-2">
             <Plus className="h-4 w-4" />
-            <span>Přidat první kontakt</span>
+            <span>{t('list.addFirst')}</span>
           </button>
         </div>
       )}
@@ -249,7 +251,7 @@ export default function Clients() {
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {editingClient ? 'Upravit kontakt' : 'Nový kontakt'}
+                {editingClient ? t('modal.titleEdit') : t('modal.titleNew')}
               </h2>
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                 <X className="h-5 w-5" />
@@ -259,7 +261,7 @@ export default function Clients() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* ICO with ARES lookup */}
               <div>
-                <label className="label">ICO</label>
+                <label className="label">{t('modal.fields.ico')}</label>
                 <div className="flex space-x-2">
                   <input
                     type="text"
@@ -268,7 +270,7 @@ export default function Clients() {
                     onChange={handleChange}
                     className="input flex-1"
                     maxLength={8}
-                    placeholder="12345678"
+                    placeholder={t('modal.fields.icoPlaceholder')}
                   />
                   <button
                     type="button"
@@ -276,13 +278,13 @@ export default function Clients() {
                     disabled={aresLoading || formData.ico.length !== 8}
                     className="btn btn-secondary whitespace-nowrap"
                   >
-                    {aresLoading ? 'Načítám...' : 'Načíst z ARES'}
+                    {aresLoading ? t('modal.ares.loading') : t('modal.ares.lookup')}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="label">Název firmy *</label>
+                <label className="label">{t('modal.fields.companyName')}</label>
                 <input
                   type="text"
                   name="companyName"
@@ -294,7 +296,7 @@ export default function Clients() {
               </div>
 
               <div>
-                <label className="label">Primární email *</label>
+                <label className="label">{t('modal.fields.primaryEmail')}</label>
                 <input
                   type="email"
                   name="primaryEmail"
@@ -306,7 +308,7 @@ export default function Clients() {
               </div>
 
               <div>
-                <label className="label">Sekundární email</label>
+                <label className="label">{t('modal.fields.secondaryEmail')}</label>
                 <input
                   type="email"
                   name="secondaryEmail"
@@ -317,19 +319,19 @@ export default function Clients() {
               </div>
 
               <div>
-                <label className="label">DIC</label>
+                <label className="label">{t('modal.fields.dic')}</label>
                 <input
                   type="text"
                   name="dic"
                   value={formData.dic}
                   onChange={handleChange}
                   className="input"
-                  placeholder="CZ12345678"
+                  placeholder={t('modal.fields.dicPlaceholder')}
                 />
               </div>
 
               <div>
-                <label className="label">Adresa</label>
+                <label className="label">{t('modal.fields.address')}</label>
                 <textarea
                   name="address"
                   value={formData.address}
@@ -341,7 +343,7 @@ export default function Clients() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">Kontaktní osoba</label>
+                  <label className="label">{t('modal.fields.contactPerson')}</label>
                   <input
                     type="text"
                     name="contactPerson"
@@ -351,7 +353,7 @@ export default function Clients() {
                   />
                 </div>
                 <div>
-                  <label className="label">Telefon</label>
+                  <label className="label">{t('modal.fields.phone')}</label>
                   <input
                     type="text"
                     name="contactPhone"
@@ -363,7 +365,7 @@ export default function Clients() {
               </div>
 
               <div>
-                <label className="label">Poznámky</label>
+                <label className="label">{t('modal.fields.notes')}</label>
                 <textarea
                   name="notes"
                   value={formData.notes}
@@ -375,10 +377,10 @@ export default function Clients() {
 
               <div className="flex justify-end space-x-2 pt-4">
                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">
-                  Zrušit
+                  {t('modal.buttons.cancel')}
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  {editingClient ? 'Uložit změny' : 'Vytvořit kontakt'}
+                  {editingClient ? t('modal.buttons.saveChanges') : t('modal.buttons.createClient')}
                 </button>
               </div>
             </form>

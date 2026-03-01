@@ -36,7 +36,7 @@ authRouter.post('/register',
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, name } = req.body;
+    const { email, password, name, language } = req.body;
 
     try {
       // Check if user exists
@@ -48,12 +48,13 @@ authRouter.post('/register',
       // Hash password
       const passwordHash = await bcrypt.hash(password, 12);
 
-      // Create user
+      // Create user with preferred language
+      const userLanguage = language === 'en' ? 'en' : 'cs';
       const result = await query(
-        `INSERT INTO users (email, password_hash, name)
-         VALUES ($1, $2, $3)
+        `INSERT INTO users (email, password_hash, name, language)
+         VALUES ($1, $2, $3, $4)
          RETURNING id, email, name`,
-        [email, passwordHash, name]
+        [email, passwordHash, name, userLanguage]
       );
 
       const user = result.rows[0];
@@ -70,7 +71,7 @@ authRouter.post('/register',
 
       // Send welcome email (fire-and-forget)
       if (isGlobalSmtpConfigured()) {
-        sendWelcomeEmail(email, name).catch(err => {
+        sendWelcomeEmail(email, name, userLanguage).catch(err => {
           console.error('Failed to send welcome email:', err);
         });
       }
@@ -90,7 +91,7 @@ authRouter.post('/register',
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  message: { error: 'Příliš mnoho pokusů o přihlášení, zkuste to prosím později.' }
+  message: { error: 'TOO_MANY_LOGIN_ATTEMPTS' }
 });
 
 // Login
@@ -141,7 +142,7 @@ authRouter.post('/login',
 authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const result = await query(
-      `SELECT id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, vat_payer, onboarding_completed, pausalni_dan_enabled, pausalni_dan_tier, pausalni_dan_limit, logo_data IS NOT NULL as has_logo, created_at
+      `SELECT id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, vat_payer, onboarding_completed, pausalni_dan_enabled, pausalni_dan_tier, pausalni_dan_limit, language, logo_data IS NOT NULL as has_logo, created_at
        FROM users WHERE id = $1`,
       [req.userId]
     );
@@ -166,6 +167,7 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
       pausalniDanEnabled: user.pausalni_dan_enabled,
       pausalniDanTier: user.pausalni_dan_tier,
       pausalniDanLimit: user.pausalni_dan_limit,
+      language: user.language || 'cs',
       hasLogo: user.has_logo,
       createdAt: user.created_at
     });
@@ -177,7 +179,7 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
 
 // Update user profile
 authRouter.put('/me', authenticateToken, async (req: AuthRequest, res: Response) => {
-  const { name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode, vatPayer, onboardingCompleted, pausalniDanEnabled, pausalniDanTier, pausalniDanLimit } = req.body;
+  const { name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode, vatPayer, onboardingCompleted, pausalniDanEnabled, pausalniDanTier, pausalniDanLimit, language } = req.body;
 
   try {
     const result = await query(
@@ -194,10 +196,11 @@ authRouter.put('/me', authenticateToken, async (req: AuthRequest, res: Response)
         pausalni_dan_enabled = COALESCE($10, pausalni_dan_enabled),
         pausalni_dan_tier = COALESCE($11, pausalni_dan_tier),
         pausalni_dan_limit = COALESCE($12, pausalni_dan_limit),
+        language = COALESCE($13, language),
         updated_at = CURRENT_TIMESTAMP
-       WHERE id = $13
-       RETURNING id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, vat_payer, onboarding_completed, pausalni_dan_enabled, pausalni_dan_tier, pausalni_dan_limit`,
-      [name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode, vatPayer, onboardingCompleted, pausalniDanEnabled, pausalniDanTier, pausalniDanLimit, req.userId]
+       WHERE id = $14
+       RETURNING id, email, name, company_name, company_ico, company_dic, company_address, bank_account, bank_code, vat_payer, onboarding_completed, pausalni_dan_enabled, pausalni_dan_tier, pausalni_dan_limit, language`,
+      [name, companyName, companyIco, companyDic, companyAddress, bankAccount, bankCode, vatPayer, onboardingCompleted, pausalniDanEnabled, pausalniDanTier, pausalniDanLimit, language, req.userId]
     );
 
     if (result.rows.length === 0) {
@@ -219,7 +222,8 @@ authRouter.put('/me', authenticateToken, async (req: AuthRequest, res: Response)
       onboardingCompleted: user.onboarding_completed,
       pausalniDanEnabled: user.pausalni_dan_enabled,
       pausalniDanTier: user.pausalni_dan_tier,
-      pausalniDanLimit: user.pausalni_dan_limit
+      pausalniDanLimit: user.pausalni_dan_limit,
+      language: user.language || 'cs'
     });
   } catch (error) {
     console.error('Update profile error:', error);
@@ -266,7 +270,7 @@ authRouter.post('/change-password', authenticateToken,
 const forgotPasswordLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
-  message: { error: 'Příliš mnoho požadavků na obnovení hesla, zkuste to prosím později.' }
+  message: { error: 'TOO_MANY_RESET_ATTEMPTS' }
 });
 
 // Forgot password
@@ -274,7 +278,7 @@ authRouter.post('/forgot-password',
   forgotPasswordLimiter,
   body('email').isEmail().normalizeEmail(),
   async (req: Request, res: Response) => {
-    const genericResponse = { message: 'Pokud účet s tímto emailem existuje, byl odeslán odkaz pro obnovení hesla.' };
+    const genericResponse = { message: 'RESET_EMAIL_SENT' };
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -289,7 +293,7 @@ authRouter.post('/forgot-password',
         return res.json(genericResponse);
       }
 
-      const userResult = await query('SELECT id, name, email FROM users WHERE email = $1', [email]);
+      const userResult = await query('SELECT id, name, email, language FROM users WHERE email = $1', [email]);
       if (userResult.rows.length === 0) {
         return res.json(genericResponse);
       }
@@ -312,7 +316,7 @@ authRouter.post('/forgot-password',
         [user.id, tokenHash, expiresAt]
       );
 
-      await sendPasswordResetEmail(user.email, user.name, token);
+      await sendPasswordResetEmail(user.email, user.name, token, user.language || 'cs');
 
       res.json(genericResponse);
     } catch (error) {
@@ -343,17 +347,17 @@ authRouter.post('/reset-password',
       );
 
       if (tokenResult.rows.length === 0) {
-        return res.status(400).json({ error: 'Neplatný nebo expirovaný odkaz pro obnovení hesla.' });
+        return res.status(400).json({ error: 'RESET_LINK_INVALID' });
       }
 
       const resetToken = tokenResult.rows[0];
 
       if (resetToken.used_at) {
-        return res.status(400).json({ error: 'Tento odkaz pro obnovení hesla již byl použit.' });
+        return res.status(400).json({ error: 'RESET_LINK_USED' });
       }
 
       if (new Date(resetToken.expires_at) < new Date()) {
-        return res.status(400).json({ error: 'Platnost odkazu pro obnovení hesla vypršela.' });
+        return res.status(400).json({ error: 'RESET_LINK_EXPIRED' });
       }
 
       // Hash new password and update
@@ -372,10 +376,10 @@ authRouter.post('/reset-password',
       // Clean up expired tokens
       await query('DELETE FROM password_reset_tokens WHERE expires_at < CURRENT_TIMESTAMP');
 
-      res.json({ message: 'Heslo bylo úspěšně změněno.' });
+      res.json({ message: 'PASSWORD_RESET_SUCCESS' });
     } catch (error) {
       console.error('Reset password error:', error);
-      res.status(500).json({ error: 'Nepodařilo se obnovit heslo.' });
+      res.status(500).json({ error: 'PASSWORD_RESET_FAILED' });
     }
   }
 );

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api } from '../utils/api';
+import i18n from '../i18n/i18n';
 
 interface User {
   id: string;
@@ -17,6 +18,7 @@ interface User {
   pausalniDanEnabled?: boolean;
   pausalniDanTier?: number;
   pausalniDanLimit?: number;
+  language?: string;
 }
 
 interface AuthContextType {
@@ -34,6 +36,7 @@ interface RegisterData {
   email: string;
   password: string;
   name: string;
+  language?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,6 +58,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const userData = await api.get('/auth/me');
       setUser(userData);
+      const lang = userData.language || 'cs';
+      i18n.changeLanguage(lang);
+      localStorage.setItem('language', lang);
     } catch {
       localStorage.removeItem('token');
       setToken(null);
@@ -81,11 +87,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    i18n.changeLanguage('cs');
+    localStorage.setItem('language', 'cs');
   }
 
   async function updateProfile(data: Partial<User>) {
     const updatedUser = await api.put('/auth/me', data);
     setUser(updatedUser);
+    if (updatedUser.language) {
+      i18n.changeLanguage(updatedUser.language);
+      localStorage.setItem('language', updatedUser.language);
+    }
   }
 
   async function refreshUser() {

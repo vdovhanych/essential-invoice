@@ -1,0 +1,36 @@
+{
+  "title": "Přehled",
+  "newInvoice": "Nová faktura",
+  "loadError": "Nepodařilo se načíst data",
+  "stats": {
+    "outstanding": "K úhradě",
+    "outstandingDescription": "{{count}} faktur čeká na platbu",
+    "paidThisMonth": "Zaplaceno tento měsíc",
+    "paidThisMonthDescription": "{{count}} zaplacených faktur celkem",
+    "overdue": "Po splatnosti",
+    "overdueDescription": "Faktury po datu splatnosti",
+    "totalPaid": "Celkem zaplaceno",
+    "totalPaidDescription": "Za celou dobu"
+  },
+  "unmatchedPayments": {
+    "message": "Máte {{count}} nespárovaných plateb",
+    "link": "Zobrazit platby"
+  },
+  "chart": {
+    "totalRevenue": "Celkové tržby",
+    "income": "Příjmy",
+    "expenses": "Výdaje",
+    "noData": "Zatím žádná data"
+  },
+  "pausalniDan": {
+    "label": "Paušální daň ({{tier}}. pásmo)",
+    "remaining": "Zbývá {{amount}}",
+    "limitExceeded": "Limit překročen – hrozí vyřazení z režimu",
+    "approachingLimit": "Blížíte se k limitu"
+  },
+  "recentInvoices": {
+    "title": "Poslední faktury",
+    "viewAll": "Zobrazit vše",
+    "empty": "Zatím žádné faktury"
+  }
+}

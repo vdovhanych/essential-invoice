@@ -1,0 +1,84 @@
+{
+  "list": {
+    "title": "Kontakty",
+    "newClient": "Nový kontakt",
+    "searchPlaceholder": "Hledat kontakty...",
+    "invoiceCount": "{{count}} faktur",
+    "contactLabel": "Kontakt: {{name}}",
+    "empty": "Žádné kontakty nenalezeny",
+    "addFirst": "Přidat první kontakt",
+    "toast": {
+      "created": "Kontakt byl vytvořen",
+      "updated": "Kontakt byl aktualizován",
+      "deleted": "Kontakt byl smazán",
+      "deleteFailed": "Nepodařilo se smazat kontakt",
+      "operationFailed": "Operace selhala"
+    },
+    "confirm": {
+      "delete": "Opravdu chcete smazat kontakt \"{{name}}\"?"
+    }
+  },
+  "modal": {
+    "titleNew": "Nový kontakt",
+    "titleEdit": "Upravit kontakt",
+    "fields": {
+      "ico": "ICO",
+      "icoPlaceholder": "12345678",
+      "companyName": "Název firmy *",
+      "primaryEmail": "Primární email *",
+      "secondaryEmail": "Sekundární email",
+      "dic": "DIC",
+      "dicPlaceholder": "CZ12345678",
+      "address": "Adresa",
+      "contactPerson": "Kontaktní osoba",
+      "phone": "Telefon",
+      "notes": "Poznámky"
+    },
+    "ares": {
+      "loading": "Načítám...",
+      "lookup": "Načíst z ARES",
+      "success": "Údaje načteny z ARES",
+      "failed": "Nepodařilo se načíst údaje z ARES",
+      "icoValidation": "IČO musí mít 8 číslic"
+    },
+    "buttons": {
+      "cancel": "Zrušit",
+      "saveChanges": "Uložit změny",
+      "createClient": "Vytvořit kontakt"
+    }
+  },
+  "detail": {
+    "notFound": "Kontakt nenalezen",
+    "newInvoice": "Nová faktura",
+    "contactInfo": {
+      "title": "Kontaktní údaje",
+      "primaryEmail": "Primární email",
+      "secondaryEmail": "Sekundární email",
+      "contactPerson": "Kontaktní osoba",
+      "phone": "Telefon",
+      "address": "Adresa"
+    },
+    "taxInfo": {
+      "title": "Daňové údaje",
+      "ico": "ICO:",
+      "dic": "DIC:"
+    },
+    "notes": {
+      "title": "Poznámky"
+    },
+    "stats": {
+      "totalRevenue": "Celkové tržby",
+      "pendingAmount": "K úhradě"
+    },
+    "invoices": {
+      "title": "Historie faktur",
+      "table": {
+        "number": "Číslo",
+        "date": "Datum",
+        "amount": "Částka",
+        "status": "Stav"
+      },
+      "empty": "Žádné faktury pro tento kontakt"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { Mail, Server, Eye, EyeOff, Calculator, Sparkles } from 'lucide-react';
@@ -29,6 +30,7 @@ interface Settings {
 }
 
 export default function Settings() {
+  const { t } = useTranslation('settings');
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -114,12 +116,12 @@ export default function Settings() {
 
     try {
       await api.put('/settings', formData);
-      toast.success('Nastavení bylo uloženo');
+      toast.success(t('toast.saveSuccess'));
       loadSettings();
       window.dispatchEvent(new Event('settings-updated'));
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Nepodařilo se uložit nastavení');
+      toast.error(error.message || t('toast.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -130,10 +132,10 @@ export default function Settings() {
 
     try {
       await api.post(`/settings/test-${type}`);
-      toast.success(`${type.toUpperCase()} připojení je funkční`);
+      toast.success(t(`${type}.testSuccess`));
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || `Test ${type.toUpperCase()} selhal`);
+      toast.error(error.message || t(`${type}.testFailed`));
     } finally {
       setTesting(null);
     }
@@ -149,7 +151,7 @@ export default function Settings() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nastavení</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* SMTP Settings */}
@@ -158,23 +160,23 @@ export default function Settings() {
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
               <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Odesílání emailů (SMTP)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('smtp.heading')}</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">SMTP server</label>
+              <label className="label">{t('smtp.server')}</label>
               <input
                 type="text"
                 name="smtpHost"
                 value={formData.smtpHost}
                 onChange={handleChange}
                 className="input"
-                placeholder="smtp.example.com"
+                placeholder={t('smtp.serverPlaceholder')}
               />
             </div>
             <div>
-              <label className="label">Port</label>
+              <label className="label">{t('smtp.port')}</label>
               <input
                 type="number"
                 name="smtpPort"
@@ -184,7 +186,7 @@ export default function Settings() {
               />
             </div>
             <div>
-              <label className="label">Uživatel</label>
+              <label className="label">{t('smtp.user')}</label>
               <input
                 type="text"
                 name="smtpUser"
@@ -194,7 +196,7 @@ export default function Settings() {
               />
             </div>
             <div>
-              <label className="label">Heslo {settings?.smtpPasswordSet && '(nastaveno)'}</label>
+              <label className="label">{t('smtp.password')} {settings?.smtpPasswordSet && t('smtp.passwordSet')}</label>
               <div className="relative">
                 <input
                   type={showPasswords.smtp ? 'text' : 'password'}
@@ -214,25 +216,25 @@ export default function Settings() {
               </div>
             </div>
             <div>
-              <label className="label">Email odesilatele</label>
+              <label className="label">{t('smtp.fromEmail')}</label>
               <input
                 type="email"
                 name="smtpFromEmail"
                 value={formData.smtpFromEmail}
                 onChange={handleChange}
                 className="input"
-                placeholder="faktury@example.com"
+                placeholder={t('smtp.fromEmailPlaceholder')}
               />
             </div>
             <div>
-              <label className="label">Jmeno odesilatele</label>
+              <label className="label">{t('smtp.fromName')}</label>
               <input
                 type="text"
                 name="smtpFromName"
                 value={formData.smtpFromName}
                 onChange={handleChange}
                 className="input"
-                placeholder="Moje Firma s.r.o."
+                placeholder={t('smtp.fromNamePlaceholder')}
               />
             </div>
           </div>
@@ -246,7 +248,7 @@ export default function Settings() {
                 onChange={handleChange}
                 className="rounded border-gray-300 text-blue-600"
               />
-              <span className="text-sm text-gray-600 dark:text-gray-400">Použít TLS/SSL</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('smtp.useTls')}</span>
             </label>
             <button
               type="button"
@@ -254,7 +256,7 @@ export default function Settings() {
               disabled={testing === 'smtp' || !formData.smtpHost}
               className="btn btn-secondary"
             >
-              {testing === 'smtp' ? 'Testuji...' : 'Otestovat připojení'}
+              {testing === 'smtp' ? t('smtp.testing') : t('smtp.testConnection')}
             </button>
           </div>
         </div>
@@ -265,27 +267,27 @@ export default function Settings() {
             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
               <Server className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Přijímání emailů (IMAP)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('imap.heading')}</h2>
           </div>
 
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Nastavte IMAP pro automatické načítání bankovních notifikací o platbách.
+            {t('imap.description')}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">IMAP server</label>
+              <label className="label">{t('imap.server')}</label>
               <input
                 type="text"
                 name="imapHost"
                 value={formData.imapHost}
                 onChange={handleChange}
                 className="input"
-                placeholder="imap.example.com"
+                placeholder={t('imap.serverPlaceholder')}
               />
             </div>
             <div>
-              <label className="label">Port</label>
+              <label className="label">{t('imap.port')}</label>
               <input
                 type="number"
                 name="imapPort"
@@ -295,7 +297,7 @@ export default function Settings() {
               />
             </div>
             <div>
-              <label className="label">Uživatel</label>
+              <label className="label">{t('imap.user')}</label>
               <input
                 type="text"
                 name="imapUser"
@@ -305,7 +307,7 @@ export default function Settings() {
               />
             </div>
             <div>
-              <label className="label">Heslo {settings?.imapPasswordSet && '(nastaveno)'}</label>
+              <label className="label">{t('imap.password')} {settings?.imapPasswordSet && t('imap.passwordSet')}</label>
               <div className="relative">
                 <input
                   type={showPasswords.imap ? 'text' : 'password'}
@@ -325,17 +327,17 @@ export default function Settings() {
               </div>
             </div>
             <div className="md:col-span-2">
-              <label className="label">Email bankovních notifikací (volitelné)</label>
+              <label className="label">{t('imap.bankNotificationEmail')}</label>
               <input
                 type="email"
                 name="bankNotificationEmail"
                 value={formData.bankNotificationEmail}
                 onChange={handleChange}
                 className="input"
-                placeholder="noreply@airbank.cz"
+                placeholder={t('imap.bankNotificationEmailPlaceholder')}
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Pokud vyplníte, budou se načítat pouze emaily od této adresy
+                {t('imap.bankNotificationEmailHelp')}
               </p>
             </div>
           </div>
@@ -349,7 +351,7 @@ export default function Settings() {
                 onChange={handleChange}
                 className="rounded border-gray-300 text-blue-600"
               />
-              <span className="text-sm text-gray-600 dark:text-gray-400">Použít TLS</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('imap.useTls')}</span>
             </label>
             <button
               type="button"
@@ -357,7 +359,7 @@ export default function Settings() {
               disabled={testing === 'imap' || !formData.imapHost}
               className="btn btn-secondary"
             >
-              {testing === 'imap' ? 'Testuji...' : 'Otestovat připojení'}
+              {testing === 'imap' ? t('imap.testing') : t('imap.testConnection')}
             </button>
           </div>
         </div>
@@ -368,11 +370,11 @@ export default function Settings() {
             <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
               <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">AI funkce (Perplexity)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('ai.heading')}</h2>
           </div>
 
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Aktivujte AI asistenta pro český daňový poradenství, inteligentní párování plateb a další funkce.
+            {t('ai.description')}
           </p>
 
           <label className="flex items-center space-x-2 mb-4">
@@ -383,11 +385,11 @@ export default function Settings() {
               onChange={handleChange}
               className="rounded border-gray-300 text-blue-600"
             />
-            <span className="text-sm text-gray-600 dark:text-gray-400">Zapnout AI funkce</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">{t('ai.enableAi')}</span>
           </label>
 
           <div>
-            <label className="label">Perplexity API klíč {settings?.perplexityApiKeySet && '(nastaveno)'}</label>
+            <label className="label">{t('ai.apiKeyLabel')} {settings?.perplexityApiKeySet && t('ai.apiKeySet')}</label>
             <div className="relative">
               <input
                 type={showPasswords.perplexity ? 'text' : 'password'}
@@ -395,7 +397,7 @@ export default function Settings() {
                 value={formData.perplexityApiKey}
                 onChange={handleChange}
                 className="input pr-10"
-                placeholder={settings?.perplexityApiKeySet ? '••••••••' : 'pplx-xxxxxxxxxxxxxxxxxxxx'}
+                placeholder={settings?.perplexityApiKeySet ? '••••••••' : t('ai.apiKeyPlaceholder')}
               />
               <button
                 type="button"
@@ -406,14 +408,14 @@ export default function Settings() {
               </button>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Získejte API klíč na{' '}
+              {t('ai.apiKeyHelp')}{' '}
               <a
                 href="https://www.perplexity.ai/settings/api"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
               >
-                perplexity.ai/settings/api
+                {t('ai.apiKeyLink')}
               </a>
             </p>
           </div>
@@ -421,11 +423,11 @@ export default function Settings() {
 
         {/* Invoice defaults */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Výchozí hodnoty faktur</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('invoiceDefaults.heading')}</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">Výchozí sazba DPH (%)</label>
+              <label className="label">{t('invoiceDefaults.vatRate')}</label>
               <select
                 name="defaultVatRate"
                 value={formData.defaultVatRate}
@@ -438,7 +440,7 @@ export default function Settings() {
               </select>
             </div>
             <div>
-              <label className="label">Výchozí splatnost (dny)</label>
+              <label className="label">{t('invoiceDefaults.paymentTerms')}</label>
               <input
                 type="number"
                 name="defaultPaymentTerms"
@@ -449,14 +451,14 @@ export default function Settings() {
               />
             </div>
             <div className="md:col-span-2">
-              <label className="label">Prefix čísla faktury</label>
+              <label className="label">{t('invoiceDefaults.invoiceNumberPrefix')}</label>
               <input
                 type="text"
                 name="invoiceNumberPrefix"
                 value={formData.invoiceNumberPrefix}
                 onChange={handleChange}
                 className="input"
-                placeholder="Např. FV, INV"
+                placeholder={t('invoiceDefaults.invoiceNumberPrefixPlaceholder')}
               />
             </div>
           </div>
@@ -468,11 +470,11 @@ export default function Settings() {
             <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
               <Calculator className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Kalkulačka</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('calculator.heading')}</h2>
           </div>
 
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Povolit kalkulačku pro výpočet fakturované částky na základě hodinové sazby a KPI bonusu.
+            {t('calculator.description')}
           </p>
 
           <label className="flex items-center space-x-2">
@@ -483,15 +485,15 @@ export default function Settings() {
               onChange={handleChange}
               className="rounded border-gray-300 text-blue-600"
             />
-            <span className="text-sm text-gray-600 dark:text-gray-400">Zapnout kalkulačku</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">{t('calculator.enable')}</span>
           </label>
         </div>
 
         {/* Email template */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Šablona emailu</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('emailTemplate.heading')}</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Použijte proměnné: {'{{invoiceNumber}}'}, {'{{total}}'}, {'{{dueDate}}'}, {'{{clientName}}'}, {'{{senderName}}'}
+            {t('emailTemplate.variablesHelp')}
           </p>
           <textarea
             name="emailTemplate"
@@ -499,23 +501,14 @@ export default function Settings() {
             onChange={handleChange}
             className="input"
             rows={6}
-            placeholder={`Dobrý den,
-
-v příloze Vám zasílám fakturu č. {{invoiceNumber}} na částku {{total}}.
-
-Datum splatnosti: {{dueDate}}
-
-Děkuji za spolupráci.
-
-S pozdravem,
-{{senderName}}`}
+            placeholder={t('emailTemplate.placeholder')}
           />
         </div>
 
         {/* Submit */}
         <div className="flex justify-end">
           <button type="submit" disabled={saving} className="btn btn-primary">
-            {saving ? 'Ukládám...' : 'Uložit nastavení'}
+            {saving ? t('actions.saving') : t('actions.save')}
           </button>
         </div>
       </form>

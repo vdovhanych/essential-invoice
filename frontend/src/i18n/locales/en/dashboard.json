@@ -1,0 +1,36 @@
+{
+  "title": "Dashboard",
+  "newInvoice": "New invoice",
+  "loadError": "Failed to load data",
+  "stats": {
+    "outstanding": "Outstanding",
+    "outstandingDescription": "{{count}} invoices awaiting payment",
+    "paidThisMonth": "Paid this month",
+    "paidThisMonthDescription": "{{count}} paid invoices total",
+    "overdue": "Overdue",
+    "overdueDescription": "Invoices past due date",
+    "totalPaid": "Total paid",
+    "totalPaidDescription": "All time"
+  },
+  "unmatchedPayments": {
+    "message": "You have {{count}} unmatched payments",
+    "link": "View payments"
+  },
+  "chart": {
+    "totalRevenue": "Total revenue",
+    "income": "Income",
+    "expenses": "Expenses",
+    "noData": "No data yet"
+  },
+  "pausalniDan": {
+    "label": "Flat-rate tax (tier {{tier}})",
+    "remaining": "{{amount}} remaining",
+    "limitExceeded": "Limit exceeded – risk of exclusion from the regime",
+    "approachingLimit": "Approaching the limit"
+  },
+  "recentInvoices": {
+    "title": "Recent invoices",
+    "viewAll": "View all",
+    "empty": "No invoices yet"
+  }
+}

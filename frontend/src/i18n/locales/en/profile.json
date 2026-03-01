@@ -1,0 +1,111 @@
+{
+  "title": "My Profile",
+
+  "language": {
+    "label": "Jazyk / Language",
+    "cs": "Čeština",
+    "en": "English"
+  },
+
+  "personal": {
+    "heading": "Personal Information",
+    "name": "Name *",
+    "email": "Email",
+    "emailReadonly": "Email cannot be changed"
+  },
+
+  "company": {
+    "heading": "Company Details",
+    "description": "This information will appear on your invoices.",
+    "companyName": "Company name",
+    "ico": "Company ID (ICO)",
+    "dic": "Tax ID (DIC)",
+    "dicNotRequired": "Tax ID is not required for non-VAT payers",
+    "vatPayer": "I am a VAT payer",
+    "vatPayerHelp": "If you are not a VAT payer, invoices will show \"Non-VAT payer\" instead of Tax ID",
+    "address": "Address",
+    "bankAccount": "Bank account number",
+    "bankAccountPlaceholder": "1234567890",
+    "bankCode": "Bank code",
+    "bankCodePlaceholder": "0100"
+  },
+
+  "pausalniDan": {
+    "heading": "Flat-rate Tax (Pausalni dan)",
+    "description": "Track how much you can still invoice within the flat-rate tax limit. The limit depends on the tier and type of income (expense lump sum).",
+    "enable": "I use flat-rate tax",
+    "tierLabel": "Flat-rate tax tier",
+    "tier1": "Tier 1 (9,984 CZK/month)",
+    "tier2": "Tier 2 (16,745 CZK/month)",
+    "tier3": "Tier 3 (27,139 CZK/month)",
+    "tierHelp": "Monthly payment includes income tax, social security, and health insurance.",
+    "limitLabel": "Income limit",
+    "limit1m": "1,000,000 CZK (basic)",
+    "limit1_5m_60_80": "1,500,000 CZK (75% self-employed, lump sum 60%/80%)",
+    "limit2m_80": "2,000,000 CZK (75% self-employed, lump sum 80%)",
+    "limit1_5m_basic": "1,500,000 CZK (basic)",
+    "limit2m_pausal": "2,000,000 CZK (75% self-employed with lump sum)",
+    "limit2m": "2,000,000 CZK",
+    "limitHelp": "Higher limits apply if at least 75% of income comes from self-employment with the applicable expense lump sum."
+  },
+
+  "logo": {
+    "heading": "Company Logo",
+    "description": "The logo will appear on your invoices instead of company details in the header. Supported formats: PNG, JPG, SVG. Max size: 2 MB.",
+    "altText": "Company logo",
+    "noLogo": "No logo",
+    "uploading": "Uploading...",
+    "changeLogo": "Change logo",
+    "uploadLogo": "Upload logo",
+    "deleteLogo": "Delete",
+    "recommendedSize": "Recommended size: 200x80 pixels",
+    "allowedTypes": "Only PNG, JPG, and SVG files are allowed",
+    "maxSize": "Maximum file size is 2 MB",
+    "deleteConfirm": "Are you sure you want to delete the logo?"
+  },
+
+  "password": {
+    "heading": "Change Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "changing": "Changing password...",
+    "change": "Change password"
+  },
+
+  "dangerZone": {
+    "heading": "Danger Zone",
+    "description": "Deleting your account is irreversible. All your data (invoices, clients, expenses, payments, settings) will be permanently removed.",
+    "deleteAccount": "Delete account",
+    "deleteModalTitle": "Are you sure you want to delete your account?",
+    "deleteModalDescription": "This action is irreversible. All your data will be permanently deleted, including:",
+    "deleteModalInvoices": "Invoices and their items",
+    "deleteModalClients": "Clients",
+    "deleteModalExpenses": "Expenses",
+    "deleteModalPayments": "Payments",
+    "deleteModalSettings": "Settings and logo",
+    "deleteModalPasswordLabel": "Enter your password to confirm",
+    "deleteModalCancel": "Cancel",
+    "deleteModalDeleting": "Deleting account...",
+    "deleteModalConfirm": "Permanently delete account"
+  },
+
+  "toast": {
+    "profileUpdated": "Profile updated successfully",
+    "profileUpdateFailed": "Failed to update profile",
+    "passwordChanged": "Password changed successfully",
+    "passwordChangeFailed": "Failed to change password",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "logoUploaded": "Logo uploaded successfully",
+    "logoUploadFailed": "Failed to upload logo",
+    "logoDeleted": "Logo deleted successfully",
+    "logoDeleteFailed": "Failed to delete logo",
+    "accountDeleteFailed": "Failed to delete account"
+  },
+
+  "actions": {
+    "saving": "Saving...",
+    "save": "Save changes"
+  }
+}

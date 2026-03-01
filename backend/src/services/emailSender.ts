@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import { query } from '../db/init';
 import { generateInvoicePDF } from './pdfGenerator';
 import { decrypt } from '../utils/encryption';
+import { t, formatDateLocale, formatCurrencyLocale } from '../i18n/translations';
 
 interface SendResult {
   success: boolean;
@@ -28,6 +29,11 @@ export async function sendInvoiceEmail(
     }
 
     const settings = settingsResult.rows[0];
+
+    // Get user language
+    const userResult = await query('SELECT language FROM users WHERE id = $1', [userId]);
+    const language = userResult.rows[0]?.language || 'cs';
+    const tr = t(language).email;
 
     // Get invoice details
     const invoiceResult = await query(
@@ -59,35 +65,15 @@ export async function sendInvoiceEmail(
     });
 
     // Build email content
-    const formatCurrency = (amount: number, currency: string) => {
-      if (currency === 'CZK') {
-        return `${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })} Kč`;
-      }
-      return `€${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })}`;
-    };
-
-    const formatDate = (date: Date) => new Date(date).toLocaleDateString('cs-CZ');
-
-    const defaultTemplate = `Dobrý den,
-
-v příloze Vám zasílám fakturu č. {{invoiceNumber}} na částku {{total}}.
-
-Datum splatnosti: {{dueDate}}
-
-Děkuji za spolupráci.
-
-S pozdravem,
-{{senderName}}`;
-
-    const template = customMessage || settings.email_template || defaultTemplate;
+    const template = customMessage || settings.email_template || tr.defaultTemplate;
     const emailBody = template
       .replace(/\{\{invoiceNumber\}\}/g, invoice.invoice_number)
-      .replace(/\{\{total\}\}/g, formatCurrency(parseFloat(invoice.total), invoice.currency))
-      .replace(/\{\{dueDate\}\}/g, formatDate(invoice.due_date))
+      .replace(/\{\{total\}\}/g, formatCurrencyLocale(parseFloat(invoice.total), invoice.currency, language))
+      .replace(/\{\{dueDate\}\}/g, formatDateLocale(invoice.due_date, language))
       .replace(/\{\{clientName\}\}/g, invoice.client_name)
-      .replace(/\{\{senderName\}\}/g, settings.smtp_from_name || 'Dodavatel');
+      .replace(/\{\{senderName\}\}/g, settings.smtp_from_name || tr.supplierFallback);
 
-    const subject = `Faktura č. ${invoice.invoice_number}`;
+    const subject = tr.invoiceSubject.replace('{{number}}', invoice.invoice_number);
     const sentTo: string[] = [];
 
     // Send to primary email

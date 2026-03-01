@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
 import { Plus, Repeat, Play, Pause, Trash2 } from 'lucide-react';
@@ -23,6 +24,7 @@ interface RecurringInvoice {
 }
 
 export default function RecurringInvoices() {
+  const { t } = useTranslation('invoices');
   const [templates, setTemplates] = useState<RecurringInvoice[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +53,7 @@ export default function RecurringInvoices() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Opravdu chcete smazat tuto opakovanou fakturu?')) return;
+    if (!confirm(t('recurring.list.confirmDelete'))) return;
     try {
       await api.delete(`/recurring-invoices/${id}`);
       loadTemplates();
@@ -75,13 +77,13 @@ export default function RecurringInvoices() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Kontakt</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Částka</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Den v měsíci</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Další generování</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Auto-odeslání</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Stav</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Akce</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnContact')}</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnAmount')}</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnDayOfMonth')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnNextGeneration')}</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnAutoSend')}</th>
+                <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnStatus')}</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnActions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -104,16 +106,16 @@ export default function RecurringInvoices() {
                   </td>
                   <td className="py-3 px-4 text-center">
                     {template.autoSend ? (
-                      <span className="badge bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">Ano</span>
+                      <span className="badge bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">{t('recurring.list.autoSendYes')}</span>
                     ) : (
-                      <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">Ne</span>
+                      <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">{t('recurring.list.autoSendNo')}</span>
                     )}
                   </td>
                   <td className="py-3 px-4 text-center">
                     {template.active ? (
-                      <span className="badge bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">Aktivní</span>
+                      <span className="badge bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">{t('recurring.list.statusActive')}</span>
                     ) : (
-                      <span className="badge bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">Pozastaveno</span>
+                      <span className="badge bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">{t('recurring.list.statusPaused')}</span>
                     )}
                   </td>
                   <td className="py-3 px-4 text-right">
@@ -121,14 +123,14 @@ export default function RecurringInvoices() {
                       <button
                         onClick={() => handleToggle(template.id)}
                         className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
-                        title={template.active ? 'Pozastavit' : 'Aktivovat'}
+                        title={template.active ? t('recurring.list.togglePause') : t('recurring.list.toggleActivate')}
                       >
                         {template.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                       </button>
                       <button
                         onClick={() => handleDelete(template.id)}
                         className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
-                        title="Smazat"
+                        title={t('recurring.list.delete')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -142,10 +144,10 @@ export default function RecurringInvoices() {
       ) : (
         <div className="text-center py-12">
           <Repeat className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">Žádné opakované faktury</p>
+          <p className="text-gray-500 dark:text-gray-400">{t('recurring.list.emptyState')}</p>
           <Link to="/recurring/new" className="btn btn-primary mt-4 inline-flex items-center space-x-2">
             <Plus className="h-4 w-4" />
-            <span>Vytvořit opakovanou fakturu</span>
+            <span>{t('recurring.list.createFirst')}</span>
           </Link>
         </div>
       )}

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { formatCurrency as formatCurrencyLocale } from '../utils/format';
 
 interface Client {
   id: string;
@@ -22,6 +24,7 @@ interface InvoiceItem {
 }
 
 export default function InvoiceCreate() {
+  const { t } = useTranslation('invoices');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -149,12 +152,12 @@ export default function InvoiceCreate() {
 
     // Validation
     if (!formData.clientId) {
-      toast.error('Vyberte kontakt');
+      toast.error(t('create.validationSelectContact'));
       return;
     }
 
     if (items.some(item => !item.description || item.unitPrice <= 0)) {
-      toast.error('Vyplňte všechny položky');
+      toast.error(t('create.validationFillItems'));
       return;
     }
 
@@ -180,7 +183,7 @@ export default function InvoiceCreate() {
       navigate('/invoices');
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Nepodařilo se uložit fakturu');
+      toast.error(error.message || t('create.saveError'));
     } finally {
       setSaving(false);
     }
@@ -195,8 +198,7 @@ export default function InvoiceCreate() {
   }
 
   const formatCurrency = (amount: number) => {
-    const symbol = formData.currency === 'CZK' ? 'Kč' : 'EUR';
-    return `${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${symbol}`;
+    return formatCurrencyLocale(amount, formData.currency);
   };
 
   return (
@@ -209,16 +211,16 @@ export default function InvoiceCreate() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {isEdit ? 'Upravit fakturu' : 'Nová faktura'}
+          {isEdit ? t('create.titleEdit') : t('create.title')}
         </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Client selection */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Kontakt</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.contactSection')}</h2>
           <div>
-            <label htmlFor="clientId" className="label">Vyberte kontakt *</label>
+            <label htmlFor="clientId" className="label">{t('create.selectContact')}</label>
             <select
               id="clientId"
               name="clientId"
@@ -227,7 +229,7 @@ export default function InvoiceCreate() {
               className="input"
               required
             >
-              <option value="">-- Vyberte kontakt --</option>
+              <option value="">{t('create.selectContactPlaceholder')}</option>
               {clients.map(client => (
                 <option key={client.id} value={client.id}>
                   {client.companyName} ({client.primaryEmail})
@@ -236,8 +238,8 @@ export default function InvoiceCreate() {
             </select>
             {clients.length === 0 && (
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Zatím nemáte žádné kontakty.{' '}
-                <a href="/clients" className="text-blue-600 hover:underline">Přidat kontakt</a>
+                {t('create.noContacts')}{' '}
+                <a href="/clients" className="text-blue-600 hover:underline">{t('create.addContact')}</a>
               </p>
             )}
           </div>
@@ -245,10 +247,10 @@ export default function InvoiceCreate() {
 
         {/* Invoice details */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Údaje faktury</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.detailsSection')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label htmlFor="issueDate" className="label">Datum vystavení *</label>
+              <label htmlFor="issueDate" className="label">{t('create.issueDate')}</label>
               <input
                 type="date"
                 id="issueDate"
@@ -260,7 +262,7 @@ export default function InvoiceCreate() {
               />
             </div>
             <div>
-              <label htmlFor="dueDate" className="label">Datum splatnosti *</label>
+              <label htmlFor="dueDate" className="label">{t('create.dueDate')}</label>
               <input
                 type="date"
                 id="dueDate"
@@ -272,7 +274,7 @@ export default function InvoiceCreate() {
               />
             </div>
             <div>
-              <label htmlFor="currency" className="label">Měna</label>
+              <label htmlFor="currency" className="label">{t('create.currency')}</label>
               <select
                 id="currency"
                 name="currency"
@@ -290,14 +292,14 @@ export default function InvoiceCreate() {
         {/* Items */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Položky</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('create.itemsSection')}</h2>
             <button
               type="button"
               onClick={addItem}
               className="btn btn-secondary flex items-center space-x-2"
             >
               <Plus className="h-4 w-4" />
-              <span>Přidat položku</span>
+              <span>{t('create.addItem')}</span>
             </button>
           </div>
 
@@ -305,19 +307,19 @@ export default function InvoiceCreate() {
             {items.map((item, index) => (
               <div key={index} className="grid grid-cols-12 gap-4 items-end">
                 <div className="col-span-12 md:col-span-5">
-                  <label className="label">Popis * <span className="text-gray-400 dark:text-gray-500 font-normal">({item.description.length}/150)</span></label>
+                  <label className="label">{t('create.itemDescription')} <span className="text-gray-400 dark:text-gray-500 font-normal">({item.description.length}/150)</span></label>
                   <input
                     type="text"
                     value={item.description}
                     onChange={(e) => handleItemChange(index, 'description', e.target.value)}
                     className="input"
-                    placeholder="Popis položky"
+                    placeholder={t('create.itemDescriptionPlaceholder')}
                     maxLength={150}
                     required
                   />
                 </div>
                 <div className="col-span-4 md:col-span-2">
-                  <label className="label">Množství</label>
+                  <label className="label">{t('create.itemQuantity')}</label>
                   <input
                     type="number"
                     value={item.quantity}
@@ -329,17 +331,17 @@ export default function InvoiceCreate() {
                   />
                 </div>
                 <div className="col-span-4 md:col-span-1">
-                  <label className="label">Jednotka</label>
+                  <label className="label">{t('create.itemUnit')}</label>
                   <input
                     type="text"
                     value={item.unit}
                     onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
                     className="input"
-                    placeholder="ks"
+                    placeholder={t('create.itemUnitPlaceholder')}
                   />
                 </div>
                 <div className="col-span-4 md:col-span-3">
-                  <label className="label">Cena za jednotku *</label>
+                  <label className="label">{t('create.itemUnitPrice')}</label>
                   <input
                     type="number"
                     value={item.unitPrice}
@@ -368,12 +370,12 @@ export default function InvoiceCreate() {
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <div className="flex flex-col items-end space-y-2">
               <div className="flex justify-between w-full max-w-xs">
-                <span className="text-gray-600 dark:text-gray-300">Základ daně:</span>
+                <span className="text-gray-600 dark:text-gray-300">{t('create.subtotal')}</span>
                 <span className="font-medium">{formatCurrency(calculateSubtotal())}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs items-center">
                 <div className="flex items-center space-x-2">
-                  <span className="text-gray-600 dark:text-gray-300">DPH:</span>
+                  <span className="text-gray-600 dark:text-gray-300">{t('create.vat')}</span>
                   <select
                     name="vatRate"
                     value={formData.vatRate}
@@ -388,7 +390,7 @@ export default function InvoiceCreate() {
                 <span className="font-medium">{formatCurrency(calculateVat())}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs text-lg">
-                <span className="font-bold">Celkem:</span>
+                <span className="font-bold">{t('create.total')}</span>
                 <span className="font-bold text-blue-600">{formatCurrency(calculateTotal())}</span>
               </div>
             </div>
@@ -397,7 +399,7 @@ export default function InvoiceCreate() {
 
         {/* Notes */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Poznámky</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.notesSection')}</h2>
           <textarea
             name="notes"
             value={formData.notes}
@@ -405,10 +407,10 @@ export default function InvoiceCreate() {
             className="input"
             rows={3}
             maxLength={300}
-            placeholder="Volitelné poznámky k faktuře..."
+            placeholder={t('create.notesPlaceholder')}
           />
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {formData.notes.length}/300 znaků
+            {t('create.notesCharCount', { count: formData.notes.length })}
           </p>
         </div>
 
@@ -419,14 +421,14 @@ export default function InvoiceCreate() {
             onClick={() => navigate('/invoices')}
             className="btn btn-secondary"
           >
-            Zrušit
+            {t('create.cancel')}
           </button>
           <button
             type="submit"
             disabled={saving}
             className="btn btn-primary"
           >
-            {saving ? 'Ukládám...' : (isEdit ? 'Uložit změny' : 'Vytvořit fakturu')}
+            {saving ? t('create.saving') : (isEdit ? t('create.saveChanges') : t('create.createInvoice'))}
           </button>
         </div>
       </form>

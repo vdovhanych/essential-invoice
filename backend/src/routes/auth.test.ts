@@ -181,12 +181,13 @@ describe('Auth Routes', () => {
       expect(sql).not.toContain('company_name');
       expect(sql).not.toContain('company_ico');
 
-      // Verify the parameters array has exactly 3 items (email, passwordHash, name)
+      // Verify the parameters array has exactly 4 items (email, passwordHash, name, language)
       const params = insertCall[1] as any[];
-      expect(params).toHaveLength(3);
+      expect(params).toHaveLength(4);
       expect(params[0]).toBe('new@example.com');
       // params[1] is the bcrypt hash
       expect(params[2]).toBe('New User');
+      expect(params[3]).toBe('cs'); // default language
     });
   });
 
@@ -520,7 +521,7 @@ describe('Auth Routes', () => {
         });
 
       expect(response.status).toBe(201);
-      expect(mockedSendWelcomeEmail).toHaveBeenCalledWith('new@example.com', 'New User');
+      expect(mockedSendWelcomeEmail).toHaveBeenCalledWith('new@example.com', 'New User', 'cs');
     });
 
     it('should still register successfully when global SMTP is not configured', async () => {
@@ -643,7 +644,7 @@ describe('Auth Routes', () => {
       mockedIsGlobalSmtpConfigured.mockReturnValue(true);
       // User lookup
       mockedQuery.mockResolvedValueOnce({
-        rows: [{ id: 'user-id', name: 'Test User', email: 'test@example.com' }]
+        rows: [{ id: 'user-id', name: 'Test User', email: 'test@example.com', language: 'cs' }]
       } as any);
       // Invalidate existing tokens
       mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
@@ -658,7 +659,8 @@ describe('Auth Routes', () => {
       expect(mockedSendPasswordResetEmail).toHaveBeenCalledWith(
         'test@example.com',
         'Test User',
-        expect.any(String)
+        expect.any(String),
+        'cs'
       );
     });
 
@@ -699,7 +701,7 @@ describe('Auth Routes', () => {
         .send({ token: 'invalid-token', password: 'newpassword123' });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('Neplatný');
+      expect(response.body.error).toBe('RESET_LINK_INVALID');
     });
 
     it('should return 400 for already-used token', async () => {
@@ -717,7 +719,7 @@ describe('Auth Routes', () => {
         .send({ token: 'used-token', password: 'newpassword123' });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('již byl použit');
+      expect(response.body.error).toBe('RESET_LINK_USED');
     });
 
     it('should return 400 for expired token', async () => {
@@ -735,7 +737,7 @@ describe('Auth Routes', () => {
         .send({ token: 'expired-token', password: 'newpassword123' });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('vypršela');
+      expect(response.body.error).toBe('RESET_LINK_EXPIRED');
     });
 
     it('should reset password successfully with valid token', async () => {
@@ -760,7 +762,7 @@ describe('Auth Routes', () => {
         .send({ token: 'valid-token', password: 'newpassword123' });
 
       expect(response.status).toBe(200);
-      expect(response.body.message).toContain('úspěšně');
+      expect(response.body.message).toBe('PASSWORD_RESET_SUCCESS');
 
       // Verify password was updated
       const updateCall = mockedQuery.mock.calls[1];

@@ -4,9 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { FileText } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
+import { useTranslation } from 'react-i18next';
 
 export default function Register() {
   const { register } = useAuth();
+  const { t, i18n } = useTranslation('auth');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,22 +24,22 @@ export default function Register() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Hesla se neshodují');
+      toast.error(t('register.errorPasswordMismatch'));
       return;
     }
 
     if (formData.password.length < 8) {
-      toast.error('Heslo musí mít alespoň 8 znaků');
+      toast.error(t('register.errorPasswordLength'));
       return;
     }
 
     setLoading(true);
 
     try {
-      await register({ email: formData.email, password: formData.password, name: formData.name });
+      await register({ email: formData.email, password: formData.password, name: formData.name, language: i18n.language });
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Registrace selhala');
+      toast.error(t(`common:errors.${error.message}`, { defaultValue: error.message }) || t('register.errorDefault'));
     } finally {
       setLoading(false);
     }
@@ -52,14 +54,14 @@ export default function Register() {
             <FileText className="h-12 w-12 text-blue-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">Vytvořte si účet</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">{t('register.subtitle')}</p>
         </div>
 
         <div className="card">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label htmlFor="name" className="label">Jméno *</label>
+                <label htmlFor="name" className="label">{t('register.nameLabel')}</label>
                 <input
                   type="text"
                   id="name"
@@ -72,7 +74,7 @@ export default function Register() {
               </div>
 
               <div className="md:col-span-2">
-                <label htmlFor="email" className="label">Email *</label>
+                <label htmlFor="email" className="label">{t('register.emailLabel')}</label>
                 <input
                   type="email"
                   id="email"
@@ -85,7 +87,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="password" className="label">Heslo *</label>
+                <label htmlFor="password" className="label">{t('register.passwordLabel')}</label>
                 <input
                   type="password"
                   id="password"
@@ -99,7 +101,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="label">Potvrzení hesla *</label>
+                <label htmlFor="confirmPassword" className="label">{t('register.confirmPasswordLabel')}</label>
                 <input
                   type="password"
                   id="confirmPassword"
@@ -117,14 +119,14 @@ export default function Register() {
               disabled={loading}
               className="btn btn-primary w-full mt-6"
             >
-              {loading ? 'Registruji...' : 'Registrovat se'}
+              {loading ? t('register.submittingButton') : t('register.submitButton')}
             </button>
           </form>
 
           <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
-            Již máte účet?{' '}
+            {t('register.hasAccountText')}{' '}
             <Link to="/login" className="text-blue-600 hover:underline">
-              Přihlásit se
+              {t('register.loginLink')}
             </Link>
           </p>
         </div>

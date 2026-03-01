@@ -1,0 +1,82 @@
+{
+  "title": "Settings",
+
+  "smtp": {
+    "heading": "Email Sending (SMTP)",
+    "server": "SMTP server",
+    "port": "Port",
+    "user": "Username",
+    "password": "Password",
+    "passwordSet": "(set)",
+    "fromEmail": "Sender email",
+    "fromEmailPlaceholder": "invoices@example.com",
+    "fromName": "Sender name",
+    "fromNamePlaceholder": "My Company Ltd.",
+    "useTls": "Use TLS/SSL",
+    "testing": "Testing...",
+    "testConnection": "Test connection",
+    "testSuccess": "SMTP connection is working",
+    "testFailed": "SMTP test failed",
+    "serverPlaceholder": "smtp.example.com"
+  },
+
+  "imap": {
+    "heading": "Email Receiving (IMAP)",
+    "description": "Set up IMAP for automatic loading of bank payment notifications.",
+    "server": "IMAP server",
+    "port": "Port",
+    "user": "Username",
+    "password": "Password",
+    "passwordSet": "(set)",
+    "bankNotificationEmail": "Bank notification email (optional)",
+    "bankNotificationEmailPlaceholder": "noreply@airbank.cz",
+    "bankNotificationEmailHelp": "If provided, only emails from this address will be loaded",
+    "useTls": "Use TLS",
+    "testing": "Testing...",
+    "testConnection": "Test connection",
+    "testSuccess": "IMAP connection is working",
+    "testFailed": "IMAP test failed",
+    "serverPlaceholder": "imap.example.com"
+  },
+
+  "ai": {
+    "heading": "AI Features (Perplexity)",
+    "description": "Enable AI assistant for Czech tax advisory, intelligent payment matching, and other features.",
+    "enableAi": "Enable AI features",
+    "apiKeyLabel": "Perplexity API key",
+    "apiKeySet": "(set)",
+    "apiKeyPlaceholder": "pplx-xxxxxxxxxxxxxxxxxxxx",
+    "apiKeyHelp": "Get your API key at",
+    "apiKeyLink": "perplexity.ai/settings/api"
+  },
+
+  "invoiceDefaults": {
+    "heading": "Invoice Defaults",
+    "vatRate": "Default VAT rate (%)",
+    "paymentTerms": "Default payment terms (days)",
+    "invoiceNumberPrefix": "Invoice number prefix",
+    "invoiceNumberPrefixPlaceholder": "e.g. FV, INV"
+  },
+
+  "calculator": {
+    "heading": "Calculator",
+    "description": "Enable calculator for computing invoiced amount based on hourly rate and KPI bonus.",
+    "enable": "Enable calculator"
+  },
+
+  "emailTemplate": {
+    "heading": "Email Template",
+    "variablesHelp": "Use variables: {{invoiceNumber}}, {{total}}, {{dueDate}}, {{clientName}}, {{senderName}}",
+    "placeholder": "Hello,\n\nPlease find attached invoice #{{invoiceNumber}} for {{total}}.\n\nDue date: {{dueDate}}\n\nThank you for your cooperation.\n\nBest regards,\n{{senderName}}"
+  },
+
+  "toast": {
+    "saveSuccess": "Settings saved successfully",
+    "saveFailed": "Failed to save settings"
+  },
+
+  "actions": {
+    "saving": "Saving...",
+    "save": "Save settings"
+  }
+}

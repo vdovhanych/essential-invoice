@@ -1,0 +1,84 @@
+{
+  "list": {
+    "title": "Contacts",
+    "newClient": "New contact",
+    "searchPlaceholder": "Search contacts...",
+    "invoiceCount": "{{count}} invoices",
+    "contactLabel": "Contact: {{name}}",
+    "empty": "No contacts found",
+    "addFirst": "Add first contact",
+    "toast": {
+      "created": "Contact created",
+      "updated": "Contact updated",
+      "deleted": "Contact deleted",
+      "deleteFailed": "Failed to delete contact",
+      "operationFailed": "Operation failed"
+    },
+    "confirm": {
+      "delete": "Are you sure you want to delete contact \"{{name}}\"?"
+    }
+  },
+  "modal": {
+    "titleNew": "New contact",
+    "titleEdit": "Edit contact",
+    "fields": {
+      "ico": "Reg. No.",
+      "icoPlaceholder": "12345678",
+      "companyName": "Company name *",
+      "primaryEmail": "Primary email *",
+      "secondaryEmail": "Secondary email",
+      "dic": "Tax ID",
+      "dicPlaceholder": "CZ12345678",
+      "address": "Address",
+      "contactPerson": "Contact person",
+      "phone": "Phone",
+      "notes": "Notes"
+    },
+    "ares": {
+      "loading": "Loading...",
+      "lookup": "Lookup in ARES",
+      "success": "Data loaded from ARES",
+      "failed": "Failed to load data from ARES",
+      "icoValidation": "Reg. No. must be 8 digits"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "saveChanges": "Save changes",
+      "createClient": "Create contact"
+    }
+  },
+  "detail": {
+    "notFound": "Contact not found",
+    "newInvoice": "New invoice",
+    "contactInfo": {
+      "title": "Contact details",
+      "primaryEmail": "Primary email",
+      "secondaryEmail": "Secondary email",
+      "contactPerson": "Contact person",
+      "phone": "Phone",
+      "address": "Address"
+    },
+    "taxInfo": {
+      "title": "Tax details",
+      "ico": "Reg. No.:",
+      "dic": "Tax ID:"
+    },
+    "notes": {
+      "title": "Notes"
+    },
+    "stats": {
+      "totalRevenue": "Total revenue",
+      "pendingAmount": "Pending"
+    },
+    "invoices": {
+      "title": "Invoice history",
+      "table": {
+        "number": "Number",
+        "date": "Date",
+        "amount": "Amount",
+        "status": "Status"
+      },
+      "empty": "No invoices for this contact"
+    }
+  }
+}

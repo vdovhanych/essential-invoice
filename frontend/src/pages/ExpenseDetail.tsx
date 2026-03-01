@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getExpenseStatusLabel, getExpenseStatusColor } from '../utils/format';
@@ -44,6 +45,7 @@ interface Expense {
 export default function ExpenseDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation('expenses');
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -65,30 +67,30 @@ export default function ExpenseDetail() {
   async function handleMarkPaid() {
     try {
       await api.post(`/expenses/${id}/mark-paid`);
-      toast.success('Náklad byl označen jako zaplacený');
+      toast.success(t('detail.toast.markedPaid'));
       loadExpense();
     } catch (error) {
-      toast.error('Nepodařilo se označit náklad jako zaplacený');
+      toast.error(t('detail.toast.markPaidFailed'));
     }
   }
 
   async function handleMarkUnpaid() {
     try {
       await api.post(`/expenses/${id}/mark-unpaid`);
-      toast.success('Náklad byl označen jako nezaplacený');
+      toast.success(t('detail.toast.markedUnpaid'));
       loadExpense();
     } catch (error) {
-      toast.error('Nepodařilo se označit náklad jako nezaplacený');
+      toast.error(t('detail.toast.markUnpaidFailed'));
     }
   }
 
   async function handleDelete() {
-    if (!confirm('Opravdu chcete smazat tento náklad? Tato akce je nevratná.')) return;
+    if (!confirm(t('detail.confirm.delete'))) return;
     try {
       await api.delete(`/expenses/${id}`);
       navigate('/expenses');
     } catch (error) {
-      toast.error('Nepodařilo se smazat náklad');
+      toast.error(t('detail.toast.deleteFailed'));
     }
   }
 
@@ -97,7 +99,7 @@ export default function ExpenseDetail() {
     try {
       await api.download(`/expenses/${id}/file`, expense.fileName);
     } catch (error) {
-      toast.error('Nepodařilo se stáhnout soubor');
+      toast.error(t('detail.toast.downloadFailed'));
     }
   }
 
@@ -110,7 +112,7 @@ export default function ExpenseDetail() {
   }
 
   if (!expense) {
-    return <div className="text-center text-gray-500 dark:text-gray-400">Náklad nenalezen</div>;
+    return <div className="text-center text-gray-500 dark:text-gray-400">{t('detail.notFound')}</div>;
   }
 
   return (
@@ -126,7 +128,7 @@ export default function ExpenseDetail() {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Náklad {expense.expenseNumber}
+              {t('detail.title', { number: expense.expenseNumber })}
             </h1>
             <span className={`badge ${getExpenseStatusColor(expense.status)}`}>
               {getExpenseStatusLabel(expense.status)}
@@ -138,18 +140,18 @@ export default function ExpenseDetail() {
             <>
               <Link to={`/expenses/${id}/edit`} className="btn btn-secondary flex items-center space-x-2">
                 <Edit className="h-4 w-4" />
-                <span>Upravit</span>
+                <span>{t('detail.actions.edit')}</span>
               </Link>
               <button onClick={handleMarkPaid} className="btn btn-success flex items-center space-x-2">
                 <CheckCircle className="h-4 w-4" />
-                <span>Zaplaceno</span>
+                <span>{t('detail.actions.markPaid')}</span>
               </button>
             </>
           )}
           {expense.status === 'paid' && (
             <button onClick={handleMarkUnpaid} className="btn btn-secondary flex items-center space-x-2">
               <XCircle className="h-4 w-4" />
-              <span>Označit jako nezaplacený</span>
+              <span>{t('detail.actions.markUnpaid')}</span>
             </button>
           )}
         </div>
@@ -161,31 +163,31 @@ export default function ExpenseDetail() {
           {/* Supplier info */}
           {expense.clientName && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Dodavatel</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.supplier.title')}</h2>
               <div className="space-y-2">
                 <p className="font-medium text-gray-900 dark:text-gray-100">{expense.clientName}</p>
                 {expense.clientAddress && <p className="text-gray-600 dark:text-gray-300">{expense.clientAddress}</p>}
-                {expense.clientIco && <p className="text-gray-600 dark:text-gray-300">IČO: {expense.clientIco}</p>}
-                {expense.clientDic && <p className="text-gray-600 dark:text-gray-300">DIČ: {expense.clientDic}</p>}
-                {expense.clientEmail && <p className="text-gray-600 dark:text-gray-300">Email: {expense.clientEmail}</p>}
+                {expense.clientIco && <p className="text-gray-600 dark:text-gray-300">{t('detail.supplier.ico', { value: expense.clientIco })}</p>}
+                {expense.clientDic && <p className="text-gray-600 dark:text-gray-300">{t('detail.supplier.dic', { value: expense.clientDic })}</p>}
+                {expense.clientEmail && <p className="text-gray-600 dark:text-gray-300">{t('detail.supplier.email', { value: expense.clientEmail })}</p>}
               </div>
             </div>
           )}
 
           {/* Amount */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Částka</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.amount.title')}</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">Základ daně:</span>
+                <span className="text-gray-600 dark:text-gray-300">{t('detail.amount.taxBase')}</span>
                 <span className="font-medium">{formatCurrency(expense.amount, expense.currency)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">DPH ({expense.vatRate}%):</span>
+                <span className="text-gray-600 dark:text-gray-300">{t('detail.amount.vat', { rate: expense.vatRate })}</span>
                 <span className="font-medium">{formatCurrency(expense.vatAmount, expense.currency)}</span>
               </div>
               <div className="flex justify-between text-lg border-t border-gray-200 dark:border-gray-700 pt-3">
-                <span className="font-bold">Celkem:</span>
+                <span className="font-bold">{t('detail.amount.total')}</span>
                 <span className="font-bold text-blue-600">{formatCurrency(expense.total, expense.currency)}</span>
               </div>
             </div>
@@ -194,7 +196,7 @@ export default function ExpenseDetail() {
           {/* Description */}
           {expense.description && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Popis</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.description.title')}</h2>
               <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{expense.description}</p>
             </div>
           )}
@@ -203,10 +205,10 @@ export default function ExpenseDetail() {
           {expense.fileData && expense.fileName && (
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Příloha</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('detail.attachment.title')}</h2>
                 <button onClick={handleDownloadFile} className="btn btn-secondary flex items-center space-x-2">
                   <Download className="h-4 w-4" />
-                  <span>Stáhnout</span>
+                  <span>{t('detail.attachment.download')}</span>
                 </button>
               </div>
               {expense.fileMimeType === 'application/pdf' ? (
@@ -216,7 +218,7 @@ export default function ExpenseDetail() {
                   className="w-full h-[500px] rounded border border-gray-200 dark:border-gray-700"
                 >
                   <p className="p-4 text-gray-500 dark:text-gray-400 text-center">
-                    Váš prohlížeč nepodporuje zobrazení PDF.
+                    {t('detail.attachment.pdfNotSupported')}
                   </p>
                 </object>
               ) : (
@@ -232,7 +234,7 @@ export default function ExpenseDetail() {
           {/* Notes */}
           {expense.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Poznámky</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.notes.title')}</h2>
               <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{expense.notes}</p>
             </div>
           )}
@@ -242,29 +244,29 @@ export default function ExpenseDetail() {
         <div className="space-y-6">
           {/* Details */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Údaje</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.info.title')}</h2>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">Číslo nákladu:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">{t('detail.info.expenseNumber')}</dt>
                 <dd className="font-medium">{expense.expenseNumber}</dd>
               </div>
               {expense.supplierInvoiceNumber && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">Číslo faktury:</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">{t('detail.info.invoiceNumber')}</dt>
                   <dd className="font-medium">{expense.supplierInvoiceNumber}</dd>
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">Datum přijetí:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">{t('detail.info.issueDate')}</dt>
                 <dd className="font-medium">{formatDate(expense.issueDate)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">Datum splatnosti:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">{t('detail.info.dueDate')}</dt>
                 <dd className="font-medium">{formatDate(expense.dueDate)}</dd>
               </div>
               {expense.paidAt && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">Zaplaceno:</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">{t('detail.info.paidAt')}</dt>
                   <dd className="font-medium">{formatDate(expense.paidAt)}</dd>
                 </div>
               )}
@@ -273,14 +275,14 @@ export default function ExpenseDetail() {
 
           {/* Actions */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Akce</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.actions.title')}</h2>
             <div className="space-y-2">
               <button
                 onClick={handleDelete}
                 className="btn btn-danger w-full flex items-center justify-center space-x-2"
               >
                 <Trash2 className="h-4 w-4" />
-                <span>Smazat náklad</span>
+                <span>{t('detail.actions.delete')}</span>
               </button>
             </div>
           </div>

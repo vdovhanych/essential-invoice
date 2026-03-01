@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getStatusLabel, getStatusColor } from '../utils/format';
 import { Plus, Search, Filter, FileText, Download } from 'lucide-react';
@@ -21,6 +22,7 @@ interface Invoice {
 }
 
 export default function Invoices() {
+  const { t } = useTranslation('invoices');
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') === 'recurring' ? 'recurring' : 'invoices';
 
@@ -74,13 +76,13 @@ export default function Invoices() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Faktury</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
         <Link
           to={activeTab === 'recurring' ? '/recurring/new' : '/invoices/new'}
           className="btn btn-primary flex items-center space-x-2"
         >
           <Plus className="h-4 w-4" />
-          <span>{activeTab === 'recurring' ? 'Nová opakovaná' : 'Nová faktura'}</span>
+          <span>{activeTab === 'recurring' ? t('newRecurring') : t('newInvoice')}</span>
         </Link>
       </div>
 
@@ -95,7 +97,7 @@ export default function Invoices() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300'
             }`}
           >
-            Faktury
+            {t('tabs.invoices')}
           </button>
           <button
             onClick={() => setTab('recurring')}
@@ -105,7 +107,7 @@ export default function Invoices() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300'
             }`}
           >
-            Opakované
+            {t('tabs.recurring')}
           </button>
         </nav>
       </div>
@@ -120,7 +122,7 @@ export default function Invoices() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Hledat faktury..."
+                placeholder={t('list.searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="input pl-10"
@@ -133,12 +135,12 @@ export default function Invoices() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="input w-auto"
               >
-                <option value="">Všechny stavy</option>
-                <option value="draft">Koncept</option>
-                <option value="sent">Odesláno</option>
-                <option value="paid">Zaplaceno</option>
-                <option value="overdue">Po splatnosti</option>
-                <option value="cancelled">Zrušeno</option>
+                <option value="">{t('list.allStatuses')}</option>
+                <option value="draft">{t('common:status.draft')}</option>
+                <option value="sent">{t('common:status.sent')}</option>
+                <option value="paid">{t('common:status.paid')}</option>
+                <option value="overdue">{t('common:status.overdue')}</option>
+                <option value="cancelled">{t('common:status.cancelled')}</option>
               </select>
             </div>
           </div>
@@ -155,13 +157,13 @@ export default function Invoices() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-700">
-                        <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Číslo</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Kontakt</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Datum vystavení</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Splatnost</th>
-                        <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Částka</th>
-                        <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Stav</th>
-                        <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Akce</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.columnNumber')}</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.columnContact')}</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.columnIssueDate')}</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.columnDueDate')}</th>
+                        <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.columnAmount')}</th>
+                        <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.columnStatus')}</th>
+                        <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.columnActions')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -197,7 +199,7 @@ export default function Invoices() {
                             <button
                               onClick={() => handleDownloadPDF(invoice.id, invoice.invoiceNumber)}
                               className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
-                              title="Stáhnout PDF"
+                              title={t('list.downloadPdf')}
                             >
                               <Download className="h-4 w-4" />
                             </button>
@@ -210,10 +212,10 @@ export default function Invoices() {
               ) : (
                 <div className="text-center py-12">
                   <FileText className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">Žádné faktury nenalezeny</p>
+                  <p className="text-gray-500 dark:text-gray-400">{t('list.emptyState')}</p>
                   <Link to="/invoices/new" className="btn btn-primary mt-4 inline-flex items-center space-x-2">
                     <Plus className="h-4 w-4" />
-                    <span>Vytvořit první fakturu</span>
+                    <span>{t('list.createFirst')}</span>
                   </Link>
                 </div>
               )}

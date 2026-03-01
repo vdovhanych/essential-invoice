@@ -6,6 +6,7 @@ import App from './App'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
 import { AIProvider } from './context/AIContext'
+import './i18n/i18n'
 import './index.css'
 
 function ToasterWithTheme() {

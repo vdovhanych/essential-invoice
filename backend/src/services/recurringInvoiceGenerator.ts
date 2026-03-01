@@ -68,7 +68,7 @@ export async function generateInvoiceFromRecurring(template: RecurringInvoiceRow
 
     // Get user's bank details for QR code
     const userResult = await query(
-      'SELECT bank_account, bank_code FROM users WHERE id = $1',
+      'SELECT bank_account, bank_code, language FROM users WHERE id = $1',
       [template.user_id]
     );
     const user = userResult.rows[0];
@@ -89,7 +89,7 @@ export async function generateInvoiceFromRecurring(template: RecurringInvoiceRow
             total,
             template.currency,
             variableSymbol,
-            `Faktura ${invoiceNumber}`
+            `${(user?.language === 'en' ? 'Invoice' : 'Faktura')} ${invoiceNumber}`
           );
         }
 

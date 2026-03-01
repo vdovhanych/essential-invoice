@@ -1,0 +1,54 @@
+{
+  "list": {
+    "title": "Bank payments",
+    "checkEmails": "Check emails",
+    "checkingEmails": "Checking...",
+    "checkEmailsTooltip": "Check for new payments from email",
+    "searchPlaceholder": "Search payments...",
+    "filters": {
+      "all": "All",
+      "unmatched": "Unmatched",
+      "matched": "Matched"
+    },
+    "table": {
+      "date": "Date",
+      "sender": "Sender",
+      "variableSymbol": "VS",
+      "amount": "Amount",
+      "invoice": "Invoice",
+      "actions": "Actions"
+    },
+    "matchButton": "Match",
+    "unmatchTooltip": "Unmatch",
+    "deleteTooltip": "Delete payment",
+    "empty": "No payments found",
+    "emptyHint": "Payments are automatically loaded from your email",
+    "toast": {
+      "matched": "Payment matched",
+      "matchFailed": "Failed to match payment",
+      "unmatched": "Payment unmatched",
+      "unmatchFailed": "Failed to unmatch payment",
+      "deleted": "Payment deleted",
+      "deleteFailed": "Failed to delete payment",
+      "checkSuccess": "Email check completed. If new payments were found, they will appear in the list.",
+      "checkFailed": "Failed to check emails. Please verify your IMAP settings."
+    },
+    "confirm": {
+      "unmatch": "Are you sure you want to unmatch this payment?",
+      "delete": "Are you sure you want to delete this payment? This action cannot be undone."
+    }
+  },
+  "matchModal": {
+    "title": "Match payment",
+    "paymentDetails": {
+      "amount": "Amount:",
+      "variableSymbol": "VS:",
+      "sender": "Sender:",
+      "date": "Date:"
+    },
+    "potentialMatches": "Potential matches",
+    "matchScore": "{{score}}% match",
+    "matchButton": "Match",
+    "noMatches": "No matching invoices found"
+  }
+}

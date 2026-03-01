@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
@@ -34,6 +35,7 @@ interface PotentialMatch {
 }
 
 export default function Payments() {
+  const { t } = useTranslation('payments');
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkingEmails, setCheckingEmails] = useState(false);
@@ -85,38 +87,38 @@ export default function Payments() {
 
     try {
       await api.post(`/payments/${selectedPayment.id}/match`, { invoiceId });
-      toast.success('Platba byla spárována');
+      toast.success(t('list.toast.matched'));
       setShowMatchModal(false);
       loadPayments();
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Nepodařilo se spárovat platbu');
+      toast.error(error.message || t('list.toast.matchFailed'));
     }
   }
 
   async function handleUnmatch(payment: Payment) {
-    if (!confirm('Opravdu chcete zrušit spárování této platby?')) return;
+    if (!confirm(t('list.confirm.unmatch'))) return;
 
     try {
       await api.post(`/payments/${payment.id}/unmatch`);
-      toast.success('Spárování bylo zrušeno');
+      toast.success(t('list.toast.unmatched'));
       loadPayments();
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Nepodařilo se zrušit spárování');
+      toast.error(error.message || t('list.toast.unmatchFailed'));
     }
   }
 
   async function handleDelete(payment: Payment) {
-    if (!confirm('Opravdu chcete smazat tuto platbu? Tuto akci nelze vrátit zpět.')) return;
+    if (!confirm(t('list.confirm.delete'))) return;
 
     try {
       await api.delete(`/payments/${payment.id}`);
-      toast.success('Platba byla smazána');
+      toast.success(t('list.toast.deleted'));
       loadPayments();
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Nepodařilo se smazat platbu');
+      toast.error(error.message || t('list.toast.deleteFailed'));
     }
   }
 
@@ -125,11 +127,11 @@ export default function Payments() {
 
     try {
       await api.post('/payments/check-emails');
-      toast.success('Kontrola emailů dokončena. Pokud byly nalezeny nové platby, zobrazí se v seznamu.');
+      toast.success(t('list.toast.checkSuccess'));
       loadPayments();
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Nepodařilo se zkontrolovat emaily. Zkontrolujte nastavení IMAP.');
+      toast.error(error.message || t('list.toast.checkFailed'));
     } finally {
       setCheckingEmails(false);
     }
@@ -152,15 +154,15 @@ export default function Payments() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Platby z banky</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('list.title')}</h1>
         <button
           onClick={checkForNewPayments}
           disabled={checkingEmails}
           className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          title="Zkontrolovat nové platby z emailu"
+          title={t('list.checkEmailsTooltip')}
         >
           <RefreshCw className={`w-5 h-5 ${checkingEmails ? 'animate-spin' : ''}`} />
-          <span>{checkingEmails ? 'Kontroluji...' : 'Zkontrolovat emaily'}</span>
+          <span>{checkingEmails ? t('list.checkingEmails') : t('list.checkEmails')}</span>
         </button>
       </div>
 
@@ -170,7 +172,7 @@ export default function Payments() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
-            placeholder="Hledat platby..."
+            placeholder={t('list.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input pl-10"
@@ -181,19 +183,19 @@ export default function Payments() {
             onClick={() => setFilter('all')}
             className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
           >
-            Všechny
+            {t('list.filters.all')}
           </button>
           <button
             onClick={() => setFilter('unmatched')}
             className={`btn ${filter === 'unmatched' ? 'btn-primary' : 'btn-secondary'}`}
           >
-            Nespárované
+            {t('list.filters.unmatched')}
           </button>
           <button
             onClick={() => setFilter('matched')}
             className={`btn ${filter === 'matched' ? 'btn-primary' : 'btn-secondary'}`}
           >
-            Spárované
+            {t('list.filters.matched')}
           </button>
         </div>
       </div>
@@ -205,12 +207,12 @@ export default function Payments() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Datum</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Odesílatel</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">VS</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Částka</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Faktura</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Akce</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.date')}</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.sender')}</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.variableSymbol')}</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.amount')}</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.invoice')}</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -251,7 +253,7 @@ export default function Payments() {
                         <button
                           onClick={() => handleUnmatch(payment)}
                           className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
-                          title="Zrušit spárování"
+                          title={t('list.unmatchTooltip')}
                         >
                           <Unlink className="h-4 w-4" />
                         </button>
@@ -261,12 +263,12 @@ export default function Payments() {
                             onClick={() => openMatchModal(payment)}
                             className="btn btn-secondary text-sm py-1 px-3"
                           >
-                            Spárovat
+                            {t('list.matchButton')}
                           </button>
                           <button
                             onClick={() => handleDelete(payment)}
                             className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
-                            title="Smazat platbu"
+                            title={t('list.deleteTooltip')}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -281,9 +283,9 @@ export default function Payments() {
         ) : (
           <div className="text-center py-12">
             <CreditCard className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">Žádné platby nenalezeny</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('list.empty')}</p>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-              Platby se automaticky načítají z vašeho emailu
+              {t('list.emptyHint')}
             </p>
           </div>
         )}
@@ -294,7 +296,7 @@ export default function Payments() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Spárovat platbu</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('matchModal.title')}</h2>
               <button onClick={() => setShowMatchModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                 <X className="h-5 w-5" />
               </button>
@@ -304,28 +306,28 @@ export default function Payments() {
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500 dark:text-gray-400">Částka:</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('matchModal.paymentDetails.amount')}</span>
                   <span className="ml-2 font-medium text-green-600">
                     {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500 dark:text-gray-400">VS:</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('matchModal.paymentDetails.variableSymbol')}</span>
                   <span className="ml-2 font-mono">{selectedPayment.variableSymbol || '-'}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500 dark:text-gray-400">Odesílatel:</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('matchModal.paymentDetails.sender')}</span>
                   <span className="ml-2">{selectedPayment.senderName || '-'}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500 dark:text-gray-400">Datum:</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('matchModal.paymentDetails.date')}</span>
                   <span className="ml-2">{formatDate(selectedPayment.transactionDate)}</span>
                 </div>
               </div>
             </div>
 
             {/* Potential matches */}
-            <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Možné shody</h3>
+            <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">{t('matchModal.potentialMatches')}</h3>
             {matchLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -345,26 +347,26 @@ export default function Payments() {
                           match.matchScore >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
                           'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                         }`}>
-                          {match.matchScore}% shoda
+                          {t('matchModal.matchScore', { score: match.matchScore })}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-300">{match.clientName}</p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        VS: {match.variableSymbol} | {formatDate(match.issueDate)} | {formatCurrency(match.total, match.currency)}
+                        {t('list.table.variableSymbol')}: {match.variableSymbol} | {formatDate(match.issueDate)} | {formatCurrency(match.total, match.currency)}
                       </p>
                     </div>
                     <button
                       onClick={() => handleMatch(match.id)}
                       className="btn btn-primary"
                     >
-                      Spárovat
+                      {t('matchModal.matchButton')}
                     </button>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                Nebyly nalezeny žádné odpovídající faktury
+                {t('matchModal.noMatches')}
               </div>
             )}
           </div>

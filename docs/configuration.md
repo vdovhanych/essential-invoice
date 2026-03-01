@@ -27,6 +27,18 @@ Copy `.env.example` to `.env` in the project root and configure:
 | `GLOBAL_SMTP_FROM_EMAIL` | - | Sender email for system emails |
 | `GLOBAL_SMTP_FROM_NAME` | `essentialInvoice` | Sender name for system emails |
 
+## Language / Localization
+
+The application supports Czech (`cs`, default) and English (`en`). Each user's language preference is stored in the `users.language` column and can be changed on the Profile page.
+
+The preference affects:
+- All frontend UI text (via react-i18next)
+- Generated PDF invoices (labels, footer text)
+- Email templates (invoice emails, welcome email, password reset)
+- Date and currency formatting
+
+The `GET /auth/me` endpoint returns the `language` field; `PUT /auth/me` accepts it to update the preference.
+
 ## SMTP Configuration (In-App)
 
 Configure per-user email sending in Settings > Email (SMTP):

@@ -1,0 +1,127 @@
+{
+  "list": {
+    "title": "Náklady",
+    "newExpense": "Nový náklad",
+    "searchPlaceholder": "Hledat náklady...",
+    "allStatuses": "Všechny stavy",
+    "unpaid": "Nezaplaceno",
+    "paid": "Zaplaceno",
+    "table": {
+      "number": "Číslo",
+      "supplier": "Dodavatel",
+      "invoiceNumber": "Číslo faktury",
+      "issueDate": "Datum přijetí",
+      "dueDate": "Splatnost",
+      "amount": "Částka",
+      "status": "Stav"
+    },
+    "empty": "Žádné náklady nenalezeny",
+    "addFirst": "Přidat první náklad"
+  },
+  "create": {
+    "titleNew": "Nový náklad",
+    "titleEdit": "Upravit náklad",
+    "supplier": {
+      "title": "Dodavatel",
+      "label": "Vyberte dodavatele",
+      "noSupplier": "-- Bez dodavatele --"
+    },
+    "details": {
+      "title": "Údaje nákladu",
+      "supplierInvoiceNumber": "Číslo faktury dodavatele",
+      "supplierInvoiceNumberPlaceholder": "FV-2026001",
+      "issueDate": "Datum přijetí *",
+      "dueDate": "Datum splatnosti *",
+      "currency": "Měna"
+    },
+    "amount": {
+      "title": "Částka",
+      "taxBase": "Základ daně *",
+      "vatRate": "Sazba DPH",
+      "taxBaseLabel": "Základ daně:",
+      "vatLabel": "DPH ({{rate}}%):",
+      "total": "Celkem:"
+    },
+    "attachment": {
+      "title": "Příloha",
+      "uploadPrompt": "Klikněte pro nahrání souboru (PDF, JPEG, PNG, max 5 MB)",
+      "allowedFormats": "Povolené formáty: PDF, JPEG, PNG",
+      "maxFileSize": "Maximální velikost souboru je 5 MB"
+    },
+    "description": {
+      "title": "Popis",
+      "placeholder": "Za co je náklad...",
+      "charCount": "{{count}}/300 znaků"
+    },
+    "notes": {
+      "title": "Poznámky",
+      "placeholder": "Doplňující poznámky...",
+      "charCount": "{{count}}/300 znaků"
+    },
+    "buttons": {
+      "cancel": "Zrušit",
+      "saving": "Ukládám...",
+      "saveChanges": "Uložit změny",
+      "createExpense": "Vytvořit náklad"
+    },
+    "validation": {
+      "enterAmount": "Zadejte částku"
+    },
+    "toast": {
+      "saveFailed": "Nepodařilo se uložit náklad"
+    }
+  },
+  "detail": {
+    "title": "Náklad {{number}}",
+    "notFound": "Náklad nenalezen",
+    "supplier": {
+      "title": "Dodavatel",
+      "ico": "IČO: {{value}}",
+      "dic": "DIČ: {{value}}",
+      "email": "Email: {{value}}"
+    },
+    "amount": {
+      "title": "Částka",
+      "taxBase": "Základ daně:",
+      "vat": "DPH ({{rate}}%):",
+      "total": "Celkem:"
+    },
+    "description": {
+      "title": "Popis"
+    },
+    "attachment": {
+      "title": "Příloha",
+      "download": "Stáhnout",
+      "pdfNotSupported": "Váš prohlížeč nepodporuje zobrazení PDF."
+    },
+    "notes": {
+      "title": "Poznámky"
+    },
+    "info": {
+      "title": "Údaje",
+      "expenseNumber": "Číslo nákladu:",
+      "invoiceNumber": "Číslo faktury:",
+      "issueDate": "Datum přijetí:",
+      "dueDate": "Datum splatnosti:",
+      "paidAt": "Zaplaceno:"
+    },
+    "actions": {
+      "title": "Akce",
+      "edit": "Upravit",
+      "markPaid": "Zaplaceno",
+      "markUnpaid": "Označit jako nezaplacený",
+      "delete": "Smazat náklad"
+    },
+    "confirm": {
+      "delete": "Opravdu chcete smazat tento náklad? Tato akce je nevratná."
+    },
+    "toast": {
+      "markedPaid": "Náklad byl označen jako zaplacený",
+      "markPaidFailed": "Nepodařilo se označit náklad jako zaplacený",
+      "markedUnpaid": "Náklad byl označen jako nezaplacený",
+      "markUnpaidFailed": "Nepodařilo se označit náklad jako nezaplacený",
+      "deleteFailed": "Nepodařilo se smazat náklad",
+      "downloadFailed": "Nepodařilo se stáhnout soubor"
+    }
+  }
+}

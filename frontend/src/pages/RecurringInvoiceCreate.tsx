@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
@@ -18,6 +19,7 @@ interface RecurringItem {
 }
 
 export default function RecurringInvoiceCreate() {
+  const { t } = useTranslation('invoices');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEdit = !!id;
@@ -128,12 +130,12 @@ export default function RecurringInvoiceCreate() {
     e.preventDefault();
 
     if (!formData.clientId) {
-      toast.error('Vyberte kontakt');
+      toast.error(t('recurring.create.validationSelectContact'));
       return;
     }
 
     if (items.some(item => !item.description || item.unitPrice <= 0)) {
-      toast.error('Vyplňte všechny položky');
+      toast.error(t('recurring.create.validationFillItems'));
       return;
     }
 
@@ -162,7 +164,7 @@ export default function RecurringInvoiceCreate() {
       navigate('/invoices?tab=recurring');
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Nepodařilo se uložit opakovanou fakturu');
+      toast.error(error.message || t('recurring.create.saveError'));
     } finally {
       setSaving(false);
     }
@@ -191,16 +193,16 @@ export default function RecurringInvoiceCreate() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {isEdit ? 'Upravit opakovanou fakturu' : 'Nová opakovaná faktura'}
+          {isEdit ? t('recurring.create.titleEdit') : t('recurring.create.title')}
         </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Client selection */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Kontakt</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.create.contactSection')}</h2>
           <div>
-            <label htmlFor="clientId" className="label">Vyberte kontakt *</label>
+            <label htmlFor="clientId" className="label">{t('recurring.create.selectContact')}</label>
             <select
               id="clientId"
               name="clientId"
@@ -209,7 +211,7 @@ export default function RecurringInvoiceCreate() {
               className="input"
               required
             >
-              <option value="">-- Vyberte kontakt --</option>
+              <option value="">{t('recurring.create.selectContactPlaceholder')}</option>
               {clients.map(client => (
                 <option key={client.id} value={client.id}>
                   {client.companyName} ({client.primaryEmail})
@@ -221,10 +223,10 @@ export default function RecurringInvoiceCreate() {
 
         {/* Schedule */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Plán generování</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.create.scheduleSection')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label htmlFor="dayOfMonth" className="label">Den v měsíci *</label>
+              <label htmlFor="dayOfMonth" className="label">{t('recurring.create.dayOfMonth')}</label>
               <select
                 id="dayOfMonth"
                 name="dayOfMonth"
@@ -239,7 +241,7 @@ export default function RecurringInvoiceCreate() {
               </select>
             </div>
             <div>
-              <label htmlFor="startDate" className="label">Datum zahájení *</label>
+              <label htmlFor="startDate" className="label">{t('recurring.create.startDate')}</label>
               <input
                 type="date"
                 id="startDate"
@@ -251,7 +253,7 @@ export default function RecurringInvoiceCreate() {
               />
             </div>
             <div>
-              <label htmlFor="endDate" className="label">Datum ukončení</label>
+              <label htmlFor="endDate" className="label">{t('recurring.create.endDate')}</label>
               <input
                 type="date"
                 id="endDate"
@@ -259,11 +261,11 @@ export default function RecurringInvoiceCreate() {
                 value={formData.endDate}
                 onChange={handleChange}
                 className="input"
-                placeholder="Neomezeno"
+                placeholder={t('recurring.create.endDatePlaceholder')}
               />
             </div>
             <div>
-              <label htmlFor="paymentTerms" className="label">Splatnost (dny)</label>
+              <label htmlFor="paymentTerms" className="label">{t('recurring.create.paymentTerms')}</label>
               <input
                 type="number"
                 id="paymentTerms"
@@ -278,7 +280,7 @@ export default function RecurringInvoiceCreate() {
           </div>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="currency" className="label">Měna</label>
+              <label htmlFor="currency" className="label">{t('recurring.create.currency')}</label>
               <select
                 id="currency"
                 name="currency"
@@ -300,7 +302,7 @@ export default function RecurringInvoiceCreate() {
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
               />
               <label htmlFor="autoSend" className="text-sm text-gray-700 dark:text-gray-300">
-                Automaticky odeslat e-mailem po vygenerování
+                {t('recurring.create.autoSend')}
               </label>
             </div>
           </div>
@@ -309,14 +311,14 @@ export default function RecurringInvoiceCreate() {
         {/* Items */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Položky</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('recurring.create.itemsSection')}</h2>
             <button
               type="button"
               onClick={addItem}
               className="btn btn-secondary flex items-center space-x-2"
             >
               <Plus className="h-4 w-4" />
-              <span>Přidat položku</span>
+              <span>{t('recurring.create.addItem')}</span>
             </button>
           </div>
 
@@ -324,19 +326,19 @@ export default function RecurringInvoiceCreate() {
             {items.map((item, index) => (
               <div key={index} className="grid grid-cols-12 gap-4 items-end">
                 <div className="col-span-12 md:col-span-5">
-                  <label className="label">Popis * <span className="text-gray-400 dark:text-gray-500 font-normal">({item.description.length}/150)</span></label>
+                  <label className="label">{t('recurring.create.itemDescription')} <span className="text-gray-400 dark:text-gray-500 font-normal">({item.description.length}/150)</span></label>
                   <input
                     type="text"
                     value={item.description}
                     onChange={(e) => handleItemChange(index, 'description', e.target.value)}
                     className="input"
-                    placeholder="Popis položky"
+                    placeholder={t('recurring.create.itemDescriptionPlaceholder')}
                     maxLength={150}
                     required
                   />
                 </div>
                 <div className="col-span-4 md:col-span-2">
-                  <label className="label">Množství</label>
+                  <label className="label">{t('recurring.create.itemQuantity')}</label>
                   <input
                     type="number"
                     value={item.quantity}
@@ -348,17 +350,17 @@ export default function RecurringInvoiceCreate() {
                   />
                 </div>
                 <div className="col-span-4 md:col-span-1">
-                  <label className="label">Jednotka</label>
+                  <label className="label">{t('recurring.create.itemUnit')}</label>
                   <input
                     type="text"
                     value={item.unit}
                     onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
                     className="input"
-                    placeholder="ks"
+                    placeholder={t('recurring.create.itemUnitPlaceholder')}
                   />
                 </div>
                 <div className="col-span-4 md:col-span-3">
-                  <label className="label">Cena za jednotku *</label>
+                  <label className="label">{t('recurring.create.itemUnitPrice')}</label>
                   <input
                     type="number"
                     value={item.unitPrice}
@@ -387,12 +389,12 @@ export default function RecurringInvoiceCreate() {
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <div className="flex flex-col items-end space-y-2">
               <div className="flex justify-between w-full max-w-xs">
-                <span className="text-gray-600 dark:text-gray-300">Základ daně:</span>
+                <span className="text-gray-600 dark:text-gray-300">{t('recurring.create.subtotal')}</span>
                 <span className="font-medium">{formatCurrency(calculateSubtotal())}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs items-center">
                 <div className="flex items-center space-x-2">
-                  <span className="text-gray-600 dark:text-gray-300">DPH:</span>
+                  <span className="text-gray-600 dark:text-gray-300">{t('recurring.create.vat')}</span>
                   <select
                     name="vatRate"
                     value={formData.vatRate}
@@ -407,7 +409,7 @@ export default function RecurringInvoiceCreate() {
                 <span className="font-medium">{formatCurrency(calculateVat())}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs text-lg">
-                <span className="font-bold">Celkem:</span>
+                <span className="font-bold">{t('recurring.create.total')}</span>
                 <span className="font-bold text-blue-600">{formatCurrency(calculateTotal())}</span>
               </div>
             </div>
@@ -416,7 +418,7 @@ export default function RecurringInvoiceCreate() {
 
         {/* Notes */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Poznámky</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.create.notesSection')}</h2>
           <textarea
             name="notes"
             value={formData.notes}
@@ -424,10 +426,10 @@ export default function RecurringInvoiceCreate() {
             className="input"
             rows={3}
             maxLength={300}
-            placeholder="Volitelné poznámky k faktuře..."
+            placeholder={t('recurring.create.notesPlaceholder')}
           />
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {formData.notes.length}/300 znaků
+            {t('recurring.create.notesCharCount', { count: formData.notes.length })}
           </p>
         </div>
 
@@ -438,14 +440,14 @@ export default function RecurringInvoiceCreate() {
             onClick={() => navigate('/invoices?tab=recurring')}
             className="btn btn-secondary"
           >
-            Zrušit
+            {t('recurring.create.cancel')}
           </button>
           <button
             type="submit"
             disabled={saving}
             className="btn btn-primary"
           >
-            {saving ? 'Ukládám...' : (isEdit ? 'Uložit změny' : 'Vytvořit opakovanou fakturu')}
+            {saving ? t('recurring.create.saving') : (isEdit ? t('recurring.create.saveChanges') : t('recurring.create.createRecurring'))}
           </button>
         </div>
       </form>

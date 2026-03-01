@@ -1,34 +1,26 @@
-export function formatCurrency(amount: number, currency: string = 'CZK'): string {
-  if (currency === 'EUR') {
-    return new Intl.NumberFormat('cs-CZ', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount);
-  }
+import i18n from '../i18n/i18n';
 
-  return new Intl.NumberFormat('cs-CZ', {
+function getLocale(): string {
+  return i18n.language === 'en' ? 'en-US' : 'cs-CZ';
+}
+
+export function formatCurrency(amount: number, currency: string = 'CZK'): string {
+  return new Intl.NumberFormat(getLocale(), {
     style: 'currency',
-    currency: 'CZK',
+    currency,
   }).format(amount);
 }
 
 export function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('cs-CZ');
+  return new Date(date).toLocaleDateString(getLocale());
 }
 
 export function formatDateTime(date: string | Date): string {
-  return new Date(date).toLocaleString('cs-CZ');
+  return new Date(date).toLocaleString(getLocale());
 }
 
 export function getStatusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    draft: 'Koncept',
-    sent: 'Odesláno',
-    paid: 'Zaplaceno',
-    overdue: 'Po splatnosti',
-    cancelled: 'Zrušeno',
-  };
-  return labels[status] || status;
+  return i18n.t(`common:status.${status}`, { defaultValue: status });
 }
 
 export function getStatusColor(status: string): string {
@@ -43,11 +35,7 @@ export function getStatusColor(status: string): string {
 }
 
 export function getExpenseStatusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    unpaid: 'Nezaplaceno',
-    paid: 'Zaplaceno',
-  };
-  return labels[status] || status;
+  return i18n.t(`common:expenseStatus.${status}`, { defaultValue: status });
 }
 
 export function getExpenseStatusColor(status: string): string {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from '../context/ThemeContext';
 import Register from './Register';
 
 // Mock sonner
@@ -22,12 +23,18 @@ vi.mock('../context/AuthContext', () => ({
 
 vi.mock('lucide-react', () => ({
   FileText: () => <span data-testid="filetext-icon" />,
+  Sun: () => <span data-testid="sun-icon" />,
+  Moon: () => <span data-testid="moon-icon" />,
+  Monitor: () => <span data-testid="monitor-icon" />,
+  ChevronDown: () => <span data-testid="chevrondown-icon" />,
 }));
 
 function renderRegister() {
   return render(
     <BrowserRouter>
-      <Register />
+      <ThemeProvider>
+        <Register />
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

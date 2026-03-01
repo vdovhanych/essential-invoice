@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getStatusLabel, getStatusColor } from '../utils/format';
@@ -50,6 +51,7 @@ interface Invoice {
 }
 
 export default function InvoiceDetail() {
+  const { t } = useTranslation('invoices');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -90,7 +92,7 @@ export default function InvoiceDetail() {
       setSendToSecondary(!!result.recipients.secondary);
     } catch (error) {
       console.error('Failed to load preview:', error);
-      toast.error('Nepodařilo se načíst náhled');
+      toast.error(t('detail.previewError'));
       setShowSendModal(false);
     } finally {
       setPreviewLoading(false);
@@ -113,7 +115,7 @@ export default function InvoiceDetail() {
     try {
       await api.download(`/invoices/${id}/pdf`, `${invoice.invoiceNumber}.pdf`);
     } catch (error) {
-      toast.error('Nepodařilo se stáhnout PDF');
+      toast.error(t('detail.downloadError'));
     }
   }
 
@@ -125,13 +127,13 @@ export default function InvoiceDetail() {
         secondaryEmail: sendToSecondary && secondaryEmail.trim() !== '' ? secondaryEmail.trim() : undefined,
         customMessage: customMessage !== previewData?.emailBody ? customMessage : undefined
       });
-      toast.success('Faktura byla úspěšně odeslána');
+      toast.success(t('detail.sendSuccess'));
       setShowSendModal(false);
       setPreviewData(null);
       loadInvoice();
     } catch (error: unknown) {
       const err = error as Error;
-      toast.error(err.message || 'Nepodařilo se odeslat fakturu');
+      toast.error(err.message || t('detail.sendError'));
     } finally {
       setSending(false);
     }
@@ -146,32 +148,32 @@ export default function InvoiceDetail() {
   async function handleMarkPaid() {
     try {
       await api.post(`/invoices/${id}/mark-paid`, { paidAt: paidDate });
-      toast.success('Faktura byla označena jako zaplacená');
+      toast.success(t('detail.markPaidSuccess'));
       setShowMarkPaidModal(false);
       loadInvoice();
     } catch (error) {
-      toast.error('Nepodařilo se označit fakturu jako zaplacenou');
+      toast.error(t('detail.markPaidError'));
     }
   }
 
   async function handleCancel() {
-    if (!confirm('Opravdu chcete zrušit tuto fakturu?')) return;
+    if (!confirm(t('detail.confirmCancel'))) return;
     try {
       await api.post(`/invoices/${id}/cancel`);
-      toast.success('Faktura byla zrušena');
+      toast.success(t('detail.cancelSuccess'));
       loadInvoice();
     } catch (error) {
-      toast.error('Nepodařilo se zrušit fakturu');
+      toast.error(t('detail.cancelError'));
     }
   }
 
   async function handleDelete() {
-    if (!confirm('Opravdu chcete smazat tuto fakturu? Tato akce je nevratná.')) return;
+    if (!confirm(t('detail.confirmDelete'))) return;
     try {
       await api.delete(`/invoices/${id}`);
       navigate('/invoices');
     } catch (error) {
-      toast.error('Nepodařilo se smazat fakturu');
+      toast.error(t('detail.deleteError'));
     }
   }
 
@@ -184,7 +186,7 @@ export default function InvoiceDetail() {
   }
 
   if (!invoice) {
-    return <div className="text-center text-gray-500 dark:text-gray-400">Faktura nenalezena</div>;
+    return <div className="text-center text-gray-500 dark:text-gray-400">{t('detail.notFound')}</div>;
   }
 
   return (
@@ -200,7 +202,7 @@ export default function InvoiceDetail() {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Faktura {invoice.invoiceNumber}
+              {t('detail.title', { number: invoice.invoiceNumber })}
             </h1>
             <span className={`badge ${getStatusColor(invoice.status)}`}>
               {getStatusLabel(invoice.status)}
@@ -210,24 +212,24 @@ export default function InvoiceDetail() {
         <div className="flex flex-wrap gap-2">
           <button onClick={handleDownloadPDF} className="btn btn-secondary flex items-center space-x-2">
             <Download className="h-4 w-4" />
-            <span>PDF</span>
+            <span>{t('detail.pdf')}</span>
           </button>
           <button
             onClick={() => navigate(`/invoices/new?duplicate=${id}`)}
             className="btn btn-secondary flex items-center space-x-2"
           >
             <Copy className="h-4 w-4" />
-            <span>Duplikovat</span>
+            <span>{t('detail.duplicate')}</span>
           </button>
           {invoice.status === 'draft' && (
             <>
               <Link to={`/invoices/${id}/edit`} className="btn btn-secondary flex items-center space-x-2">
                 <Edit className="h-4 w-4" />
-                <span>Upravit</span>
+                <span>{t('detail.edit')}</span>
               </Link>
               <button onClick={() => setShowSendModal(true)} className="btn btn-primary flex items-center space-x-2">
                 <Send className="h-4 w-4" />
-                <span>Odeslat</span>
+                <span>{t('detail.send')}</span>
               </button>
             </>
           )}
@@ -235,11 +237,11 @@ export default function InvoiceDetail() {
             <>
               <button onClick={() => setShowSendModal(true)} className="btn btn-secondary flex items-center space-x-2">
                 <Send className="h-4 w-4" />
-                <span>Odeslat znovu</span>
+                <span>{t('detail.sendAgain')}</span>
               </button>
               <button onClick={openMarkPaidModal} className="btn btn-success flex items-center space-x-2">
                 <CheckCircle className="h-4 w-4" />
-                <span>Zaplaceno</span>
+                <span>{t('detail.markPaid')}</span>
               </button>
             </>
           )}
@@ -251,30 +253,30 @@ export default function InvoiceDetail() {
         <div className="lg:col-span-2 space-y-6">
           {/* Client info */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Odběratel</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.clientSection')}</h2>
             <div className="space-y-2">
               <p className="font-medium text-gray-900 dark:text-gray-100">{invoice.clientName}</p>
               {invoice.clientAddress && <p className="text-gray-600 dark:text-gray-300">{invoice.clientAddress}</p>}
-              {invoice.clientIco && <p className="text-gray-600 dark:text-gray-300">ICO: {invoice.clientIco}</p>}
-              {invoice.clientDic && <p className="text-gray-600 dark:text-gray-300">DIC: {invoice.clientDic}</p>}
-              <p className="text-gray-600 dark:text-gray-300">Email: {invoice.clientEmail}</p>
+              {invoice.clientIco && <p className="text-gray-600 dark:text-gray-300">{t('detail.clientIco')} {invoice.clientIco}</p>}
+              {invoice.clientDic && <p className="text-gray-600 dark:text-gray-300">{t('detail.clientDic')} {invoice.clientDic}</p>}
+              <p className="text-gray-600 dark:text-gray-300">{t('detail.clientEmail')} {invoice.clientEmail}</p>
               {invoice.clientSecondaryEmail && (
-                <p className="text-gray-600 dark:text-gray-300">Sekundární email: {invoice.clientSecondaryEmail}</p>
+                <p className="text-gray-600 dark:text-gray-300">{t('detail.clientSecondaryEmail')} {invoice.clientSecondaryEmail}</p>
               )}
             </div>
           </div>
 
           {/* Items */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Položky</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.itemsSection')}</h2>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[500px]">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">Popis</th>
-                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Množství</th>
-                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Cena/ks</th>
-                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Celkem</th>
+                    <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">{t('detail.columnDescription')}</th>
+                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('detail.columnQuantity')}</th>
+                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('detail.columnUnitPrice')}</th>
+                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('detail.columnTotal')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -289,15 +291,15 @@ export default function InvoiceDetail() {
                 </tbody>
                 <tfoot>
                   <tr className="border-t border-gray-200 dark:border-gray-700">
-                    <td colSpan={3} className="py-2 text-right font-medium">Základ daně:</td>
+                    <td colSpan={3} className="py-2 text-right font-medium">{t('detail.subtotal')}</td>
                     <td className="py-2 text-right">{formatCurrency(invoice.subtotal, invoice.currency)}</td>
                   </tr>
                   <tr>
-                    <td colSpan={3} className="py-2 text-right font-medium">DPH ({invoice.vatRate}%):</td>
+                    <td colSpan={3} className="py-2 text-right font-medium">{t('detail.vatWithRate', { rate: invoice.vatRate })}</td>
                     <td className="py-2 text-right">{formatCurrency(invoice.vatAmount, invoice.currency)}</td>
                   </tr>
                   <tr className="text-lg">
-                    <td colSpan={3} className="py-2 text-right font-bold">Celkem:</td>
+                    <td colSpan={3} className="py-2 text-right font-bold">{t('detail.total')}</td>
                     <td className="py-2 text-right font-bold text-blue-600">
                       {formatCurrency(invoice.total, invoice.currency)}
                     </td>
@@ -310,7 +312,7 @@ export default function InvoiceDetail() {
           {/* Notes */}
           {invoice.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Poznámky</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.notesSection')}</h2>
               <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{invoice.notes}</p>
             </div>
           )}
@@ -320,29 +322,29 @@ export default function InvoiceDetail() {
         <div className="space-y-6">
           {/* Dates */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Údaje</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.infoSection')}</h2>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">Variabilní symbol:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">{t('detail.variableSymbol')}</dt>
                 <dd className="font-medium">{invoice.variableSymbol}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">Datum vystavení:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">{t('detail.issueDate')}</dt>
                 <dd className="font-medium">{formatDate(invoice.issueDate)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">Datum splatnosti:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">{t('detail.dueDate')}</dt>
                 <dd className="font-medium">{formatDate(invoice.dueDate)}</dd>
               </div>
               {invoice.sentAt && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">Odesláno:</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">{t('detail.sentAt')}</dt>
                   <dd className="font-medium">{formatDate(invoice.sentAt)}</dd>
                 </div>
               )}
               {invoice.paidAt && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">Zaplaceno:</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">{t('detail.paidAt')}</dt>
                   <dd className="font-medium">{formatDate(invoice.paidAt)}</dd>
                 </div>
               )}
@@ -351,7 +353,7 @@ export default function InvoiceDetail() {
 
           {/* Actions */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Akce</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.actionsSection')}</h2>
             <div className="space-y-2">
               {invoice.status !== 'cancelled' && invoice.status !== 'paid' && (
                 <button
@@ -359,7 +361,7 @@ export default function InvoiceDetail() {
                   className="btn btn-secondary w-full flex items-center justify-center space-x-2"
                 >
                   <XCircle className="h-4 w-4" />
-                  <span>Zrušit fakturu</span>
+                  <span>{t('detail.cancelInvoice')}</span>
                 </button>
               )}
               <button
@@ -367,7 +369,7 @@ export default function InvoiceDetail() {
                 className="btn btn-danger w-full flex items-center justify-center space-x-2"
               >
                 <Trash2 className="h-4 w-4" />
-                <span>Smazat fakturu</span>
+                <span>{t('detail.deleteInvoice')}</span>
               </button>
             </div>
           </div>
@@ -381,7 +383,7 @@ export default function InvoiceDetail() {
             {/* Header */}
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Náhled a odeslání faktury
+                {t('detail.sendModal.title')}
               </h2>
               <button
                 onClick={() => { setShowSendModal(false); setPreviewData(null); }}
@@ -401,20 +403,20 @@ export default function InvoiceDetail() {
               <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                 {/* PDF Preview */}
                 <div className="lg:w-1/2 p-4 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700 overflow-auto">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Náhled PDF</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('detail.sendModal.pdfPreview')}</h3>
                   <object
                     data={`data:application/pdf;base64,${previewData.pdfBase64}`}
                     type="application/pdf"
                     className="w-full h-[400px] lg:h-[calc(100%-2rem)] rounded border border-gray-200 dark:border-gray-700"
                   >
                     <p className="p-4 text-gray-500 dark:text-gray-400 text-center">
-                      Váš prohlížeč nepodporuje zobrazení PDF.{' '}
+                      {t('detail.sendModal.pdfNotSupported')}{' '}
                       <a
                         href={`data:application/pdf;base64,${previewData.pdfBase64}`}
                         download={`${invoice.invoiceNumber}.pdf`}
                         className="text-blue-600 hover:underline"
                       >
-                        Stáhnout PDF
+                        {t('detail.sendModal.downloadPdf')}
                       </a>
                     </p>
                   </object>
@@ -422,11 +424,11 @@ export default function InvoiceDetail() {
 
                 {/* Email Editor */}
                 <div className="lg:w-1/2 p-4 flex flex-col overflow-auto">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">E-mail</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('detail.sendModal.emailSection')}</h3>
 
                   {/* Subject */}
                   <div className="mb-4">
-                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Předmět</label>
+                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{t('detail.sendModal.subject')}</label>
                     <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">
                       {previewData.subject}
                     </div>
@@ -434,7 +436,7 @@ export default function InvoiceDetail() {
 
                   {/* Recipients */}
                   <div className="mb-4">
-                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Primární e-mail</label>
+                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{t('detail.sendModal.primaryEmail')}</label>
                     <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">
                       {previewData.recipients.primary}
                     </div>
@@ -442,7 +444,7 @@ export default function InvoiceDetail() {
 
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-sm text-gray-500 dark:text-gray-400">Sekundární e-mail</label>
+                      <label className="block text-sm text-gray-500 dark:text-gray-400">{t('detail.sendModal.secondaryEmail')}</label>
                       <label className="flex items-center space-x-2">
                         <input
                           type="checkbox"
@@ -450,7 +452,7 @@ export default function InvoiceDetail() {
                           onChange={(e) => setSendToSecondary(e.target.checked)}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
-                        <span className="text-sm text-gray-600 dark:text-gray-400">Odeslat</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{t('detail.sendModal.sendToSecondary')}</span>
                       </label>
                     </div>
                     <input
@@ -458,18 +460,18 @@ export default function InvoiceDetail() {
                       value={secondaryEmail}
                       onChange={(e) => setSecondaryEmail(e.target.value)}
                       className="input"
-                      placeholder="sekundarni@email.cz"
+                      placeholder={t('detail.sendModal.secondaryEmailPlaceholder')}
                     />
                   </div>
 
                   {/* Message */}
                   <div className="flex-1 flex flex-col mb-4">
-                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Zpráva</label>
+                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{t('detail.sendModal.message')}</label>
                     <textarea
                       value={customMessage}
                       onChange={(e) => setCustomMessage(e.target.value)}
                       className="input flex-1 min-h-[200px] resize-none"
-                      placeholder="Text e-mailu..."
+                      placeholder={t('detail.sendModal.messagePlaceholder')}
                     />
                   </div>
 
@@ -480,7 +482,7 @@ export default function InvoiceDetail() {
                       className="btn btn-secondary"
                       disabled={sending}
                     >
-                      Zrušit
+                      {t('detail.sendModal.cancel')}
                     </button>
                     <button
                       onClick={handleSendInvoice}
@@ -488,7 +490,7 @@ export default function InvoiceDetail() {
                       disabled={sending}
                     >
                       <Send className="h-4 w-4" />
-                      <span>{sending ? 'Odesílám...' : 'Odeslat'}</span>
+                      <span>{sending ? t('detail.sendModal.sending') : t('detail.sendModal.send')}</span>
                     </button>
                   </div>
                 </div>
@@ -503,12 +505,12 @@ export default function InvoiceDetail() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              Označit fakturu jako zaplacenou
+              {t('detail.markPaidModal.title')}
             </h2>
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Datum zaplacení
+                {t('detail.markPaidModal.paidDate')}
               </label>
               <input
                 type="date"
@@ -517,7 +519,7 @@ export default function InvoiceDetail() {
                 className="input"
               />
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Výchozí datum je datum splatnosti faktury
+                {t('detail.markPaidModal.paidDateHint')}
               </p>
             </div>
 
@@ -526,14 +528,14 @@ export default function InvoiceDetail() {
                 onClick={() => setShowMarkPaidModal(false)}
                 className="btn btn-secondary"
               >
-                Zrušit
+                {t('detail.markPaidModal.cancel')}
               </button>
               <button
                 onClick={handleMarkPaid}
                 className="btn btn-success flex items-center space-x-2"
               >
                 <CheckCircle className="h-4 w-4" />
-                <span>Potvrdit</span>
+                <span>{t('detail.markPaidModal.confirm')}</span>
               </button>
             </div>
           </div>
