@@ -191,7 +191,7 @@ export default function InvoiceDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate('/invoices')}
@@ -208,7 +208,7 @@ export default function InvoiceDetail() {
             </span>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap gap-2">
           <button onClick={handleDownloadPDF} className="btn btn-secondary flex items-center space-x-2">
             <Download className="h-4 w-4" />
             <span>PDF</span>
@@ -279,7 +279,7 @@ export default function InvoiceDetail() {
           <div className="card">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Položky</h2>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[500px]">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
                     <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">Popis</th>
