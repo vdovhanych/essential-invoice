@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getStatusLabel, getStatusColor } from '../utils/format';
 import {
@@ -11,7 +12,6 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
-  AlertCircle
 } from 'lucide-react';
 
 interface InvoiceItem {
@@ -57,7 +57,6 @@ export default function InvoiceDetail() {
   const [sending, setSending] = useState(false);
   const [sendToSecondary, setSendToSecondary] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewData, setPreviewData] = useState<{
     subject: string;
@@ -91,7 +90,7 @@ export default function InvoiceDetail() {
       setSendToSecondary(!!result.recipients.secondary);
     } catch (error) {
       console.error('Failed to load preview:', error);
-      setMessage({ type: 'error', text: 'Nepodařilo se načíst náhled' });
+      toast.error('Nepodařilo se načíst náhled');
       setShowSendModal(false);
     } finally {
       setPreviewLoading(false);
@@ -114,7 +113,7 @@ export default function InvoiceDetail() {
     try {
       await api.download(`/invoices/${id}/pdf`, `${invoice.invoiceNumber}.pdf`);
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodařilo se stáhnout PDF' });
+      toast.error('Nepodařilo se stáhnout PDF');
     }
   }
 
@@ -126,13 +125,13 @@ export default function InvoiceDetail() {
         secondaryEmail: sendToSecondary && secondaryEmail.trim() !== '' ? secondaryEmail.trim() : undefined,
         customMessage: customMessage !== previewData?.emailBody ? customMessage : undefined
       });
-      setMessage({ type: 'success', text: 'Faktura byla úspěšně odeslána' });
+      toast.success('Faktura byla úspěšně odeslána');
       setShowSendModal(false);
       setPreviewData(null);
       loadInvoice();
     } catch (error: unknown) {
       const err = error as Error;
-      setMessage({ type: 'error', text: err.message || 'Nepodařilo se odeslat fakturu' });
+      toast.error(err.message || 'Nepodařilo se odeslat fakturu');
     } finally {
       setSending(false);
     }
@@ -147,11 +146,11 @@ export default function InvoiceDetail() {
   async function handleMarkPaid() {
     try {
       await api.post(`/invoices/${id}/mark-paid`, { paidAt: paidDate });
-      setMessage({ type: 'success', text: 'Faktura byla označena jako zaplacená' });
+      toast.success('Faktura byla označena jako zaplacená');
       setShowMarkPaidModal(false);
       loadInvoice();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodařilo se označit fakturu jako zaplacenou' });
+      toast.error('Nepodařilo se označit fakturu jako zaplacenou');
     }
   }
 
@@ -159,10 +158,10 @@ export default function InvoiceDetail() {
     if (!confirm('Opravdu chcete zrušit tuto fakturu?')) return;
     try {
       await api.post(`/invoices/${id}/cancel`);
-      setMessage({ type: 'success', text: 'Faktura byla zrušena' });
+      toast.success('Faktura byla zrušena');
       loadInvoice();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodařilo se zrušit fakturu' });
+      toast.error('Nepodařilo se zrušit fakturu');
     }
   }
 
@@ -172,7 +171,7 @@ export default function InvoiceDetail() {
       await api.delete(`/invoices/${id}`);
       navigate('/invoices');
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodařilo se smazat fakturu' });
+      toast.error('Nepodařilo se smazat fakturu');
     }
   }
 
@@ -246,16 +245,6 @@ export default function InvoiceDetail() {
           )}
         </div>
       </div>
-
-      {/* Message */}
-      {message && (
-        <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-        }`}>
-          {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-          <span>{message.text}</span>
-        </div>
-      )}
 
       {/* Invoice details */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
-import { ArrowLeft, AlertCircle, Upload, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { ArrowLeft, Upload, X } from 'lucide-react';
 
 interface Client {
   id: string;
@@ -17,7 +18,6 @@ export default function ExpenseCreate() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
     clientId: '',
@@ -81,12 +81,12 @@ export default function ExpenseCreate() {
 
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
-      setError('Povolené formáty: PDF, JPEG, PNG');
+      toast.error('Povolené formáty: PDF, JPEG, PNG');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setError('Maximální velikost souboru je 5 MB');
+      toast.error('Maximální velikost souboru je 5 MB');
       return;
     }
 
@@ -96,7 +96,6 @@ export default function ExpenseCreate() {
       setFileData(base64);
       setFileName(file.name);
       setFileMimeType(file.type);
-      setError('');
     };
     reader.readAsDataURL(file);
   }
@@ -117,10 +116,9 @@ export default function ExpenseCreate() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
 
     if (Number(formData.amount) <= 0) {
-      setError('Zadejte částku');
+      toast.error('Zadejte částku');
       return;
     }
 
@@ -151,7 +149,7 @@ export default function ExpenseCreate() {
       navigate('/expenses');
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Nepodařilo se uložit náklad');
+      toast.error(error.message || 'Nepodařilo se uložit náklad');
     } finally {
       setSaving(false);
     }
@@ -183,13 +181,6 @@ export default function ExpenseCreate() {
           {isEdit ? 'Upravit náklad' : 'Nový náklad'}
         </h1>
       </div>
-
-      {error && (
-        <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-6">
-          <AlertCircle className="h-5 w-5 flex-shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Supplier selection */}

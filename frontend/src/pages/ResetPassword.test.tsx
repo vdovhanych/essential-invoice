@@ -3,6 +3,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ResetPassword from './ResetPassword';
 
+// Mock sonner
+const mockToastError = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: (...args: unknown[]) => mockToastError(...args),
+  },
+}));
+
 vi.mock('lucide-react', () => ({
   FileText: () => <span data-testid="filetext-icon" />,
   AlertCircle: () => <span data-testid="alert-icon" />,
@@ -59,7 +68,7 @@ describe('ResetPassword Component', () => {
     fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(screen.getByText('Hesla se neshodují')).toBeInTheDocument();
+      expect(mockToastError).toHaveBeenCalledWith('Hesla se neshodují');
     });
 
     expect(mockPost).not.toHaveBeenCalled();
@@ -75,7 +84,7 @@ describe('ResetPassword Component', () => {
     fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(screen.getByText(/alespoň 8 znaků/)).toBeInTheDocument();
+      expect(mockToastError).toHaveBeenCalledWith('Heslo musí mít alespoň 8 znaků');
     });
 
     expect(mockPost).not.toHaveBeenCalled();
@@ -110,7 +119,7 @@ describe('ResetPassword Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /Nastavit nové heslo/ }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Token expired/)).toBeInTheDocument();
+      expect(mockToastError).toHaveBeenCalledWith('Token expired');
     });
   });
 });

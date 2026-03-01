@@ -3,6 +3,16 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Payments from './Payments';
 
+// Mock sonner
+const mockToastSuccess = vi.fn();
+const mockToastError = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    success: (...args: unknown[]) => mockToastSuccess(...args),
+    error: (...args: unknown[]) => mockToastError(...args),
+  },
+}));
+
 // Mock the API
 const mockGet = vi.fn();
 const mockPost = vi.fn();
@@ -23,8 +33,6 @@ vi.mock('lucide-react', () => ({
   Search: () => <span data-testid="search-icon" />,
   Link2: () => <span data-testid="link2-icon" />,
   Unlink: () => <span data-testid="unlink-icon" />,
-  AlertCircle: () => <span data-testid="alert-icon" />,
-  CheckCircle: () => <span data-testid="check-icon" />,
   X: () => <span data-testid="x-icon" />,
   RefreshCw: () => <span data-testid="refresh-icon" />,
   Trash2: () => <span data-testid="trash-icon" />
@@ -126,7 +134,7 @@ describe('Payments Component', () => {
 
     await waitFor(() => {
       expect(mockDelete).toHaveBeenCalledWith('/payments/payment-1');
-      expect(screen.getByText('Platba byla smazána')).toBeInTheDocument();
+      expect(mockToastSuccess).toHaveBeenCalledWith('Platba byla smazána');
     });
 
     // Verify payments list is reloaded
@@ -170,7 +178,7 @@ describe('Payments Component', () => {
     fireEvent.click(deleteButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to delete payment')).toBeInTheDocument();
+      expect(mockToastError).toHaveBeenCalledWith('Failed to delete payment');
     });
   });
 
@@ -191,7 +199,7 @@ describe('Payments Component', () => {
 
     await waitFor(() => {
       expect(mockPost).toHaveBeenCalledWith('/payments/payment-2/unmatch');
-      expect(screen.getByText('Spárování bylo zrušeno')).toBeInTheDocument();
+      expect(mockToastSuccess).toHaveBeenCalledWith('Spárování bylo zrušeno');
     });
   });
 
@@ -266,7 +274,9 @@ describe('Payments Component', () => {
 
     await waitFor(() => {
       expect(mockPost).toHaveBeenCalledWith('/payments/check-emails');
-      expect(screen.getByText(/kontrola emailů dokončena/i)).toBeInTheDocument();
+      expect(mockToastSuccess).toHaveBeenCalledWith(
+        'Kontrola emailů dokončena. Pokud byly nalezeny nové platby, zobrazí se v seznamu.'
+      );
     });
   });
 });

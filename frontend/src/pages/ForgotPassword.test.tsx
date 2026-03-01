@@ -3,9 +3,17 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import ForgotPassword from './ForgotPassword';
 
+// Mock sonner
+const mockToastError = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: (...args: unknown[]) => mockToastError(...args),
+  },
+}));
+
 vi.mock('lucide-react', () => ({
   FileText: () => <span data-testid="filetext-icon" />,
-  AlertCircle: () => <span data-testid="alert-icon" />,
   CheckCircle: () => <span data-testid="check-icon" />,
 }));
 
@@ -66,7 +74,7 @@ describe('ForgotPassword Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /Odeslat odkaz pro obnovení/ }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Server error/)).toBeInTheDocument();
+      expect(mockToastError).toHaveBeenCalledWith('Server error');
     });
   });
 });

@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { FileText, CheckCircle } from 'lucide-react';
 import { api } from '../utils/api';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
@@ -19,7 +18,7 @@ export default function ForgotPassword() {
       setSuccess(true);
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Nepodařilo se odeslat email pro obnovení hesla');
+      toast.error(error.message || 'Nepodařilo se odeslat email pro obnovení hesla');
     } finally {
       setLoading(false);
     }
@@ -51,13 +50,6 @@ export default function ForgotPassword() {
             </div>
           ) : (
             <>
-              {error && (
-                <div className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-4">
-                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 Zadejte svůj email a my vám pošleme odkaz pro obnovení hesla.
               </p>

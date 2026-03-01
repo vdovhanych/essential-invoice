@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
-import { CreditCard, Search, Link2, Unlink, AlertCircle, CheckCircle, X, RefreshCw, Trash2 } from 'lucide-react';
+import { CreditCard, Search, Link2, Unlink, X, RefreshCw, Trash2 } from 'lucide-react';
 
 interface Payment {
   id: string;
@@ -38,8 +39,6 @@ export default function Payments() {
   const [checkingEmails, setCheckingEmails] = useState(false);
   const [filter, setFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
   const [search, setSearch] = useState('');
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
   // Match modal state
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
@@ -86,12 +85,12 @@ export default function Payments() {
 
     try {
       await api.post(`/payments/${selectedPayment.id}/match`, { invoiceId });
-      setMessage({ type: 'success', text: 'Platba byla spárována' });
+      toast.success('Platba byla spárována');
       setShowMatchModal(false);
       loadPayments();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se spárovat platbu' });
+      toast.error(error.message || 'Nepodařilo se spárovat platbu');
     }
   }
 
@@ -100,11 +99,11 @@ export default function Payments() {
 
     try {
       await api.post(`/payments/${payment.id}/unmatch`);
-      setMessage({ type: 'success', text: 'Spárování bylo zrušeno' });
+      toast.success('Spárování bylo zrušeno');
       loadPayments();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se zrušit spárování' });
+      toast.error(error.message || 'Nepodařilo se zrušit spárování');
     }
   }
 
@@ -113,31 +112,24 @@ export default function Payments() {
 
     try {
       await api.delete(`/payments/${payment.id}`);
-      setMessage({ type: 'success', text: 'Platba byla smazána' });
+      toast.success('Platba byla smazána');
       loadPayments();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se smazat platbu' });
+      toast.error(error.message || 'Nepodařilo se smazat platbu');
     }
   }
 
   async function checkForNewPayments() {
     setCheckingEmails(true);
-    setMessage(null);
 
     try {
       await api.post('/payments/check-emails');
-      setMessage({ 
-        type: 'success', 
-        text: 'Kontrola emailů dokončena. Pokud byly nalezeny nové platby, zobrazí se v seznamu.' 
-      });
-      loadPayments(); // Reload payments to show new ones
+      toast.success('Kontrola emailů dokončena. Pokud byly nalezeny nové platby, zobrazí se v seznamu.');
+      loadPayments();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ 
-        type: 'error', 
-        text: error.message || 'Nepodařilo se zkontrolovat emaily. Zkontrolujte nastavení IMAP.' 
-      });
+      toast.error(error.message || 'Nepodařilo se zkontrolovat emaily. Zkontrolujte nastavení IMAP.');
     } finally {
       setCheckingEmails(false);
     }
@@ -171,16 +163,6 @@ export default function Payments() {
           <span>{checkingEmails ? 'Kontroluji...' : 'Zkontrolovat emaily'}</span>
         </button>
       </div>
-
-      {/* Message */}
-      {message && (
-        <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-        }`}>
-          {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-          <span>{message.text}</span>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import { FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { api } from '../utils/api';
 
@@ -9,21 +10,18 @@ export default function ResetPassword() {
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-
     if (password !== confirmPassword) {
-      setError('Hesla se neshodují');
+      toast.error('Hesla se neshodují');
       return;
     }
 
     if (password.length < 8) {
-      setError('Heslo musí mít alespoň 8 znaků');
+      toast.error('Heslo musí mít alespoň 8 znaků');
       return;
     }
 
@@ -34,7 +32,7 @@ export default function ResetPassword() {
       setSuccess(true);
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Nepodařilo se obnovit heslo');
+      toast.error(error.message || 'Nepodařilo se obnovit heslo');
     } finally {
       setLoading(false);
     }
@@ -92,13 +90,6 @@ export default function ResetPassword() {
             </div>
           ) : (
             <>
-              {error && (
-                <div className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-4">
-                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="password" className="label">Nové heslo</label>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getStatusLabel, getStatusColor } from '../utils/format';
 import {
@@ -9,8 +10,6 @@ import {
   Play,
   Pause,
   Zap,
-  CheckCircle,
-  AlertCircle,
 } from 'lucide-react';
 
 interface RecurringItem {
@@ -55,7 +54,6 @@ export default function RecurringInvoiceDetail() {
   const [generatedInvoices, setGeneratedInvoices] = useState<GeneratedInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -80,9 +78,9 @@ export default function RecurringInvoiceDetail() {
     try {
       const result = await api.post(`/recurring-invoices/${id}/toggle`);
       setTemplate(prev => prev ? { ...prev, active: result.active } : null);
-      setMessage({ type: 'success', text: result.active ? 'Opakovaná faktura aktivována' : 'Opakovaná faktura pozastavena' });
+      toast.success(result.active ? 'Opakovaná faktura aktivována' : 'Opakovaná faktura pozastavena');
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodařilo se změnit stav' });
+      toast.error('Nepodařilo se změnit stav');
     }
   }
 
@@ -90,10 +88,10 @@ export default function RecurringInvoiceDetail() {
     setGenerating(true);
     try {
       await api.post(`/recurring-invoices/${id}/generate-now`);
-      setMessage({ type: 'success', text: 'Faktura byla vygenerována' });
+      toast.success('Faktura byla vygenerována');
       loadData();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodařilo se vygenerovat fakturu' });
+      toast.error('Nepodařilo se vygenerovat fakturu');
     } finally {
       setGenerating(false);
     }
@@ -105,7 +103,7 @@ export default function RecurringInvoiceDetail() {
       await api.delete(`/recurring-invoices/${id}`);
       navigate('/invoices?tab=recurring');
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodařilo se smazat opakovanou fakturu' });
+      toast.error('Nepodařilo se smazat opakovanou fakturu');
     }
   }
 
@@ -169,16 +167,6 @@ export default function RecurringInvoiceDetail() {
           </button>
         </div>
       </div>
-
-      {/* Message */}
-      {message && (
-        <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-        }`}>
-          {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-          <span>{message.text}</span>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">

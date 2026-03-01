@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getExpenseStatusLabel, getExpenseStatusColor } from '../utils/format';
 import {
@@ -7,7 +8,6 @@ import {
   Edit,
   Trash2,
   CheckCircle,
-  AlertCircle,
   Download,
   XCircle
 } from 'lucide-react';
@@ -46,7 +46,6 @@ export default function ExpenseDetail() {
   const navigate = useNavigate();
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     loadExpense();
@@ -66,20 +65,20 @@ export default function ExpenseDetail() {
   async function handleMarkPaid() {
     try {
       await api.post(`/expenses/${id}/mark-paid`);
-      setMessage({ type: 'success', text: 'Náklad byl označen jako zaplacený' });
+      toast.success('Náklad byl označen jako zaplacený');
       loadExpense();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodařilo se označit náklad jako zaplacený' });
+      toast.error('Nepodařilo se označit náklad jako zaplacený');
     }
   }
 
   async function handleMarkUnpaid() {
     try {
       await api.post(`/expenses/${id}/mark-unpaid`);
-      setMessage({ type: 'success', text: 'Náklad byl označen jako nezaplacený' });
+      toast.success('Náklad byl označen jako nezaplacený');
       loadExpense();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodařilo se označit náklad jako nezaplacený' });
+      toast.error('Nepodařilo se označit náklad jako nezaplacený');
     }
   }
 
@@ -89,7 +88,7 @@ export default function ExpenseDetail() {
       await api.delete(`/expenses/${id}`);
       navigate('/expenses');
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodařilo se smazat náklad' });
+      toast.error('Nepodařilo se smazat náklad');
     }
   }
 
@@ -98,7 +97,7 @@ export default function ExpenseDetail() {
     try {
       await api.download(`/expenses/${id}/file`, expense.fileName);
     } catch (error) {
-      setMessage({ type: 'error', text: 'Nepodařilo se stáhnout soubor' });
+      toast.error('Nepodařilo se stáhnout soubor');
     }
   }
 
@@ -155,16 +154,6 @@ export default function ExpenseDetail() {
           )}
         </div>
       </div>
-
-      {/* Message */}
-      {message && (
-        <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-        }`}>
-          {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-          <span>{message.text}</span>
-        </div>
-      )}
 
       {/* Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

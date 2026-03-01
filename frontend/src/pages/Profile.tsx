@@ -1,7 +1,8 @@
 import { useState, useRef, useMemo } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
-import { User, Building, AlertCircle, CheckCircle, Upload, Trash2, Image, Landmark, ShieldAlert } from 'lucide-react';
+import { User, Building, Upload, Trash2, Image, Landmark, ShieldAlert } from 'lucide-react';
 
 export default function Profile() {
   const { user, token, updateProfile, refreshUser, logout } = useAuth();
@@ -11,7 +12,6 @@ export default function Profile() {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoKey, setLogoKey] = useState(() => Date.now());
 
@@ -63,14 +63,12 @@ export default function Profile() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setMessage(null);
-
     try {
       await updateProfile(formData);
-      setMessage({ type: 'success', text: 'Profil byl aktualizován' });
+      toast.success('Profil byl aktualizován');
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se aktualizovat profil' });
+      toast.error(error.message || 'Nepodařilo se aktualizovat profil');
     } finally {
       setSaving(false);
     }
@@ -78,15 +76,13 @@ export default function Profile() {
 
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setMessage(null);
-
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setMessage({ type: 'error', text: 'Hesla se neshodují' });
+      toast.error('Hesla se neshodují');
       return;
     }
 
     if (passwordData.newPassword.length < 8) {
-      setMessage({ type: 'error', text: 'Heslo musí mít alespoň 8 znaků' });
+      toast.error('Heslo musí mít alespoň 8 znaků');
       return;
     }
 
@@ -97,11 +93,11 @@ export default function Profile() {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
-      setMessage({ type: 'success', text: 'Heslo bylo změněno' });
+      toast.success('Heslo bylo změněno');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se změnit heslo' });
+      toast.error(error.message || 'Nepodařilo se změnit heslo');
     } finally {
       setChangingPassword(false);
     }
@@ -113,26 +109,25 @@ export default function Profile() {
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
     if (!allowedTypes.includes(file.type)) {
-      setMessage({ type: 'error', text: 'Pouze PNG, JPG a SVG soubory jsou povoleny' });
+      toast.error('Pouze PNG, JPG a SVG soubory jsou povoleny');
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      setMessage({ type: 'error', text: 'Maximální velikost souboru je 2 MB' });
+      toast.error('Maximální velikost souboru je 2 MB');
       return;
     }
 
     setUploadingLogo(true);
-    setMessage(null);
 
     try {
       await api.uploadFile('/auth/me/logo', file, 'logo');
       await refreshUser();
       setLogoKey(Date.now());
-      setMessage({ type: 'success', text: 'Logo bylo nahráno' });
+      toast.success('Logo bylo nahráno');
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se nahrát logo' });
+      toast.error(error.message || 'Nepodařilo se nahrát logo');
     } finally {
       setUploadingLogo(false);
       if (fileInputRef.current) {
@@ -145,16 +140,15 @@ export default function Profile() {
     if (!confirm('Opravdu chcete smazat logo?')) return;
 
     setUploadingLogo(true);
-    setMessage(null);
 
     try {
       await api.delete('/auth/me/logo');
       await refreshUser();
       setLogoKey(Date.now());
-      setMessage({ type: 'success', text: 'Logo bylo smazáno' });
+      toast.success('Logo bylo smazáno');
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se smazat logo' });
+      toast.error(error.message || 'Nepodařilo se smazat logo');
     } finally {
       setUploadingLogo(false);
     }
@@ -163,14 +157,13 @@ export default function Profile() {
   async function handleDeleteAccount(e: React.FormEvent) {
     e.preventDefault();
     setDeletingAccount(true);
-    setMessage(null);
 
     try {
       await api.delete('/auth/me', { password: deletePassword });
       logout();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se smazat účet' });
+      toast.error(error.message || 'Nepodařilo se smazat účet');
       setDeletingAccount(false);
     }
   }
@@ -178,16 +171,6 @@ export default function Profile() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Můj profil</h1>
-
-      {/* Message */}
-      {message && (
-        <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-        }`}>
-          {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-          <span>{message.text}</span>
-        </div>
-      )}
 
       {/* Profile form */}
       <form onSubmit={handleSubmit} className="card space-y-6">
