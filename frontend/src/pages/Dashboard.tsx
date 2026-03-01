@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { formatCurrency, getStatusLabel, getStatusColor } from '../utils/format';
 import { useTheme } from '../context/ThemeContext';
@@ -60,6 +61,8 @@ interface DashboardData {
 
 export default function Dashboard() {
   const { resolvedTheme } = useTheme();
+  const { t, i18n } = useTranslation('dashboard');
+  const locale = i18n.language === 'en' ? 'en-US' : 'cs-CZ';
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -94,7 +97,7 @@ export default function Dashboard() {
       const date = new Date(selectedYear, i, 1);
       return {
         key: `${selectedYear}-${String(i + 1).padStart(2, '0')}`,
-        name: date.toLocaleDateString('cs-CZ', { month: 'short' }),
+        name: date.toLocaleDateString(locale, { month: 'short' }),
         income: 0,
         expenses: 0,
       };
@@ -131,16 +134,16 @@ export default function Dashboard() {
   }
 
   if (!data) {
-    return <div className="text-center text-gray-500 dark:text-gray-400">Nepodařilo se načíst data</div>;
+    return <div className="text-center text-gray-500 dark:text-gray-400">{t('loadError')}</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Přehled</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
         <Link to="/invoices/new" className="btn btn-primary flex items-center space-x-2">
           <Plus className="h-4 w-4" />
-          <span>Nová faktura</span>
+          <span>{t('newInvoice')}</span>
         </Link>
       </div>
 
@@ -149,7 +152,7 @@ export default function Dashboard() {
         <div className="card-interactive min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400">K úhradě</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('stats.outstanding')}</p>
               <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
                 {formatCurrency(data.stats.outstandingAmount)}
               </p>
@@ -159,14 +162,14 @@ export default function Dashboard() {
             </div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            {data.stats.sentCount + data.stats.overdueCount} faktur čeká na platbu
+            {t('stats.outstandingDescription', { count: data.stats.sentCount + data.stats.overdueCount })}
           </p>
         </div>
 
         <div className="card-interactive min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Zaplaceno tento měsíc</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('stats.paidThisMonth')}</p>
               <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
                 {formatCurrency(data.stats.paidThisMonth)}
               </p>
@@ -176,14 +179,14 @@ export default function Dashboard() {
             </div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            {data.stats.paidCount} zaplacených faktur celkem
+            {t('stats.paidThisMonthDescription', { count: data.stats.paidCount })}
           </p>
         </div>
 
         <div className="card-interactive min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Po splatnosti</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('stats.overdue')}</p>
               <p className="text-2xl font-bold tabular-nums text-red-600">
                 {data.stats.overdueCount}
               </p>
@@ -193,14 +196,14 @@ export default function Dashboard() {
             </div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Faktury po datu splatnosti
+            {t('stats.overdueDescription')}
           </p>
         </div>
 
         <div className="card-interactive min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Celkem zaplaceno</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('stats.totalPaid')}</p>
               <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
                 {formatCurrency(data.stats.paidAmount)}
               </p>
@@ -210,7 +213,7 @@ export default function Dashboard() {
             </div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Za celou dobu
+            {t('stats.totalPaidDescription')}
           </p>
         </div>
       </div>
@@ -221,11 +224,11 @@ export default function Dashboard() {
           <div className="flex items-center space-x-3">
             <CreditCard className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
             <span className="text-yellow-800 dark:text-yellow-300">
-              Máte {data.unmatchedPayments} nespárovaných plateb
+              {t('unmatchedPayments.message', { count: data.unmatchedPayments })}
             </span>
           </div>
           <Link to="/payments" className="text-yellow-600 dark:text-yellow-400 hover:underline font-medium">
-            Zobrazit platby
+            {t('unmatchedPayments.link')}
           </Link>
         </div>
       )}
@@ -235,7 +238,7 @@ export default function Dashboard() {
         <div className="card">
           <div className="flex items-center justify-between mb-1">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Celkové tržby</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('chart.totalRevenue')}</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {formatCurrency(yearlyIncome - yearlyExpensesTotal)}
               </p>
@@ -256,11 +259,11 @@ export default function Dashboard() {
           <div className="flex items-center space-x-4 mb-4">
             <div className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Příjmy</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{t('chart.income')}</span>
             </div>
             <div className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Výdaje</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{t('chart.expenses')}</span>
             </div>
           </div>
           {chartData.some(d => d.income > 0 || d.expenses > 0) ? (
@@ -283,7 +286,7 @@ export default function Dashboard() {
                           {payload.map((entry) => (
                             <p key={entry.dataKey} className="flex items-center space-x-2">
                               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
-                              <span className="text-gray-500 dark:text-gray-400">{entry.dataKey === 'income' ? 'Příjmy' : 'Výdaje'}:</span>
+                              <span className="text-gray-500 dark:text-gray-400">{entry.dataKey === 'income' ? t('chart.income') : t('chart.expenses')}:</span>
                               <span className="font-medium">{formatCurrency(entry.value as number)}</span>
                             </p>
                           ))}
@@ -298,7 +301,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="h-80 flex items-center justify-center text-gray-500 dark:text-gray-400">
-              Zatím žádná data
+              {t('chart.noData')}
             </div>
           )}
 
@@ -309,7 +312,7 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-2 min-w-0">
                   <Landmark className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                   <span className="text-xs font-medium text-gray-600 dark:text-gray-300 truncate">
-                    Paušální daň ({data.pausalniDan.tier}. pásmo)
+                    {t('pausalniDan.label', { tier: data.pausalniDan.tier })}
                   </span>
                 </div>
                 <span className="text-xs text-gray-500 dark:text-gray-400 text-right whitespace-nowrap ml-2">
@@ -341,7 +344,7 @@ export default function Dashboard() {
                     ? 'text-red-600'
                     : 'text-emerald-600'
                 }`}>
-                  Zbývá {formatCurrency(data.pausalniDan.remaining)}
+                  {t('pausalniDan.remaining', { amount: formatCurrency(data.pausalniDan.remaining) })}
                 </span>
               </div>
               {(data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) >= 0.9 && (
@@ -351,8 +354,8 @@ export default function Dashboard() {
                   <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
                   <span>
                     {data.pausalniDan.remaining <= 0
-                      ? 'Limit překročen – hrozí vyřazení z režimu'
-                      : 'Blížíte se k limitu'}
+                      ? t('pausalniDan.limitExceeded')
+                      : t('pausalniDan.approachingLimit')}
                   </span>
                 </div>
               )}
@@ -363,9 +366,9 @@ export default function Dashboard() {
         {/* Recent invoices */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Poslední faktury</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('recentInvoices.title')}</h2>
             <Link to="/invoices" className="text-blue-600 hover:underline text-sm">
-              Zobrazit vše
+              {t('recentInvoices.viewAll')}
             </Link>
           </div>
           <div className="space-y-3">
@@ -395,7 +398,7 @@ export default function Dashboard() {
               ))
             ) : (
               <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                Zatím žádné faktury
+                {t('recentInvoices.empty')}
               </div>
             )}
           </div>

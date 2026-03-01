@@ -15,15 +15,17 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
   - `recurringInvoiceGenerator.ts` - In-process scheduler (setInterval) that auto-generates invoices from recurring templates, with optional auto-send via SMTP
   - `perplexityAI.ts` - Perplexity AI integration for tax advice and financial guidance
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
+- **i18n**: `i18n/translations.ts` - Plain TypeScript translation maps (cs/en) for PDF labels and email templates. Services look up translations by the user's `language` column. Backend error messages use language-neutral error codes (e.g., `TOO_MANY_LOGIN_ATTEMPTS`) that the frontend maps to localized strings
 - **Utils**: `utils/validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
 - **Scripts**: `scripts/delete-user.ts` - Admin CLI script to delete a user by email
 - **Seed**: `db/seed.ts` - Seeds test data (user, clients, invoices, expenses, payments) for development. Run with `bun run seed [email] [password]`
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
-- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow.
+- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, `language` (VARCHAR(5), default 'cs') for locale preference, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow.
 
 ## Frontend (`frontend/src/`)
 
 - **React 18** with TypeScript, Vite, and TailwindCSS
+- **i18n**: react-i18next with 10 namespaces (common, dashboard, invoices, expenses, clients, payments, settings, profile, auth, calculator). Translation JSON files in `i18n/locales/{cs,en}/`. Language switcher on the Profile page persists the choice to the `users.language` column via `PUT /auth/me`. Format utilities (`utils/format.ts`) are locale-aware
 - **Context**:
   - `context/AuthContext.tsx` - Authentication state management
   - `context/AIContext.tsx` - AI assistant state management

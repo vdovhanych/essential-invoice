@@ -1,0 +1,82 @@
+{
+  "title": "Nastavení",
+
+  "smtp": {
+    "heading": "Odesílání emailů (SMTP)",
+    "server": "SMTP server",
+    "port": "Port",
+    "user": "Uživatel",
+    "password": "Heslo",
+    "passwordSet": "(nastaveno)",
+    "fromEmail": "Email odesilatele",
+    "fromEmailPlaceholder": "faktury@example.com",
+    "fromName": "Jmeno odesilatele",
+    "fromNamePlaceholder": "Moje Firma s.r.o.",
+    "useTls": "Použít TLS/SSL",
+    "testing": "Testuji...",
+    "testConnection": "Otestovat připojení",
+    "testSuccess": "SMTP připojení je funkční",
+    "testFailed": "Test SMTP selhal",
+    "serverPlaceholder": "smtp.example.com"
+  },
+
+  "imap": {
+    "heading": "Přijímání emailů (IMAP)",
+    "description": "Nastavte IMAP pro automatické načítání bankovních notifikací o platbách.",
+    "server": "IMAP server",
+    "port": "Port",
+    "user": "Uživatel",
+    "password": "Heslo",
+    "passwordSet": "(nastaveno)",
+    "bankNotificationEmail": "Email bankovních notifikací (volitelné)",
+    "bankNotificationEmailPlaceholder": "noreply@airbank.cz",
+    "bankNotificationEmailHelp": "Pokud vyplníte, budou se načítat pouze emaily od této adresy",
+    "useTls": "Použít TLS",
+    "testing": "Testuji...",
+    "testConnection": "Otestovat připojení",
+    "testSuccess": "IMAP připojení je funkční",
+    "testFailed": "Test IMAP selhal",
+    "serverPlaceholder": "imap.example.com"
+  },
+
+  "ai": {
+    "heading": "AI funkce (Perplexity)",
+    "description": "Aktivujte AI asistenta pro český daňový poradenství, inteligentní párování plateb a další funkce.",
+    "enableAi": "Zapnout AI funkce",
+    "apiKeyLabel": "Perplexity API klíč",
+    "apiKeySet": "(nastaveno)",
+    "apiKeyPlaceholder": "pplx-xxxxxxxxxxxxxxxxxxxx",
+    "apiKeyHelp": "Získejte API klíč na",
+    "apiKeyLink": "perplexity.ai/settings/api"
+  },
+
+  "invoiceDefaults": {
+    "heading": "Výchozí hodnoty faktur",
+    "vatRate": "Výchozí sazba DPH (%)",
+    "paymentTerms": "Výchozí splatnost (dny)",
+    "invoiceNumberPrefix": "Prefix čísla faktury",
+    "invoiceNumberPrefixPlaceholder": "Např. FV, INV"
+  },
+
+  "calculator": {
+    "heading": "Kalkulačka",
+    "description": "Povolit kalkulačku pro výpočet fakturované částky na základě hodinové sazby a KPI bonusu.",
+    "enable": "Zapnout kalkulačku"
+  },
+
+  "emailTemplate": {
+    "heading": "Šablona emailu",
+    "variablesHelp": "Použijte proměnné: {{invoiceNumber}}, {{total}}, {{dueDate}}, {{clientName}}, {{senderName}}",
+    "placeholder": "Dobrý den,\n\nv příloze Vám zasílám fakturu č. {{invoiceNumber}} na částku {{total}}.\n\nDatum splatnosti: {{dueDate}}\n\nDěkuji za spolupráci.\n\nS pozdravem,\n{{senderName}}"
+  },
+
+  "toast": {
+    "saveSuccess": "Nastavení bylo uloženo",
+    "saveFailed": "Nepodařilo se uložit nastavení"
+  },
+
+  "actions": {
+    "saving": "Ukládám...",
+    "save": "Uložit nastavení"
+  }
+}

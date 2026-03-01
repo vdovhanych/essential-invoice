@@ -94,6 +94,7 @@ essential-invoice/
 │   │   ├── db/              # Database init (init.ts), migrations (migrate.ts), seed (seed.ts)
 │   │   ├── middleware/      # Auth middleware (auth.ts)
 │   │   ├── routes/          # API routes (auth, clients, invoices, expenses, payments, settings, ares, dashboard, ai)
+│   │   ├── i18n/             # Backend translations (translations.ts) for PDFs and emails
 │   │   ├── services/        # Business logic
 │   │   │   ├── bankParsers/ # Bank email parsers (Air Bank)
 │   │   │   ├── emailPoller.ts
@@ -111,6 +112,7 @@ essential-invoice/
 │   ├── src/
 │   │   ├── components/      # Layout, AIAssistant
 │   │   ├── context/         # AuthContext, AIContext
+│   │   ├── i18n/            # react-i18next config + locales/{cs,en}/*.json
 │   │   ├── pages/           # Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail,
 │   │   │                    # Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile,
 │   │   │                    # Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
@@ -128,6 +130,43 @@ essential-invoice/
 ├── CLAUDE.md
 └── README.md
 ```
+
+## Adding Translations (i18n)
+
+### Frontend
+
+Frontend translations use react-i18next with JSON files organized by namespace:
+
+```
+frontend/src/i18n/locales/
+├── cs/
+│   ├── common.json
+│   ├── dashboard.json
+│   ├── invoices.json
+│   ├── expenses.json
+│   ├── clients.json
+│   ├── payments.json
+│   ├── settings.json
+│   ├── profile.json
+│   ├── auth.json
+│   └── calculator.json
+└── en/
+    └── (same files)
+```
+
+To add a new translation key:
+1. Add the key to the appropriate namespace JSON file in both `cs/` and `en/`
+2. Use it in components with `const { t } = useTranslation('namespace')` then `t('key')`
+
+To add a new namespace:
+1. Create `<namespace>.json` in both `cs/` and `en/` locale directories
+2. Register the namespace in `frontend/src/i18n/index.ts`
+
+### Backend
+
+Backend translations live in `backend/src/i18n/translations.ts` as plain TypeScript objects keyed by language code. These are used by PDF generation and email templates. Add new keys to both `cs` and `en` entries.
+
+Backend error messages use language-neutral error codes (e.g., `TOO_MANY_LOGIN_ATTEMPTS`) rather than human-readable strings. The frontend maps these codes to localized messages.
 
 ## Contributing
 

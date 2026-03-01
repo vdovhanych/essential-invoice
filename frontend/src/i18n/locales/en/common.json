@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "invoices": "Invoices",
+    "expenses": "Expenses",
+    "clients": "Clients",
+    "payments": "Payments",
+    "calculator": "Calculator",
+    "settings": "Settings"
+  },
+  "userMenu": {
+    "profile": "Profile",
+    "logout": "Sign out",
+    "appearance": "Appearance"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "status": {
+    "draft": "Draft",
+    "sent": "Sent",
+    "paid": "Paid",
+    "overdue": "Overdue",
+    "cancelled": "Cancelled"
+  },
+  "expenseStatus": {
+    "unpaid": "Unpaid",
+    "paid": "Paid"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "close": "Close",
+    "confirm": "Confirm",
+    "saving": "Saving...",
+    "loading": "Loading...",
+    "search": "Search",
+    "send": "Send",
+    "download": "Download",
+    "viewAll": "View all"
+  },
+  "errors": {
+    "TOO_MANY_LOGIN_ATTEMPTS": "Too many login attempts, please try again later.",
+    "TOO_MANY_RESET_ATTEMPTS": "Too many password reset requests, please try again later.",
+    "RESET_LINK_INVALID": "Invalid or expired password reset link.",
+    "RESET_LINK_USED": "This password reset link has already been used.",
+    "RESET_LINK_EXPIRED": "This password reset link has expired.",
+    "PASSWORD_RESET_FAILED": "Failed to reset password.",
+    "loadFailed": "Failed to load data.",
+    "saveFailed": "Failed to save data.",
+    "deleteFailed": "Failed to delete.",
+    "unknownError": "An unexpected error occurred."
+  },
+  "messages": {
+    "RESET_EMAIL_SENT": "If an account with this email exists, a password reset link has been sent.",
+    "PASSWORD_RESET_SUCCESS": "Password has been successfully changed.",
+    "noData": "No data",
+    "confirmDelete": "Are you sure you want to delete?"
+  },
+  "currency": {
+    "CZK": "CZK",
+    "EUR": "EUR"
+  },
+  "ai": {
+    "title": "AI Assistant",
+    "poweredBy": "Powered by Perplexity",
+    "placeholder": "Type your question...",
+    "send": "Send",
+    "thinking": "Thinking...",
+    "error": "Error: {{message}}",
+    "errorFallback": "Failed to get a response.",
+    "disclaimer": "AI can make mistakes. Verify important information.",
+    "exampleVat": "When do I need to file VAT returns?",
+    "exampleInsurance": "What are health insurance rates for freelancers?",
+    "examplePausalni": "Should I use paušální daň?"
+  }
+}

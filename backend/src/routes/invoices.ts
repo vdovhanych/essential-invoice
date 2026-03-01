@@ -5,6 +5,7 @@ import { AuthRequest } from '../middleware/auth';
 import { generateInvoicePDF } from '../services/pdfGenerator';
 import { sendInvoiceEmail } from '../services/emailSender';
 import { generateSpayd } from '../utils/validation';
+import { t, formatDateLocale, formatCurrencyLocale } from '../i18n/translations';
 
 export const invoiceRouter: ReturnType<typeof Router> = Router();
 
@@ -189,8 +190,8 @@ invoiceRouter.post('/',
   body('issueDate').isISO8601(),
   body('dueDate').isISO8601(),
   body('items').isArray({ min: 1 }),
-  body('items.*.description').isLength({ max: 150 }).withMessage('Popis položky může mít maximálně 150 znaků'),
-  body('notes').optional().isLength({ max: 300 }).withMessage('Poznámka může mít maximálně 300 znaků'),
+  body('items.*.description').isLength({ max: 150 }).withMessage('Item description must not exceed 150 characters'),
+  body('notes').optional().isLength({ max: 300 }).withMessage('Notes must not exceed 300 characters'),
   async (req: AuthRequest, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -220,7 +221,7 @@ invoiceRouter.post('/',
 
       // Get user's bank details for QR code
       const userResult = await query(
-        'SELECT bank_account, bank_code FROM users WHERE id = $1',
+        'SELECT bank_account, bank_code, language FROM users WHERE id = $1',
         [req.userId]
       );
       const user = userResult.rows[0];
@@ -242,7 +243,7 @@ invoiceRouter.post('/',
               total,
               currency,
               variableSymbol,
-              `Faktura ${invoiceNumber}`
+              `${user.language === 'en' ? 'Invoice' : 'Faktura'} ${invoiceNumber}`
             );
           }
 
@@ -294,8 +295,8 @@ invoiceRouter.post('/',
 // Update invoice
 invoiceRouter.put('/:id',
   body('items').optional().isArray({ min: 1 }),
-  body('items.*.description').optional().isLength({ max: 150 }).withMessage('Popis položky může mít maximálně 150 znaků'),
-  body('notes').optional().isLength({ max: 300 }).withMessage('Poznámka může mít maximálně 300 znaků'),
+  body('items.*.description').optional().isLength({ max: 150 }).withMessage('Item description must not exceed 150 characters'),
+  body('notes').optional().isLength({ max: 300 }).withMessage('Notes must not exceed 300 characters'),
   async (req: AuthRequest, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -458,37 +459,20 @@ invoiceRouter.get('/:id/preview', async (req: AuthRequest, res: Response) => {
 
     const settings = settingsResult.rows[0] || {};
 
-    // Format helpers
-    const formatCurrency = (amount: number, currency: string) => {
-      if (currency === 'CZK') {
-        return `${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })} Kč`;
-      }
-      return `€${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })}`;
-    };
+    // Get user language
+    const userResult = await query('SELECT language FROM users WHERE id = $1', [req.userId]);
+    const language = userResult.rows[0]?.language || 'cs';
+    const tr = t(language).email;
 
-    const formatDate = (date: Date) => new Date(date).toLocaleDateString('cs-CZ');
-
-    // Default email template
-    const defaultTemplate = `Dobrý den,
-
-v příloze Vám zasílám fakturu č. {{invoiceNumber}} na částku {{total}}.
-
-Datum splatnosti: {{dueDate}}
-
-Děkuji za spolupráci.
-
-S pozdravem,
-{{senderName}}`;
-
-    const template = settings.email_template || defaultTemplate;
+    const template = settings.email_template || tr.defaultTemplate;
     const emailBody = template
       .replace(/\{\{invoiceNumber\}\}/g, invoice.invoice_number)
-      .replace(/\{\{total\}\}/g, formatCurrency(parseFloat(invoice.total), invoice.currency))
-      .replace(/\{\{dueDate\}\}/g, formatDate(invoice.due_date))
+      .replace(/\{\{total\}\}/g, formatCurrencyLocale(parseFloat(invoice.total), invoice.currency, language))
+      .replace(/\{\{dueDate\}\}/g, formatDateLocale(invoice.due_date, language))
       .replace(/\{\{clientName\}\}/g, invoice.client_name)
-      .replace(/\{\{senderName\}\}/g, settings.smtp_from_name || 'Dodavatel');
+      .replace(/\{\{senderName\}\}/g, settings.smtp_from_name || tr.supplierFallback);
 
-    const subject = `Faktura č. ${invoice.invoice_number}`;
+    const subject = tr.invoiceSubject.replace('{{number}}', invoice.invoice_number);
 
     // Generate PDF as base64
     const pdfBuffer = await generateInvoicePDF(req.params.id, req.userId!);

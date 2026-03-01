@@ -1,0 +1,27 @@
+{
+  "title": "Invoicing Calculator",
+
+  "inputs": {
+    "heading": "Input Values",
+    "hourlyRate": "Hourly rate",
+    "hoursWorked": "Hours worked",
+    "kpiBonusPercent": "KPI bonus (%)"
+  },
+
+  "results": {
+    "heading": "Calculated Values",
+    "kpiBonusHours": "KPI bonus (hours)",
+    "kpiBonusAmount": "KPI bonus (amount)",
+    "hoursTotal": "Hours total (amount)",
+    "grandTotal": "Grand total",
+    "hoursUnit": "hrs"
+  },
+
+  "formulas": {
+    "heading": "Calculation formulas:",
+    "kpiBonusHours": "KPI bonus (hours) = Hours worked x KPI bonus % / 100",
+    "kpiBonusAmount": "KPI bonus (amount) = Hourly rate x KPI bonus (hours)",
+    "hoursTotal": "Hours total (amount) = Hourly rate x Hours worked",
+    "grandTotal": "Grand total = Hours total + KPI bonus (amount)"
+  }
+}

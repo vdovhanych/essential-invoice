@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "dashboard": "Přehled",
+    "invoices": "Faktury",
+    "expenses": "Náklady",
+    "clients": "Kontakty",
+    "payments": "Platby",
+    "calculator": "Kalkulačka",
+    "settings": "Nastavení"
+  },
+  "userMenu": {
+    "profile": "Profil",
+    "logout": "Odhlásit se",
+    "appearance": "Vzhled aplikace"
+  },
+  "theme": {
+    "light": "Světlý",
+    "dark": "Tmavý",
+    "system": "Systém"
+  },
+  "status": {
+    "draft": "Koncept",
+    "sent": "Odesláno",
+    "paid": "Zaplaceno",
+    "overdue": "Po splatnosti",
+    "cancelled": "Zrušeno"
+  },
+  "expenseStatus": {
+    "unpaid": "Nezaplaceno",
+    "paid": "Zaplaceno"
+  },
+  "buttons": {
+    "save": "Uložit",
+    "cancel": "Zrušit",
+    "delete": "Smazat",
+    "edit": "Upravit",
+    "create": "Vytvořit",
+    "back": "Zpět",
+    "close": "Zavřít",
+    "confirm": "Potvrdit",
+    "saving": "Ukládám...",
+    "loading": "Načítání...",
+    "search": "Hledat",
+    "send": "Odeslat",
+    "download": "Stáhnout",
+    "viewAll": "Zobrazit vše"
+  },
+  "errors": {
+    "TOO_MANY_LOGIN_ATTEMPTS": "Příliš mnoho pokusů o přihlášení, zkuste to prosím později.",
+    "TOO_MANY_RESET_ATTEMPTS": "Příliš mnoho požadavků na obnovení hesla, zkuste to prosím později.",
+    "RESET_LINK_INVALID": "Neplatný nebo expirovaný odkaz pro obnovení hesla.",
+    "RESET_LINK_USED": "Tento odkaz pro obnovení hesla již byl použit.",
+    "RESET_LINK_EXPIRED": "Platnost odkazu pro obnovení hesla vypršela.",
+    "PASSWORD_RESET_FAILED": "Nepodařilo se obnovit heslo.",
+    "loadFailed": "Nepodařilo se načíst data.",
+    "saveFailed": "Nepodařilo se uložit data.",
+    "deleteFailed": "Nepodařilo se smazat.",
+    "unknownError": "Došlo k neočekávané chybě."
+  },
+  "messages": {
+    "RESET_EMAIL_SENT": "Pokud účet s tímto emailem existuje, byl odeslán odkaz pro obnovení hesla.",
+    "PASSWORD_RESET_SUCCESS": "Heslo bylo úspěšně změněno.",
+    "noData": "Žádná data",
+    "confirmDelete": "Opravdu chcete smazat?"
+  },
+  "currency": {
+    "CZK": "CZK",
+    "EUR": "EUR"
+  },
+  "ai": {
+    "title": "AI Asistent",
+    "poweredBy": "Powered by Perplexity",
+    "placeholder": "Napište svůj dotaz...",
+    "send": "Odeslat",
+    "thinking": "Přemýšlím...",
+    "error": "Chyba: {{message}}",
+    "errorFallback": "Nepodařilo se získat odpověď.",
+    "disclaimer": "AI může dělat chyby. Ověřte si důležité informace.",
+    "exampleVat": "Kdy musím podat přiznání k DPH?",
+    "exampleInsurance": "Jaké jsou sazby zdravotního pojištění pro OSVČ?",
+    "examplePausalni": "Vyplatí se mi paušální daň?"
+  }
+}

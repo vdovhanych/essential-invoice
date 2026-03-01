@@ -257,6 +257,17 @@ export async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_recurring_invoices_next_date ON recurring_invoices(next_generation_date);
       CREATE INDEX IF NOT EXISTS idx_recurring_invoice_items_recurring_id ON recurring_invoice_items(recurring_invoice_id);
       CREATE INDEX IF NOT EXISTS idx_invoices_recurring_invoice_id ON invoices(recurring_invoice_id);
+
+      -- Add language column to users table
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'users' AND column_name = 'language'
+        ) THEN
+          ALTER TABLE users ADD COLUMN language VARCHAR(5) DEFAULT 'cs';
+        END IF;
+      END $$;
     `);
 
     console.log('Database initialized successfully');

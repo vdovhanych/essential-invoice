@@ -1,0 +1,54 @@
+{
+  "list": {
+    "title": "Platby z banky",
+    "checkEmails": "Zkontrolovat emaily",
+    "checkingEmails": "Kontroluji...",
+    "checkEmailsTooltip": "Zkontrolovat nové platby z emailu",
+    "searchPlaceholder": "Hledat platby...",
+    "filters": {
+      "all": "Všechny",
+      "unmatched": "Nespárované",
+      "matched": "Spárované"
+    },
+    "table": {
+      "date": "Datum",
+      "sender": "Odesílatel",
+      "variableSymbol": "VS",
+      "amount": "Částka",
+      "invoice": "Faktura",
+      "actions": "Akce"
+    },
+    "matchButton": "Spárovat",
+    "unmatchTooltip": "Zrušit spárování",
+    "deleteTooltip": "Smazat platbu",
+    "empty": "Žádné platby nenalezeny",
+    "emptyHint": "Platby se automaticky načítají z vašeho emailu",
+    "toast": {
+      "matched": "Platba byla spárována",
+      "matchFailed": "Nepodařilo se spárovat platbu",
+      "unmatched": "Spárování bylo zrušeno",
+      "unmatchFailed": "Nepodařilo se zrušit spárování",
+      "deleted": "Platba byla smazána",
+      "deleteFailed": "Nepodařilo se smazat platbu",
+      "checkSuccess": "Kontrola emailů dokončena. Pokud byly nalezeny nové platby, zobrazí se v seznamu.",
+      "checkFailed": "Nepodařilo se zkontrolovat emaily. Zkontrolujte nastavení IMAP."
+    },
+    "confirm": {
+      "unmatch": "Opravdu chcete zrušit spárování této platby?",
+      "delete": "Opravdu chcete smazat tuto platbu? Tuto akci nelze vrátit zpět."
+    }
+  },
+  "matchModal": {
+    "title": "Spárovat platbu",
+    "paymentDetails": {
+      "amount": "Částka:",
+      "variableSymbol": "VS:",
+      "sender": "Odesílatel:",
+      "date": "Datum:"
+    },
+    "potentialMatches": "Možné shody",
+    "matchScore": "{{score}}% shoda",
+    "matchButton": "Spárovat",
+    "noMatches": "Nebyly nalezeny žádné odpovídající faktury"
+  }
+}

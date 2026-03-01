@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getStatusLabel, getStatusColor } from '../utils/format';
@@ -48,6 +49,7 @@ interface GeneratedInvoice {
 }
 
 export default function RecurringInvoiceDetail() {
+  const { t } = useTranslation('invoices');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [template, setTemplate] = useState<RecurringTemplate | null>(null);
@@ -78,9 +80,9 @@ export default function RecurringInvoiceDetail() {
     try {
       const result = await api.post(`/recurring-invoices/${id}/toggle`);
       setTemplate(prev => prev ? { ...prev, active: result.active } : null);
-      toast.success(result.active ? 'Opakovaná faktura aktivována' : 'Opakovaná faktura pozastavena');
+      toast.success(result.active ? t('recurring.detail.activatedSuccess') : t('recurring.detail.pausedSuccess'));
     } catch (error) {
-      toast.error('Nepodařilo se změnit stav');
+      toast.error(t('recurring.detail.toggleError'));
     }
   }
 
@@ -88,22 +90,22 @@ export default function RecurringInvoiceDetail() {
     setGenerating(true);
     try {
       await api.post(`/recurring-invoices/${id}/generate-now`);
-      toast.success('Faktura byla vygenerována');
+      toast.success(t('recurring.detail.generateSuccess'));
       loadData();
     } catch (error) {
-      toast.error('Nepodařilo se vygenerovat fakturu');
+      toast.error(t('recurring.detail.generateError'));
     } finally {
       setGenerating(false);
     }
   }
 
   async function handleDelete() {
-    if (!confirm('Opravdu chcete smazat tuto opakovanou fakturu? Tato akce je nevratná.')) return;
+    if (!confirm(t('recurring.detail.confirmDelete'))) return;
     try {
       await api.delete(`/recurring-invoices/${id}`);
       navigate('/invoices?tab=recurring');
     } catch (error) {
-      toast.error('Nepodařilo se smazat opakovanou fakturu');
+      toast.error(t('recurring.detail.deleteError'));
     }
   }
 
@@ -116,7 +118,7 @@ export default function RecurringInvoiceDetail() {
   }
 
   if (!template) {
-    return <div className="text-center text-gray-500 dark:text-gray-400">Opakovaná faktura nenalezena</div>;
+    return <div className="text-center text-gray-500 dark:text-gray-400">{t('recurring.detail.notFound')}</div>;
   }
 
   const subtotal = template.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -136,12 +138,12 @@ export default function RecurringInvoiceDetail() {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Opakovaná faktura — {template.clientName}
+              {t('recurring.detail.title', { clientName: template.clientName })}
             </h1>
             {template.active ? (
-              <span className="badge bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">Aktivní</span>
+              <span className="badge bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">{t('recurring.detail.statusActive')}</span>
             ) : (
-              <span className="badge bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">Pozastaveno</span>
+              <span className="badge bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">{t('recurring.detail.statusPaused')}</span>
             )}
           </div>
         </div>
@@ -152,18 +154,18 @@ export default function RecurringInvoiceDetail() {
             className="btn btn-primary flex items-center space-x-2"
           >
             <Zap className="h-4 w-4" />
-            <span>{generating ? 'Generuji...' : 'Vygenerovat nyní'}</span>
+            <span>{generating ? t('recurring.detail.generating') : t('recurring.detail.generateNow')}</span>
           </button>
           <Link to={`/recurring/${id}/edit`} className="btn btn-secondary flex items-center space-x-2">
             <Edit className="h-4 w-4" />
-            <span>Upravit</span>
+            <span>{t('recurring.detail.edit')}</span>
           </Link>
           <button
             onClick={handleToggle}
             className="btn btn-secondary flex items-center space-x-2"
           >
             {template.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            <span>{template.active ? 'Pozastavit' : 'Aktivovat'}</span>
+            <span>{template.active ? t('recurring.detail.pause') : t('recurring.detail.activate')}</span>
           </button>
         </div>
       </div>
@@ -172,15 +174,15 @@ export default function RecurringInvoiceDetail() {
         <div className="lg:col-span-2 space-y-6">
           {/* Items */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Položky</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.detail.itemsSection')}</h2>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">Popis</th>
-                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Množství</th>
-                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Cena/ks</th>
-                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Celkem</th>
+                    <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.columnDescription')}</th>
+                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.columnQuantity')}</th>
+                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.columnUnitPrice')}</th>
+                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.columnTotal')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -195,15 +197,15 @@ export default function RecurringInvoiceDetail() {
                 </tbody>
                 <tfoot>
                   <tr className="border-t border-gray-200 dark:border-gray-700">
-                    <td colSpan={3} className="py-2 text-right font-medium">Základ daně:</td>
+                    <td colSpan={3} className="py-2 text-right font-medium">{t('recurring.detail.subtotal')}</td>
                     <td className="py-2 text-right">{formatCurrency(subtotal, template.currency)}</td>
                   </tr>
                   <tr>
-                    <td colSpan={3} className="py-2 text-right font-medium">DPH ({template.vatRate}%):</td>
+                    <td colSpan={3} className="py-2 text-right font-medium">{t('recurring.detail.vatWithRate', { rate: template.vatRate })}</td>
                     <td className="py-2 text-right">{formatCurrency(vatAmount, template.currency)}</td>
                   </tr>
                   <tr className="text-lg">
-                    <td colSpan={3} className="py-2 text-right font-bold">Celkem:</td>
+                    <td colSpan={3} className="py-2 text-right font-bold">{t('recurring.detail.total')}</td>
                     <td className="py-2 text-right font-bold text-blue-600">
                       {formatCurrency(total, template.currency)}
                     </td>
@@ -216,7 +218,7 @@ export default function RecurringInvoiceDetail() {
           {/* Notes */}
           {template.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Poznámky</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.detail.notesSection')}</h2>
               <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{template.notes}</p>
             </div>
           )}
@@ -224,15 +226,15 @@ export default function RecurringInvoiceDetail() {
           {/* Generated invoices */}
           {generatedInvoices.length > 0 && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Vygenerované faktury</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.detail.generatedInvoicesSection')}</h2>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">Číslo</th>
-                      <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">Datum</th>
-                      <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Částka</th>
-                      <th className="text-center py-2 font-medium text-gray-500 dark:text-gray-400">Stav</th>
+                      <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.generatedColumnNumber')}</th>
+                      <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.generatedColumnDate')}</th>
+                      <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.generatedColumnAmount')}</th>
+                      <th className="text-center py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.generatedColumnStatus')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -262,46 +264,46 @@ export default function RecurringInvoiceDetail() {
         {/* Sidebar */}
         <div className="space-y-6">
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Plán</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.detail.scheduleSection')}</h2>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">Den v měsíci:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.dayOfMonth')}</dt>
                 <dd className="font-medium">{template.dayOfMonth}.</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">Datum zahájení:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.startDate')}</dt>
                 <dd className="font-medium">{formatDate(template.startDate)}</dd>
               </div>
               {template.endDate && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">Datum ukončení:</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.endDate')}</dt>
                   <dd className="font-medium">{formatDate(template.endDate)}</dd>
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">Další generování:</dt>
+                <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.nextGeneration')}</dt>
                 <dd className="font-medium">{formatDate(template.nextGenerationDate)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">Splatnost:</dt>
-                <dd className="font-medium">{template.paymentTerms} dní</dd>
+                <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.paymentTerms')}</dt>
+                <dd className="font-medium">{t('recurring.detail.paymentTermsDays', { count: template.paymentTerms })}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">Auto-odeslání:</dt>
-                <dd className="font-medium">{template.autoSend ? 'Ano' : 'Ne'}</dd>
+                <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.autoSend')}</dt>
+                <dd className="font-medium">{template.autoSend ? t('recurring.detail.autoSendYes') : t('recurring.detail.autoSendNo')}</dd>
               </div>
             </dl>
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Akce</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.detail.actionsSection')}</h2>
             <div className="space-y-2">
               <button
                 onClick={handleDelete}
                 className="btn btn-danger w-full flex items-center justify-center space-x-2"
               >
                 <Trash2 className="h-4 w-4" />
-                <span>Smazat opakovanou fakturu</span>
+                <span>{t('recurring.detail.deleteRecurring')}</span>
               </button>
             </div>
           </div>

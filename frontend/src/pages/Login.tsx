@@ -4,9 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { FileText } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
+import { useTranslation } from 'react-i18next';
 
 export default function Login() {
   const { login } = useAuth();
+  const { t } = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,7 @@ export default function Login() {
       await login(email, password);
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Přihlášení selhalo');
+      toast.error(t(`common:errors.${error.message}`, { defaultValue: error.message }) || t('login.errorDefault'));
     } finally {
       setLoading(false);
     }
@@ -34,13 +36,13 @@ export default function Login() {
             <FileText className="h-12 w-12 text-blue-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">Přihlaste se ke svému účtu</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">{t('login.subtitle')}</p>
         </div>
 
         <div className="card">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="label">Email</label>
+              <label htmlFor="email" className="label">{t('login.emailLabel')}</label>
               <input
                 type="email"
                 id="email"
@@ -52,7 +54,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="label">Heslo</label>
+              <label htmlFor="password" className="label">{t('login.passwordLabel')}</label>
               <input
                 type="password"
                 id="password"
@@ -65,7 +67,7 @@ export default function Login() {
 
             <div className="text-right">
               <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
-                Zapomenuté heslo?
+                {t('login.forgotPasswordLink')}
               </Link>
             </div>
 
@@ -74,14 +76,14 @@ export default function Login() {
               disabled={loading}
               className="btn btn-primary w-full"
             >
-              {loading ? 'Přihlašuji...' : 'Přihlásit se'}
+              {loading ? t('login.submittingButton') : t('login.submitButton')}
             </button>
           </form>
 
           <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
-            Nemáte účet?{' '}
+            {t('login.noAccountText')}{' '}
             <Link to="/register" className="text-blue-600 hover:underline">
-              Registrovat se
+              {t('login.registerLink')}
             </Link>
           </p>
         </div>

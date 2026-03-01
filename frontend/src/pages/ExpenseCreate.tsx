@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
 import { ArrowLeft, Upload, X } from 'lucide-react';
@@ -13,6 +14,7 @@ interface Client {
 export default function ExpenseCreate() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation('expenses');
   const isEdit = !!id;
 
   const [clients, setClients] = useState<Client[]>([]);
@@ -81,12 +83,12 @@ export default function ExpenseCreate() {
 
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Povolené formáty: PDF, JPEG, PNG');
+      toast.error(t('create.attachment.allowedFormats'));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Maximální velikost souboru je 5 MB');
+      toast.error(t('create.attachment.maxFileSize'));
       return;
     }
 
@@ -118,7 +120,7 @@ export default function ExpenseCreate() {
     e.preventDefault();
 
     if (Number(formData.amount) <= 0) {
-      toast.error('Zadejte částku');
+      toast.error(t('create.validation.enterAmount'));
       return;
     }
 
@@ -149,7 +151,7 @@ export default function ExpenseCreate() {
       navigate('/expenses');
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Nepodařilo se uložit náklad');
+      toast.error(error.message || t('create.toast.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -178,16 +180,16 @@ export default function ExpenseCreate() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {isEdit ? 'Upravit náklad' : 'Nový náklad'}
+          {isEdit ? t('create.titleEdit') : t('create.titleNew')}
         </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Supplier selection */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Dodavatel</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.supplier.title')}</h2>
           <div>
-            <label htmlFor="clientId" className="label">Vyberte dodavatele</label>
+            <label htmlFor="clientId" className="label">{t('create.supplier.label')}</label>
             <select
               id="clientId"
               name="clientId"
@@ -195,7 +197,7 @@ export default function ExpenseCreate() {
               onChange={handleChange}
               className="input"
             >
-              <option value="">-- Bez dodavatele --</option>
+              <option value="">{t('create.supplier.noSupplier')}</option>
               {clients.map(client => (
                 <option key={client.id} value={client.id}>
                   {client.companyName}
@@ -207,10 +209,10 @@ export default function ExpenseCreate() {
 
         {/* Expense details */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Údaje nákladu</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.details.title')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="supplierInvoiceNumber" className="label">Číslo faktury dodavatele</label>
+              <label htmlFor="supplierInvoiceNumber" className="label">{t('create.details.supplierInvoiceNumber')}</label>
               <input
                 type="text"
                 id="supplierInvoiceNumber"
@@ -219,11 +221,11 @@ export default function ExpenseCreate() {
                 onChange={handleChange}
                 className="input"
                 maxLength={100}
-                placeholder="FV-2026001"
+                placeholder={t('create.details.supplierInvoiceNumberPlaceholder')}
               />
             </div>
             <div>
-              <label htmlFor="issueDate" className="label">Datum přijetí *</label>
+              <label htmlFor="issueDate" className="label">{t('create.details.issueDate')}</label>
               <input
                 type="date"
                 id="issueDate"
@@ -235,7 +237,7 @@ export default function ExpenseCreate() {
               />
             </div>
             <div>
-              <label htmlFor="dueDate" className="label">Datum splatnosti *</label>
+              <label htmlFor="dueDate" className="label">{t('create.details.dueDate')}</label>
               <input
                 type="date"
                 id="dueDate"
@@ -247,7 +249,7 @@ export default function ExpenseCreate() {
               />
             </div>
             <div>
-              <label htmlFor="currency" className="label">Měna</label>
+              <label htmlFor="currency" className="label">{t('create.details.currency')}</label>
               <select
                 id="currency"
                 name="currency"
@@ -264,10 +266,10 @@ export default function ExpenseCreate() {
 
         {/* Amount */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Částka</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.amount.title')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="amount" className="label">Základ daně *</label>
+              <label htmlFor="amount" className="label">{t('create.amount.taxBase')}</label>
               <input
                 type="number"
                 id="amount"
@@ -281,7 +283,7 @@ export default function ExpenseCreate() {
               />
             </div>
             <div>
-              <label htmlFor="vatRate" className="label">Sazba DPH</label>
+              <label htmlFor="vatRate" className="label">{t('create.amount.vatRate')}</label>
               <select
                 id="vatRate"
                 name="vatRate"
@@ -299,15 +301,15 @@ export default function ExpenseCreate() {
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex flex-col items-end space-y-2">
               <div className="flex justify-between w-full max-w-xs">
-                <span className="text-gray-600 dark:text-gray-300">Základ daně:</span>
+                <span className="text-gray-600 dark:text-gray-300">{t('create.amount.taxBaseLabel')}</span>
                 <span className="font-medium">{formatCurrencyLocal(Number(formData.amount))}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs">
-                <span className="text-gray-600 dark:text-gray-300">DPH ({formData.vatRate}%):</span>
+                <span className="text-gray-600 dark:text-gray-300">{t('create.amount.vatLabel', { rate: formData.vatRate })}</span>
                 <span className="font-medium">{formatCurrencyLocal(calculateVatAmount())}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs text-lg">
-                <span className="font-bold">Celkem:</span>
+                <span className="font-bold">{t('create.amount.total')}</span>
                 <span className="font-bold text-blue-600">{formatCurrencyLocal(calculateTotal())}</span>
               </div>
             </div>
@@ -316,7 +318,7 @@ export default function ExpenseCreate() {
 
         {/* File attachment */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Příloha</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.attachment.title')}</h2>
           {fileName ? (
             <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <span className="text-gray-700 dark:text-gray-300">{fileName}</span>
@@ -333,7 +335,7 @@ export default function ExpenseCreate() {
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
                 <Upload className="h-8 w-8 text-gray-400 dark:text-gray-500 mb-2" />
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Klikněte pro nahrání souboru (PDF, JPEG, PNG, max 5 MB)
+                  {t('create.attachment.uploadPrompt')}
                 </p>
               </div>
               <input
@@ -348,7 +350,7 @@ export default function ExpenseCreate() {
 
         {/* Description */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Popis</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.description.title')}</h2>
           <textarea
             name="description"
             value={formData.description}
@@ -356,16 +358,16 @@ export default function ExpenseCreate() {
             className="input"
             rows={2}
             maxLength={300}
-            placeholder="Za co je náklad..."
+            placeholder={t('create.description.placeholder')}
           />
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {formData.description.length}/300 znaků
+            {t('create.description.charCount', { count: formData.description.length })}
           </p>
         </div>
 
         {/* Notes */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Poznámky</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.notes.title')}</h2>
           <textarea
             name="notes"
             value={formData.notes}
@@ -373,10 +375,10 @@ export default function ExpenseCreate() {
             className="input"
             rows={2}
             maxLength={300}
-            placeholder="Doplňující poznámky..."
+            placeholder={t('create.notes.placeholder')}
           />
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {formData.notes.length}/300 znaků
+            {t('create.notes.charCount', { count: formData.notes.length })}
           </p>
         </div>
 
@@ -387,14 +389,14 @@ export default function ExpenseCreate() {
             onClick={() => navigate('/expenses')}
             className="btn btn-secondary"
           >
-            Zrušit
+            {t('create.buttons.cancel')}
           </button>
           <button
             type="submit"
             disabled={saving}
             className="btn btn-primary"
           >
-            {saving ? 'Ukládám...' : (isEdit ? 'Uložit změny' : 'Vytvořit náklad')}
+            {saving ? t('create.buttons.saving') : (isEdit ? t('create.buttons.saveChanges') : t('create.buttons.createExpense'))}
           </button>
         </div>
       </form>

@@ -4,8 +4,10 @@ import { toast } from 'sonner';
 import { FileText, CheckCircle } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import { api } from '../utils/api';
+import { useTranslation } from 'react-i18next';
 
 export default function ForgotPassword() {
+  const { t } = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,7 @@ export default function ForgotPassword() {
       setSuccess(true);
     } catch (err: unknown) {
       const error = err as Error;
-      toast.error(error.message || 'Nepodařilo se odeslat email pro obnovení hesla');
+      toast.error(t(`common:errors.${error.message}`, { defaultValue: error.message }) || t('forgotPassword.errorDefault'));
     } finally {
       setLoading(false);
     }
@@ -34,7 +36,7 @@ export default function ForgotPassword() {
             <FileText className="h-12 w-12 text-blue-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">Obnovení hesla</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">{t('forgotPassword.subtitle')}</p>
         </div>
 
         <div className="card">
@@ -42,23 +44,23 @@ export default function ForgotPassword() {
             <div>
               <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg mb-4">
                 <CheckCircle className="h-5 w-5 flex-shrink-0" />
-                <span>Pokud účet s tímto emailem existuje, byl odeslán odkaz pro obnovení hesla.</span>
+                <span>{t('forgotPassword.successMessage')}</span>
               </div>
               <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
                 <Link to="/login" className="text-blue-600 hover:underline">
-                  Zpět na přihlášení
+                  {t('forgotPassword.backToLoginLink')}
                 </Link>
               </p>
             </div>
           ) : (
             <>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Zadejte svůj email a my vám pošleme odkaz pro obnovení hesla.
+                {t('forgotPassword.description')}
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="email" className="label">Email</label>
+                  <label htmlFor="email" className="label">{t('forgotPassword.emailLabel')}</label>
                   <input
                     type="email"
                     id="email"
@@ -74,13 +76,13 @@ export default function ForgotPassword() {
                   disabled={loading}
                   className="btn btn-primary w-full"
                 >
-                  {loading ? 'Odesílám...' : 'Odeslat odkaz pro obnovení'}
+                  {loading ? t('forgotPassword.submittingButton') : t('forgotPassword.submitButton')}
                 </button>
               </form>
 
               <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
                 <Link to="/login" className="text-blue-600 hover:underline">
-                  Zpět na přihlášení
+                  {t('forgotPassword.backToLoginLink')}
                 </Link>
               </p>
             </>

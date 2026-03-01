@@ -29,8 +29,12 @@ function applyTheme(resolved: ResolvedTheme) {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemePreference>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
+    } catch {
+      // localStorage unavailable in test environment
+    }
     return 'system';
   });
 
@@ -40,7 +44,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setTheme = useCallback((newTheme: ThemePreference) => {
     setThemeState(newTheme);
-    localStorage.setItem(STORAGE_KEY, newTheme);
+    try { localStorage.setItem(STORAGE_KEY, newTheme); } catch { /* test env */ }
   }, []);
 
   // Apply theme class whenever resolved theme changes

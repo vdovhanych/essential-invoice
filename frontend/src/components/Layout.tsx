@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import AIAssistant from './AIAssistant';
@@ -22,17 +23,10 @@ import {
   Monitor
 } from 'lucide-react';
 
-const baseNavItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Přehled' },
-  { path: '/invoices', icon: FileText, label: 'Faktury' },
-  { path: '/expenses', icon: Receipt, label: 'Náklady' },
-  { path: '/clients', icon: Users, label: 'Kontakty' },
-  { path: '/payments', icon: CreditCard, label: 'Platby' },
-];
-
 export default function Layout() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation('common');
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -55,16 +49,24 @@ export default function Layout() {
   }, []);
 
   // Build nav items dynamically based on calculator setting
+  const baseNavItems = [
+    { path: '/', icon: LayoutDashboard, label: t('nav.dashboard') },
+    { path: '/invoices', icon: FileText, label: t('nav.invoices') },
+    { path: '/expenses', icon: Receipt, label: t('nav.expenses') },
+    { path: '/clients', icon: Users, label: t('nav.clients') },
+    { path: '/payments', icon: CreditCard, label: t('nav.payments') },
+  ];
+
   const navItems = [
     ...baseNavItems,
-    ...(calculatorEnabled ? [{ path: '/calculator', icon: Calculator, label: 'Kalkulačka' }] : []),
-    { path: '/settings', icon: Settings, label: 'Nastavení' },
+    ...(calculatorEnabled ? [{ path: '/calculator', icon: Calculator, label: t('nav.calculator') }] : []),
+    { path: '/settings', icon: Settings, label: t('nav.settings') },
   ];
 
   const themeOptions = [
-    { value: 'light' as const, icon: Sun, label: 'Světlý' },
-    { value: 'dark' as const, icon: Moon, label: 'Tmavý' },
-    { value: 'system' as const, icon: Monitor, label: 'Systém' },
+    { value: 'light' as const, icon: Sun, label: t('theme.light') },
+    { value: 'dark' as const, icon: Moon, label: t('theme.dark') },
+    { value: 'system' as const, icon: Monitor, label: t('theme.system') },
   ];
 
   return (
@@ -162,7 +164,7 @@ export default function Layout() {
                       onClick={() => setUserMenuOpen(false)}
                     >
                       <User className="h-4 w-4" />
-                      <span>Profil</span>
+                      <span>{t('userMenu.profile')}</span>
                     </Link>
                     <Link
                       to="/settings"
@@ -170,11 +172,11 @@ export default function Layout() {
                       onClick={() => setUserMenuOpen(false)}
                     >
                       <Settings className="h-4 w-4" />
-                      <span>Nastavení</span>
+                      <span>{t('nav.settings')}</span>
                     </Link>
                     <hr className="my-1 dark:border-gray-700" />
                     <div className="px-4 py-2">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Vzhled aplikace</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('userMenu.appearance')}</p>
                       <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                         {themeOptions.map(({ value, icon: Icon, label }) => (
                           <button
@@ -201,7 +203,7 @@ export default function Layout() {
                       className="flex items-center space-x-2 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 w-full"
                     >
                       <LogOut className="h-4 w-4" />
-                      <span>Odhlásit se</span>
+                      <span>{t('userMenu.logout')}</span>
                     </button>
                   </div>
                 </>

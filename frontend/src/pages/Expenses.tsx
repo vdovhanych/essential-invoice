@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getExpenseStatusLabel, getExpenseStatusColor } from '../utils/format';
 import { Plus, Search, Filter, Receipt } from 'lucide-react';
@@ -19,6 +20,7 @@ interface Expense {
 }
 
 export default function Expenses() {
+  const { t } = useTranslation('expenses');
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -59,10 +61,10 @@ export default function Expenses() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Náklady</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('list.title')}</h1>
         <Link to="/expenses/new" className="btn btn-primary flex items-center space-x-2">
           <Plus className="h-4 w-4" />
-          <span>Nový náklad</span>
+          <span>{t('list.newExpense')}</span>
         </Link>
       </div>
 
@@ -72,7 +74,7 @@ export default function Expenses() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Hledat náklady..."
+            placeholder={t('list.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input pl-10"
@@ -85,9 +87,9 @@ export default function Expenses() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="input w-auto"
           >
-            <option value="">Všechny stavy</option>
-            <option value="unpaid">Nezaplaceno</option>
-            <option value="paid">Zaplaceno</option>
+            <option value="">{t('list.allStatuses')}</option>
+            <option value="unpaid">{t('list.unpaid')}</option>
+            <option value="paid">{t('list.paid')}</option>
           </select>
         </div>
       </div>
@@ -99,13 +101,13 @@ export default function Expenses() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Číslo</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Dodavatel</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Číslo faktury</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Datum přijetí</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Splatnost</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Částka</th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Stav</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.number')}</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.supplier')}</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.invoiceNumber')}</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.issueDate')}</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.dueDate')}</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.amount')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -152,10 +154,10 @@ export default function Expenses() {
         ) : (
           <div className="text-center py-12">
             <Receipt className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">Žádné náklady nenalezeny</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('list.empty')}</p>
             <Link to="/expenses/new" className="btn btn-primary mt-4 inline-flex items-center space-x-2">
               <Plus className="h-4 w-4" />
-              <span>Přidat první náklad</span>
+              <span>{t('list.addFirst')}</span>
             </Link>
           </div>
         )}

@@ -21,6 +21,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 - **Onboarding Wizard**: Guided 2-step setup after registration to collect company and bank details
 - **Account Deletion**: Self-service account deletion with password confirmation
 - **Dashboard**: Overview of revenue, outstanding payments, and recent activity
+- **Multi-language**: Czech and English UI, PDFs, and emails with language setting in profile
 - **Multi-currency**: Support for CZK and EUR
 - **Docker Ready**: Single command deployment with docker compose
 - **Helm Chart**: Kubernetes deployment with built-in PostgreSQL StatefulSet

@@ -1,5 +1,6 @@
 import QRCode from 'qrcode';
 import { query } from '../db/init';
+import { t, formatDateLocale, formatCurrencyLocale } from '../i18n/translations';
 
 // pdfmake is a CJS module – require it
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -39,6 +40,8 @@ interface InvoiceData {
   userBankAccount: string;
   userBankCode: string;
   userLogoDataUrl: string | null;
+  // Language
+  language: string;
   // Items
   items: Array<{
     description: string;
@@ -49,15 +52,12 @@ interface InvoiceData {
   }>;
 }
 
-function formatCurrency(amount: number, currency: string): string {
-  if (currency === 'CZK') {
-    return `${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kč`;
-  }
-  return `${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+function formatCurrency(amount: number, currency: string, locale?: string): string {
+  return formatCurrencyLocale(amount, currency, locale);
 }
 
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString('cs-CZ');
+function formatDate(date: Date, locale?: string): string {
+  return formatDateLocale(date, locale);
 }
 
 async function generateQRCodeDataURL(data: string): Promise<string> {
@@ -82,6 +82,9 @@ const BLUE = '#2563eb';
 const GRAY_BORDER = '#e5e7eb';
 
 function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): TDocumentDefinitions {
+  const tr = t(invoice.language).pdf;
+  const lang = invoice.language;
+
   // --- Header section ---
   const headerRight: Content = invoice.userLogoDataUrl
     ? { image: invoice.userLogoDataUrl, width: 150, alignment: 'right' as const }
@@ -91,7 +94,7 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
           ...(invoice.userAddress ? [{ text: invoice.userAddress, color: '#555', alignment: 'right' as const }] : []),
           ...(invoice.userIco ? [{ text: `IČO: ${invoice.userIco}`, color: '#555', alignment: 'right' as const }] : []),
           ...(invoice.userVatPayer && invoice.userDic ? [{ text: `DIČ: ${invoice.userDic}`, color: '#555', alignment: 'right' as const }] : []),
-          ...(!invoice.userVatPayer ? [{ text: 'Neplátce DPH', color: '#555', alignment: 'right' as const }] : []),
+          ...(!invoice.userVatPayer ? [{ text: tr.nonVatPayer, color: '#555', alignment: 'right' as const }] : []),
         ],
       };
 
@@ -100,8 +103,8 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
       {
         width: '*',
         stack: [
-          { text: 'FAKTURA', fontSize: 26, bold: true, color: BLUE },
-          { text: `č. ${invoice.invoiceNumber}`, fontSize: 13, color: '#666', margin: [0, 4, 0, 0] },
+          { text: tr.invoice, fontSize: 26, bold: true, color: BLUE },
+          { text: `${tr.invoiceNumberShort} ${invoice.invoiceNumber}`, fontSize: 13, color: '#666', margin: [0, 4, 0, 0] },
         ],
       },
       { width: '*', ...headerRight } as any,
@@ -120,7 +123,7 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
     if (address) lines.push({ text: address, color: '#555' });
     if (ico) lines.push({ text: `IČO: ${ico}`, color: '#555' });
     if (showVatPayer) {
-      lines.push({ text: 'Neplátce DPH', color: '#555' });
+      lines.push({ text: tr.nonVatPayer, color: '#555' });
     } else if (dic) {
       lines.push({ text: `DIČ: ${dic}`, color: '#555' });
     }
@@ -136,8 +139,8 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
 
   const partiesSection: Content = {
     columns: [
-      buildPartyStack('DODAVATEL', invoice.userCompanyName || invoice.userName, invoice.userAddress, invoice.userIco, invoice.userDic, !invoice.userVatPayer),
-      buildPartyStack('ODBĚRATEL', invoice.clientName, invoice.clientAddress, invoice.clientIco, invoice.clientDic),
+      buildPartyStack(tr.supplier, invoice.userCompanyName || invoice.userName, invoice.userAddress, invoice.userIco, invoice.userDic, !invoice.userVatPayer),
+      buildPartyStack(tr.customer, invoice.clientName, invoice.clientAddress, invoice.clientIco, invoice.clientDic),
     ],
     margin: [0, 0, 0, 18],
   };
@@ -148,12 +151,12 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
       widths: ['*', '*'],
       body: [
         [
-          { text: 'DATUM VYSTAVENÍ', fontSize: 8, color: '#666', alignment: 'center' as const },
-          { text: 'DATUM SPLATNOSTI', fontSize: 8, color: '#666', alignment: 'center' as const },
+          { text: tr.issueDate, fontSize: 8, color: '#666', alignment: 'center' as const },
+          { text: tr.dueDate, fontSize: 8, color: '#666', alignment: 'center' as const },
         ],
         [
-          { text: formatDate(invoice.issueDate), fontSize: 11, bold: true, alignment: 'center' as const },
-          { text: formatDate(invoice.dueDate), fontSize: 11, bold: true, alignment: 'center' as const },
+          { text: formatDate(invoice.issueDate, lang), fontSize: 11, bold: true, alignment: 'center' as const },
+          { text: formatDate(invoice.dueDate, lang), fontSize: 11, bold: true, alignment: 'center' as const },
         ],
       ],
     },
@@ -171,17 +174,17 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
 
   // --- Items table ---
   const itemsHeaderRow: TableCell[] = [
-    { text: 'POPIS', style: 'tableHeader' },
-    { text: 'MNOŽSTVÍ', style: 'tableHeader', alignment: 'right' },
-    { text: 'CENA ZA JEDNOTKU', style: 'tableHeader', alignment: 'right' },
-    { text: 'CELKEM', style: 'tableHeader', alignment: 'right' },
+    { text: tr.description, style: 'tableHeader' },
+    { text: tr.quantity, style: 'tableHeader', alignment: 'right' },
+    { text: tr.unitPrice, style: 'tableHeader', alignment: 'right' },
+    { text: tr.total, style: 'tableHeader', alignment: 'right' },
   ];
 
   const itemRows: TableCell[][] = invoice.items.map(item => [
     { text: item.description },
     { text: `${item.quantity} ${item.unit}`, alignment: 'right' as const },
-    { text: formatCurrency(item.unitPrice, invoice.currency), alignment: 'right' as const },
-    { text: formatCurrency(item.total, invoice.currency), alignment: 'right' as const },
+    { text: formatCurrency(item.unitPrice, invoice.currency, lang), alignment: 'right' as const },
+    { text: formatCurrency(item.total, invoice.currency, lang), alignment: 'right' as const },
   ]);
 
   const itemsSection: Content = {
@@ -206,22 +209,22 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
   // --- Totals section ---
   const totalsRows: any[] = [
     [
-      { text: 'Základ daně:' },
-      { text: formatCurrency(invoice.subtotal, invoice.currency), alignment: 'right' as const },
+      { text: tr.subtotal },
+      { text: formatCurrency(invoice.subtotal, invoice.currency, lang), alignment: 'right' as const },
     ],
   ];
 
   // Only show VAT line if VAT rate is greater than 0
   if (invoice.vatRate > 0) {
     totalsRows.push([
-      { text: `DPH (${invoice.vatRate}%):` },
-      { text: formatCurrency(invoice.vatAmount, invoice.currency), alignment: 'right' as const },
+      { text: `${tr.vat} (${invoice.vatRate}%):` },
+      { text: formatCurrency(invoice.vatAmount, invoice.currency, lang), alignment: 'right' as const },
     ]);
   }
 
   totalsRows.push([
-    { text: 'Celkem k úhradě:', bold: true, fontSize: 14, color: BLUE, margin: [0, 8, 0, 0] as [number, number, number, number] },
-    { text: formatCurrency(invoice.total, invoice.currency), bold: true, fontSize: 14, color: BLUE, alignment: 'right' as const, margin: [0, 8, 0, 0] as [number, number, number, number] },
+    { text: tr.totalDue, bold: true, fontSize: 14, color: BLUE, margin: [0, 8, 0, 0] as [number, number, number, number] },
+    { text: formatCurrency(invoice.total, invoice.currency, lang), bold: true, fontSize: 14, color: BLUE, alignment: 'right' as const, margin: [0, 8, 0, 0] as [number, number, number, number] },
   ]);
 
   const totalsTable: Column = {
@@ -253,22 +256,22 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
   const paymentRows: Content[] = [
     {
       columns: [
-        { width: 110, text: 'Číslo účtu:', color: '#666' },
+        { width: 110, text: tr.accountNumber, color: '#666' },
         { width: '*', text: `${invoice.userBankAccount}/${invoice.userBankCode}`, bold: true },
       ],
       margin: [0, 0, 0, 4],
     },
     {
       columns: [
-        { width: 110, text: 'Variabilní symbol:', color: '#666' },
+        { width: 110, text: tr.variableSymbol, color: '#666' },
         { width: '*', text: invoice.variableSymbol, bold: true },
       ],
       margin: [0, 0, 0, 4],
     },
     {
       columns: [
-        { width: 110, text: 'Částka:', color: '#666' },
-        { width: '*', text: formatCurrency(invoice.total, invoice.currency), bold: true },
+        { width: 110, text: tr.amount, color: '#666' },
+        { width: '*', text: formatCurrency(invoice.total, invoice.currency, lang), bold: true },
       ],
     },
   ];
@@ -277,7 +280,7 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
     {
       width: '*',
       stack: [
-        { text: 'Platební údaje', fontSize: 12, bold: true, color: '#0369a1', margin: [0, 0, 0, 10] },
+        { text: tr.paymentDetails, fontSize: 12, bold: true, color: '#0369a1', margin: [0, 0, 0, 10] },
         ...paymentRows,
       ],
     },
@@ -288,7 +291,7 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
       width: 'auto',
       stack: [
         { image: qrCodeDataUrl, width: 100, alignment: 'center' as const },
-        { text: 'QR platba', fontSize: 8, color: '#666', alignment: 'center' as const, margin: [0, 4, 0, 0] },
+        { text: tr.qrPayment, fontSize: 8, color: '#666', alignment: 'center' as const, margin: [0, 4, 0, 0] },
       ],
     });
   }
@@ -328,7 +331,7 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
             [
               {
                 stack: [
-                  { text: 'Poznámky:', bold: true, margin: [0, 0, 0, 4] },
+                  { text: tr.notes, bold: true, margin: [0, 0, 0, 4] },
                   { text: invoice.notes },
                 ],
               },
@@ -357,7 +360,7 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
   };
 
   const footerText: Content = {
-    text: `Vystaveno dne ${formatDate(new Date())} | Faktura č. ${invoice.invoiceNumber}`,
+    text: `${tr.issuedOn} ${formatDate(new Date(), lang)} | ${tr.invoice} ${tr.invoiceNumberShort} ${invoice.invoiceNumber}`,
     alignment: 'center',
     color: '#666',
     fontSize: 8,
@@ -410,8 +413,8 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
       u.company_address as user_address, u.company_ico as user_ico,
       u.company_dic as user_dic, u.vat_payer as user_vat_payer,
       u.bank_account as user_bank_account,
-      u.bank_code as user_bank_code, u.logo_data as user_logo_data,
-      u.logo_mime_type as user_logo_mime_type
+      u.bank_code as user_bank_code, u.language as user_language,
+      u.logo_data as user_logo_data, u.logo_mime_type as user_logo_mime_type
     FROM invoices i
     JOIN clients c ON i.client_id = c.id
     JOIN users u ON i.user_id = u.id
@@ -460,6 +463,7 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
     userVatPayer: row.user_vat_payer !== false, // Default to true if null
     userBankAccount: row.user_bank_account,
     userBankCode: row.user_bank_code,
+    language: row.user_language || 'cs',
     userLogoDataUrl,
     items: itemsResult.rows.map(item => ({
       description: item.description,

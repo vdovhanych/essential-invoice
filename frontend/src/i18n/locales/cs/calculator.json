@@ -1,0 +1,27 @@
+{
+  "title": "Kalkulačka fakturace",
+
+  "inputs": {
+    "heading": "Vstupní hodnoty",
+    "hourlyRate": "Hodinová sazba",
+    "hoursWorked": "Odpracované hodiny",
+    "kpiBonusPercent": "KPI bonus (%)"
+  },
+
+  "results": {
+    "heading": "Vypočtené hodnoty",
+    "kpiBonusHours": "KPI bonus (hodiny)",
+    "kpiBonusAmount": "KPI bonus (částka)",
+    "hoursTotal": "Hodiny celkem (částka)",
+    "grandTotal": "Celková částka",
+    "hoursUnit": "hod"
+  },
+
+  "formulas": {
+    "heading": "Vzorce pro vypocet:",
+    "kpiBonusHours": "KPI bonus (hodiny) = Odpracované hodiny x KPI bonus % / 100",
+    "kpiBonusAmount": "KPI bonus (částka) = Hodinová sazba x KPI bonus (hodiny)",
+    "hoursTotal": "Hodiny celkem (částka) = Hodinová sazba x Odpracované hodiny",
+    "grandTotal": "Celková částka = Hodiny celkem + KPI bonus (částka)"
+  }
+}

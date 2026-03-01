@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { Calculator as CalculatorIcon, AlertCircle } from 'lucide-react';
@@ -19,6 +20,7 @@ function loadSavedValues() {
 }
 
 export default function Calculator() {
+  const { t } = useTranslation('calculator');
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [enabled, setEnabled] = useState(false);
@@ -93,15 +95,15 @@ export default function Calculator() {
         <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
           <CalculatorIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Kalkulačka fakturace</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
       </div>
 
       {/* Input Section */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Vstupní hodnoty</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('inputs.heading')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="label">Hodinová sazba</label>
+            <label className="label">{t('inputs.hourlyRate')}</label>
             <input
               type="number"
               value={hourlyRate}
@@ -113,7 +115,7 @@ export default function Calculator() {
             />
           </div>
           <div>
-            <label className="label">Odpracované hodiny</label>
+            <label className="label">{t('inputs.hoursWorked')}</label>
             <input
               type="number"
               value={hoursWorked}
@@ -125,7 +127,7 @@ export default function Calculator() {
             />
           </div>
           <div>
-            <label className="label">KPI bonus (%)</label>
+            <label className="label">{t('inputs.kpiBonusPercent')}</label>
             <input
               type="number"
               value={kpiBonusPercent}
@@ -142,27 +144,27 @@ export default function Calculator() {
 
       {/* Results Section */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Vypočtené hodnoty</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('results.heading')}</h2>
         <div className="space-y-3">
           <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-            <span className="text-gray-600 dark:text-gray-300">KPI bonus (hodiny)</span>
+            <span className="text-gray-600 dark:text-gray-300">{t('results.kpiBonusHours')}</span>
             <span className="font-medium">
               {calculations.kpiBonusHours.toLocaleString('cs-CZ', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
-              })} hod
+              })} {t('results.hoursUnit')}
             </span>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-            <span className="text-gray-600 dark:text-gray-300">KPI bonus (částka)</span>
+            <span className="text-gray-600 dark:text-gray-300">{t('results.kpiBonusAmount')}</span>
             <span className="font-medium">{formatCurrency(calculations.kpiBonusAmount)}</span>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-            <span className="text-gray-600 dark:text-gray-300">Hodiny celkem (částka)</span>
+            <span className="text-gray-600 dark:text-gray-300">{t('results.hoursTotal')}</span>
             <span className="font-medium">{formatCurrency(calculations.hoursTotal)}</span>
           </div>
           <div className="flex justify-between items-center py-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg px-3 -mx-3">
-            <span className="font-bold text-gray-900 dark:text-gray-100">Celková částka</span>
+            <span className="font-bold text-gray-900 dark:text-gray-100">{t('results.grandTotal')}</span>
             <span className="font-bold text-xl text-blue-600">
               {formatCurrency(calculations.grandTotal)}
             </span>
@@ -174,12 +176,12 @@ export default function Calculator() {
       <div className="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
         <AlertCircle className="h-5 w-5 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" />
         <div className="text-sm text-gray-600 dark:text-gray-300">
-          <p className="font-medium mb-1">Vzorce pro vypocet:</p>
+          <p className="font-medium mb-1">{t('formulas.heading')}</p>
           <ul className="list-disc list-inside space-y-1">
-            <li>KPI bonus (hodiny) = Odpracované hodiny x KPI bonus % / 100</li>
-            <li>KPI bonus (částka) = Hodinová sazba x KPI bonus (hodiny)</li>
-            <li>Hodiny celkem (částka) = Hodinová sazba x Odpracované hodiny</li>
-            <li>Celková částka = Hodiny celkem + KPI bonus (částka)</li>
+            <li>{t('formulas.kpiBonusHours')}</li>
+            <li>{t('formulas.kpiBonusAmount')}</li>
+            <li>{t('formulas.hoursTotal')}</li>
+            <li>{t('formulas.grandTotal')}</li>
           </ul>
         </div>
       </div>

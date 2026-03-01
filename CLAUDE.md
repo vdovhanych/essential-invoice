@@ -70,23 +70,26 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `recurringInvoiceGenerator.ts` - In-process scheduler for auto-generating invoices from recurring templates (monthly), with optional auto-send
   - `perplexityAI.ts` - Perplexity AI integration for tax advice and financial guidance
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
+- **i18n**: `i18n/translations.ts` - Plain TypeScript translation maps (cs/en) for PDF labels and email templates. Backend services (pdfGenerator, emailSender, globalEmailSender) use the user's `language` preference to select translations
 - **Utils**: `utils/validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
 - **Scripts**: `scripts/delete-user.ts` - Admin CLI script to delete a user by email
 - **Seed**: `db/seed.ts` - Seeds test data (user, clients, invoices, expenses, payments) for development. Run with `bun run seed [email] [password]`
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
-- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow. `recurring_invoices` and `recurring_invoice_items` tables store monthly recurring invoice templates; `invoices.recurring_invoice_id` tracks which invoices were auto-generated from templates.
+- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, `language` (VARCHAR(5), default 'cs') for UI/PDF/email language preference, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow. `recurring_invoices` and `recurring_invoice_items` tables store monthly recurring invoice templates; `invoices.recurring_invoice_id` tracks which invoices were auto-generated from templates.
 
 ### Frontend (`frontend/src/`)
 - **React 18** with TypeScript, Vite, and TailwindCSS
+- **i18n**: react-i18next with 10 namespaces (common, dashboard, invoices, expenses, clients, payments, settings, profile, auth, calculator). Translation JSON files live in `i18n/locales/{cs,en}/`. Configured in `i18n/index.ts`. Format utilities in `utils/format.ts` are locale-aware via `i18n.language`
 - **Context**:
   - `context/AuthContext.tsx` - Authentication state management
   - `context/AIContext.tsx` - AI assistant state management
 - **Components**: `components/` - Reusable UI:
   - `Layout.tsx` - Main layout wrapper with navigation
+  - `ThemeToggle.tsx` - Theme switcher + language picker dropdown (used on auth pages)
   - `AIAssistant.tsx` - AI assistant chat component
 - **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, RecurringInvoices, RecurringInvoiceCreate, RecurringInvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
 - **Utils**:
-  - `utils/format.ts` - Date/currency formatting helpers
+  - `utils/format.ts` - Locale-aware date/currency formatting helpers
   - `utils/api.ts` - API client and request utilities
 - **Path alias**: `@/*` maps to `src/*`
 

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { ThemeProvider } from '../context/ThemeContext';
 import ResetPassword from './ResetPassword';
 
 // Mock sonner
@@ -16,6 +17,10 @@ vi.mock('lucide-react', () => ({
   FileText: () => <span data-testid="filetext-icon" />,
   AlertCircle: () => <span data-testid="alert-icon" />,
   CheckCircle: () => <span data-testid="check-icon" />,
+  Sun: () => <span data-testid="sun-icon" />,
+  Moon: () => <span data-testid="moon-icon" />,
+  Monitor: () => <span data-testid="monitor-icon" />,
+  ChevronDown: () => <span data-testid="chevrondown-icon" />,
 }));
 
 const mockPost = vi.fn();
@@ -32,7 +37,9 @@ function renderResetPassword(token?: string) {
 
   return render(
     <MemoryRouter initialEntries={initialEntries}>
-      <ResetPassword />
+      <ThemeProvider>
+        <ResetPassword />
+      </ThemeProvider>
     </MemoryRouter>
   );
 }

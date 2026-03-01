@@ -1,0 +1,111 @@
+{
+  "title": "Můj profil",
+
+  "language": {
+    "label": "Jazyk / Language",
+    "cs": "Čeština",
+    "en": "English"
+  },
+
+  "personal": {
+    "heading": "Osobní údaje",
+    "name": "Jméno *",
+    "email": "Email",
+    "emailReadonly": "Email nelze změnit"
+  },
+
+  "company": {
+    "heading": "Firemní údaje",
+    "description": "Tyto údaje se budou zobrazovat na vašich fakturách.",
+    "companyName": "Název firmy",
+    "ico": "ICO",
+    "dic": "DIC",
+    "dicNotRequired": "DIČ není potřeba pro neplátce DPH",
+    "vatPayer": "Jsem plátce DPH",
+    "vatPayerHelp": "Pokud nejste plátce DPH, na fakturách se zobrazí \"Neplátce DPH\" místo DIČ",
+    "address": "Adresa",
+    "bankAccount": "Číslo účtu",
+    "bankAccountPlaceholder": "1234567890",
+    "bankCode": "Kod banky",
+    "bankCodePlaceholder": "0100"
+  },
+
+  "pausalniDan": {
+    "heading": "Paušální daň",
+    "description": "Sledujte, kolik můžete ještě fakturovat v rámci limitu paušální daně. Limit závisí na pásmu a typu příjmů (výdajový paušál).",
+    "enable": "Používám paušální daň",
+    "tierLabel": "Pásmo paušální daně",
+    "tier1": "1. pásmo (9 984 Kč/měsíc)",
+    "tier2": "2. pásmo (16 745 Kč/měsíc)",
+    "tier3": "3. pásmo (27 139 Kč/měsíc)",
+    "tierHelp": "Měsíční platba zahrnuje daň z příjmu, sociální a zdravotní pojištění.",
+    "limitLabel": "Limit příjmů",
+    "limit1m": "1 000 000 Kč (základní)",
+    "limit1_5m_60_80": "1 500 000 Kč (75% OSVČ, paušál 60%/80%)",
+    "limit2m_80": "2 000 000 Kč (75% OSVČ, paušál 80%)",
+    "limit1_5m_basic": "1 500 000 Kč (základní)",
+    "limit2m_pausal": "2 000 000 Kč (75% OSVČ s paušálem)",
+    "limit2m": "2 000 000 Kč",
+    "limitHelp": "Vyšší limity platí, pokud alespoň 75% příjmů pochází ze samostatné výdělečné činnosti s příslušným výdajovým paušálem."
+  },
+
+  "logo": {
+    "heading": "Logo firmy",
+    "description": "Logo se zobrazí na vašich fakturách místo firemních údajů v záhlaví. Podporované formáty: PNG, JPG, SVG. Max. velikost: 2 MB.",
+    "altText": "Logo firmy",
+    "noLogo": "Žádné logo",
+    "uploading": "Nahrávám...",
+    "changeLogo": "Změnit logo",
+    "uploadLogo": "Nahrát logo",
+    "deleteLogo": "Smazat",
+    "recommendedSize": "Doporučená velikost: 200x80 pixelů",
+    "allowedTypes": "Pouze PNG, JPG a SVG soubory jsou povoleny",
+    "maxSize": "Maximální velikost souboru je 2 MB",
+    "deleteConfirm": "Opravdu chcete smazat logo?"
+  },
+
+  "password": {
+    "heading": "Změna hesla",
+    "currentPassword": "Současné heslo",
+    "newPassword": "Nové heslo",
+    "confirmPassword": "Potvrzení nového hesla",
+    "changing": "Měním heslo...",
+    "change": "Změnit heslo"
+  },
+
+  "dangerZone": {
+    "heading": "Nebezpečná zóna",
+    "description": "Smazání účtu je nevratné. Všechna vaše data (faktury, klienti, výdaje, platby, nastavení) budou trvale odstraněna.",
+    "deleteAccount": "Smazat účet",
+    "deleteModalTitle": "Opravdu chcete smazat účet?",
+    "deleteModalDescription": "Tato akce je nevratná. Všechna vaše data budou trvale smazána, včetně:",
+    "deleteModalInvoices": "Faktur a jejich položek",
+    "deleteModalClients": "Klientů",
+    "deleteModalExpenses": "Výdajů",
+    "deleteModalPayments": "Plateb",
+    "deleteModalSettings": "Nastavení a loga",
+    "deleteModalPasswordLabel": "Pro potvrzení zadejte heslo",
+    "deleteModalCancel": "Zrušit",
+    "deleteModalDeleting": "Mažu účet...",
+    "deleteModalConfirm": "Trvale smazat účet"
+  },
+
+  "toast": {
+    "profileUpdated": "Profil byl aktualizován",
+    "profileUpdateFailed": "Nepodařilo se aktualizovat profil",
+    "passwordChanged": "Heslo bylo změněno",
+    "passwordChangeFailed": "Nepodařilo se změnit heslo",
+    "passwordsDoNotMatch": "Hesla se neshodují",
+    "passwordTooShort": "Heslo musí mít alespoň 8 znaků",
+    "logoUploaded": "Logo bylo nahráno",
+    "logoUploadFailed": "Nepodařilo se nahrát logo",
+    "logoDeleted": "Logo bylo smazáno",
+    "logoDeleteFailed": "Nepodařilo se smazat logo",
+    "accountDeleteFailed": "Nepodařilo se smazat účet"
+  },
+
+  "actions": {
+    "saving": "Ukládám...",
+    "save": "Uložit změny"
+  }
+}

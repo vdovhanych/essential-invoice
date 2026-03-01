@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from '../context/ThemeContext';
 import ForgotPassword from './ForgotPassword';
 
 // Mock sonner
@@ -15,6 +16,10 @@ vi.mock('sonner', () => ({
 vi.mock('lucide-react', () => ({
   FileText: () => <span data-testid="filetext-icon" />,
   CheckCircle: () => <span data-testid="check-icon" />,
+  Sun: () => <span data-testid="sun-icon" />,
+  Moon: () => <span data-testid="moon-icon" />,
+  Monitor: () => <span data-testid="monitor-icon" />,
+  ChevronDown: () => <span data-testid="chevrondown-icon" />,
 }));
 
 const mockPost = vi.fn();
@@ -27,7 +32,9 @@ vi.mock('../utils/api', () => ({
 function renderForgotPassword() {
   return render(
     <BrowserRouter>
-      <ForgotPassword />
+      <ThemeProvider>
+        <ForgotPassword />
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
