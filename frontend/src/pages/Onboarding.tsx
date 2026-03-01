@@ -2,14 +2,14 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
-import { FileText, Building, CreditCard, AlertCircle, Upload, Trash2, ChevronRight, ChevronLeft, Landmark } from 'lucide-react';
+import { toast } from 'sonner';
+import { FileText, Building, CreditCard, Upload, Trash2, ChevronRight, ChevronLeft, Landmark } from 'lucide-react';
 
 export default function Onboarding() {
   const { user, token, updateProfile, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoUploaded, setLogoUploaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,12 +44,10 @@ export default function Onboarding() {
   }
 
   function handleNext() {
-    setError('');
     setStep(2);
   }
 
   function handleBack() {
-    setError('');
     setStep(1);
   }
 
@@ -59,24 +57,23 @@ export default function Onboarding() {
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
     if (!allowedTypes.includes(file.type)) {
-      setError('Pouze PNG, JPG a SVG soubory jsou povoleny');
+      toast.error('Pouze PNG, JPG a SVG soubory jsou povoleny');
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      setError('Maximální velikost souboru je 2 MB');
+      toast.error('Maximální velikost souboru je 2 MB');
       return;
     }
 
     setUploadingLogo(true);
-    setError('');
 
     try {
       await api.uploadFile('/auth/me/logo', file, 'logo');
       setLogoUploaded(true);
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Nepodařilo se nahrát logo');
+      toast.error(error.message || 'Nepodařilo se nahrát logo');
     } finally {
       setUploadingLogo(false);
       if (fileInputRef.current) {
@@ -87,14 +84,13 @@ export default function Onboarding() {
 
   async function handleLogoDelete() {
     setUploadingLogo(true);
-    setError('');
 
     try {
       await api.delete('/auth/me/logo');
       setLogoUploaded(false);
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Nepodařilo se smazat logo');
+      toast.error(error.message || 'Nepodařilo se smazat logo');
     } finally {
       setUploadingLogo(false);
     }
@@ -102,7 +98,6 @@ export default function Onboarding() {
 
   async function handleComplete() {
     setSaving(true);
-    setError('');
 
     try {
       await updateProfile({
@@ -113,7 +108,7 @@ export default function Onboarding() {
       navigate('/', { replace: true });
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Nepodařilo se dokončit nastavení');
+      toast.error(error.message || 'Nepodařilo se dokončit nastavení');
     } finally {
       setSaving(false);
     }
@@ -151,14 +146,6 @@ export default function Onboarding() {
             </div>
           </div>
         </div>
-
-        {/* Error */}
-        {error && (
-          <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-6">
-            <AlertCircle className="h-5 w-5 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
 
         {/* Step 1: Company & Tax Info */}
         {step === 1 && (

@@ -146,11 +146,11 @@ export default function Dashboard() {
 
       {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card">
+        <div className="card-interactive">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">K úhradě</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
                 {formatCurrency(data.stats.outstandingAmount)}
               </p>
             </div>
@@ -163,11 +163,11 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="card">
+        <div className="card-interactive">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Zaplaceno tento měsíc</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
                 {formatCurrency(data.stats.paidThisMonth)}
               </p>
             </div>
@@ -180,11 +180,11 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="card">
+        <div className="card-interactive">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Po splatnosti</p>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-2xl font-bold tabular-nums text-red-600">
                 {data.stats.overdueCount}
               </p>
             </div>
@@ -197,11 +197,11 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="card">
+        <div className="card-interactive">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Celkem zaplaceno</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
                 {formatCurrency(data.stats.paidAmount)}
               </p>
             </div>

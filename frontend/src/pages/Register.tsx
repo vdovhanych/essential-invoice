@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FileText, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { FileText } from 'lucide-react';
 
 export default function Register() {
   const { register } = useAuth();
@@ -11,7 +12,6 @@ export default function Register() {
     confirmPassword: '',
     name: '',
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -20,15 +20,13 @@ export default function Register() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-
     if (formData.password !== formData.confirmPassword) {
-      setError('Hesla se neshodují');
+      toast.error('Hesla se neshodují');
       return;
     }
 
     if (formData.password.length < 8) {
-      setError('Heslo musí mít alespoň 8 znaků');
+      toast.error('Heslo musí mít alespoň 8 znaků');
       return;
     }
 
@@ -38,7 +36,7 @@ export default function Register() {
       await register({ email: formData.email, password: formData.password, name: formData.name });
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Registrace selhala');
+      toast.error(error.message || 'Registrace selhala');
     } finally {
       setLoading(false);
     }
@@ -56,13 +54,6 @@ export default function Register() {
         </div>
 
         <div className="card">
-          {error && (
-            <div className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-4">
-              <AlertCircle className="h-5 w-5 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">

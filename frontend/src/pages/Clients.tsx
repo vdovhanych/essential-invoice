@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency } from '../utils/format';
-import { Plus, Search, Users, Building, Edit, Trash2, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { Plus, Search, Users, Building, Edit, Trash2, X } from 'lucide-react';
 
 interface Client {
   id: string;
@@ -25,7 +26,6 @@ export default function Clients() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [aresLoading, setAresLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -61,7 +61,7 @@ export default function Clients() {
 
   async function handleAresLookup() {
     if (!formData.ico || formData.ico.length !== 8) {
-      setMessage({ type: 'error', text: 'IČO musí mít 8 číslic' });
+      toast.error('IČO musí mít 8 číslic');
       return;
     }
 
@@ -74,10 +74,10 @@ export default function Clients() {
         address: result.address || prev.address,
         dic: result.dic || prev.dic,
       }));
-      setMessage({ type: 'success', text: 'Údaje načteny z ARES' });
+      toast.success('Údaje načteny z ARES');
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se načíst údaje z ARES' });
+      toast.error(error.message || 'Nepodařilo se načíst údaje z ARES');
     } finally {
       setAresLoading(false);
     }
@@ -117,21 +117,19 @@ export default function Clients() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setMessage(null);
-
     try {
       if (editingClient) {
         await api.put(`/clients/${editingClient.id}`, formData);
-        setMessage({ type: 'success', text: 'Kontakt byl aktualizován' });
+        toast.success('Kontakt byl aktualizován');
       } else {
         await api.post('/clients', formData);
-        setMessage({ type: 'success', text: 'Kontakt byl vytvořen' });
+        toast.success('Kontakt byl vytvořen');
       }
       setShowModal(false);
       loadClients();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Operace selhala' });
+      toast.error(error.message || 'Operace selhala');
     }
   }
 
@@ -140,11 +138,11 @@ export default function Clients() {
 
     try {
       await api.delete(`/clients/${client.id}`);
-      setMessage({ type: 'success', text: 'Kontakt byl smazán' });
+      toast.success('Kontakt byl smazán');
       loadClients();
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se smazat kontakt' });
+      toast.error(error.message || 'Nepodařilo se smazat kontakt');
     }
   }
 
@@ -171,16 +169,6 @@ export default function Clients() {
           <span>Nový kontakt</span>
         </button>
       </div>
-
-      {/* Message */}
-      {message && (
-        <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-        }`}>
-          {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-          <span>{message.text}</span>
-        </div>
-      )}
 
       {/* Search */}
       <div className="relative">

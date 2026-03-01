@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../utils/api';
-import { ArrowLeft, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 
 interface Client {
   id: string;
@@ -30,7 +31,6 @@ export default function InvoiceCreate() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
     clientId: '',
@@ -146,16 +146,15 @@ export default function InvoiceCreate() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
 
     // Validation
     if (!formData.clientId) {
-      setError('Vyberte kontakt');
+      toast.error('Vyberte kontakt');
       return;
     }
 
     if (items.some(item => !item.description || item.unitPrice <= 0)) {
-      setError('Vyplňte všechny položky');
+      toast.error('Vyplňte všechny položky');
       return;
     }
 
@@ -181,7 +180,7 @@ export default function InvoiceCreate() {
       navigate('/invoices');
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Nepodařilo se uložit fakturu');
+      toast.error(error.message || 'Nepodařilo se uložit fakturu');
     } finally {
       setSaving(false);
     }
@@ -213,13 +212,6 @@ export default function InvoiceCreate() {
           {isEdit ? 'Upravit fakturu' : 'Nová faktura'}
         </h1>
       </div>
-
-      {error && (
-        <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-6">
-          <AlertCircle className="h-5 w-5 flex-shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Client selection */}

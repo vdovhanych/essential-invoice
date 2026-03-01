@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { api } from '../utils/api';
-import { Mail, Server, AlertCircle, CheckCircle, Eye, EyeOff, Calculator, Sparkles } from 'lucide-react';
+import { Mail, Server, Eye, EyeOff, Calculator, Sparkles } from 'lucide-react';
 
 interface Settings {
   smtpHost: string | null;
@@ -32,7 +33,6 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<'smtp' | 'imap' | null>(null);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showPasswords, setShowPasswords] = useState({ smtp: false, imap: false, perplexity: false });
 
   const [formData, setFormData] = useState({
@@ -111,16 +111,15 @@ export default function Settings() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setMessage(null);
 
     try {
       await api.put('/settings', formData);
-      setMessage({ type: 'success', text: 'Nastavení bylo uloženo' });
+      toast.success('Nastavení bylo uloženo');
       loadSettings();
       window.dispatchEvent(new Event('settings-updated'));
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || 'Nepodařilo se uložit nastavení' });
+      toast.error(error.message || 'Nepodařilo se uložit nastavení');
     } finally {
       setSaving(false);
     }
@@ -128,14 +127,13 @@ export default function Settings() {
 
   async function testConnection(type: 'smtp' | 'imap') {
     setTesting(type);
-    setMessage(null);
 
     try {
       await api.post(`/settings/test-${type}`);
-      setMessage({ type: 'success', text: `${type.toUpperCase()} připojení je funkční` });
+      toast.success(`${type.toUpperCase()} připojení je funkční`);
     } catch (err: unknown) {
       const error = err as Error;
-      setMessage({ type: 'error', text: error.message || `Test ${type.toUpperCase()} selhal` });
+      toast.error(error.message || `Test ${type.toUpperCase()} selhal`);
     } finally {
       setTesting(null);
     }
@@ -152,16 +150,6 @@ export default function Settings() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nastavení</h1>
-
-      {/* Message */}
-      {message && (
-        <div className={`flex items-center space-x-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-        }`}>
-          {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-          <span>{message.text}</span>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* SMTP Settings */}

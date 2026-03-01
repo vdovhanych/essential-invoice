@@ -3,6 +3,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Register from './Register';
 
+// Mock sonner
+const mockToastError = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: (...args: unknown[]) => mockToastError(...args),
+  },
+}));
+
 const mockRegister = vi.fn();
 
 vi.mock('../context/AuthContext', () => ({
@@ -13,7 +22,6 @@ vi.mock('../context/AuthContext', () => ({
 
 vi.mock('lucide-react', () => ({
   FileText: () => <span data-testid="filetext-icon" />,
-  AlertCircle: () => <span data-testid="alert-icon" />,
 }));
 
 function renderRegister() {
@@ -66,7 +74,7 @@ describe('Register Component', () => {
     fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(screen.getByText('Hesla se neshodují')).toBeInTheDocument();
+      expect(mockToastError).toHaveBeenCalledWith('Hesla se neshodují');
     });
 
     expect(mockRegister).not.toHaveBeenCalled();

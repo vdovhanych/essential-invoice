@@ -1,11 +1,17 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import App from './App'
-import { ThemeProvider } from './context/ThemeContext'
+import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
 import { AIProvider } from './context/AIContext'
 import './index.css'
+
+function ToasterWithTheme() {
+  const { resolvedTheme } = useTheme();
+  return <Toaster theme={resolvedTheme} richColors position="top-right" closeButton />;
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -14,6 +20,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <AuthProvider>
           <AIProvider>
             <App />
+            <ToasterWithTheme />
           </AIProvider>
         </AuthProvider>
       </BrowserRouter>

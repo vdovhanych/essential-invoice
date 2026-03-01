@@ -1,25 +1,24 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FileText, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { FileText } from 'lucide-react';
 
 export default function Login() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
       await login(email, password);
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || 'Přihlášení selhalo');
+      toast.error(error.message || 'Přihlášení selhalo');
     } finally {
       setLoading(false);
     }
@@ -37,13 +36,6 @@ export default function Login() {
         </div>
 
         <div className="card">
-          {error && (
-            <div className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-4">
-              <AlertCircle className="h-5 w-5 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="label">Email</label>
