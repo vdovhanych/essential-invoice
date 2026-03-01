@@ -30,9 +30,9 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      PORT: 3001
-      DB_HOST: db
-      DB_PORT: 5432
+      PORT: ${BACKEND_PORT:-3001}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
       DB_NAME: ${DB_NAME:-essential_invoice}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
@@ -49,8 +49,6 @@ services:
       GLOBAL_SMTP_SECURE: ${GLOBAL_SMTP_SECURE:-false}
       GLOBAL_SMTP_FROM_EMAIL: ${GLOBAL_SMTP_FROM_EMAIL:-}
       GLOBAL_SMTP_FROM_NAME: ${GLOBAL_SMTP_FROM_NAME:-essentialInvoice}
-    ports:
-      - "${BACKEND_PORT:-3001}:3001"
 
   # Frontend
   frontend:
