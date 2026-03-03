@@ -306,13 +306,13 @@ export default function Dashboard() {
           {data.pausalniDan?.enabled && (
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center space-x-2">
-                  <Landmark className="h-3.5 w-3.5 text-emerald-600" />
-                  <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                <div className="flex items-center space-x-2 min-w-0">
+                  <Landmark className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span className="text-xs font-medium text-gray-600 dark:text-gray-300 truncate">
                     Paušální daň ({data.pausalniDan.tier}. pásmo)
                   </span>
                 </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-gray-500 dark:text-gray-400 text-right whitespace-nowrap ml-2">
                   {formatCurrency(data.pausalniDan.invoicedThisYear)} / {formatCurrency(data.pausalniDan.limit)}
                 </span>
               </div>
@@ -334,7 +334,7 @@ export default function Dashboard() {
                 <span className="text-gray-400 dark:text-gray-500">
                   {((data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) * 100).toFixed(0)}%
                 </span>
-                <span className={`font-medium ${
+                <span className={`font-medium text-right whitespace-nowrap ml-2 ${
                   data.pausalniDan.remaining <= 0
                     ? 'text-red-600'
                     : (data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) >= 0.9
