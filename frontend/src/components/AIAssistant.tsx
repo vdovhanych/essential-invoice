@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Sparkles, X, Send } from 'lucide-react';
 import { useAI } from '../context/AIContext';
 
 export default function AIAssistant() {
@@ -46,15 +47,7 @@ export default function AIAssistant() {
         className="fixed bottom-6 right-6 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-full p-4 shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all z-50"
         title="AI Assistant (Powered by Perplexity)"
       >
-        {/* Perplexity Logo - Stylized cube/hexagon */}
-        <svg
-          className="w-6 h-6"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.5l7.5 3.75v7.5L12 19.5l-7.5-3.75v-7.5L12 4.5z" />
-          <path d="M12 7l-5 2.5v5l5 2.5 5-2.5v-5L12 7zm0 2l3 1.5v3l-3 1.5-3-1.5v-3L12 9z" opacity="0.7" />
-        </svg>
+        <Sparkles className="w-6 h-6" />
       </button>
 
       {/* Modal */}
@@ -66,14 +59,7 @@ export default function AIAssistant() {
               <div className="flex items-center space-x-2">
                 {/* Perplexity Logo */}
                 <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-lg p-2">
-                  <svg
-                    className="w-5 h-5"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.5l7.5 3.75v7.5L12 19.5l-7.5-3.75v-7.5L12 4.5z" />
-                    <path d="M12 7l-5 2.5v5l5 2.5 5-2.5v-5L12 7zm0 2l3 1.5v3l-3 1.5-3-1.5v-3L12 9z" opacity="0.7" />
-                  </svg>
+                  <Sparkles className="w-5 h-5" />
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">AI Assistant</h2>
                 <span className="px-2 py-1 text-xs bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 text-indigo-800 dark:text-indigo-300 rounded-full font-medium">
@@ -84,14 +70,7 @@ export default function AIAssistant() {
                 onClick={() => setIsOpen(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <X className="w-6 h-6" />
               </button>
             </div>
 
@@ -167,8 +146,9 @@ export default function AIAssistant() {
                 <button
                   type="submit"
                   disabled={loading || !question.trim()}
-                  className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center gap-2"
                 >
+                  <Send className="w-4 h-4" />
                   Send
                 </button>
               </div>
