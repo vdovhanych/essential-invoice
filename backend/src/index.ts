@@ -16,13 +16,14 @@ import { startEmailPolling } from './services/emailPoller';
 import { startRecurringInvoiceGeneration } from './services/recurringInvoiceGenerator';
 import { initializeDatabase } from './db/init';
 import { validateEncryptionKey } from './utils/encryption';
+import { log } from './utils/logger';
 
 // Prevent IMAP/socket errors from crashing the process in Bun
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception (non-fatal):', err.message);
+  log.error('Uncaught exception (non-fatal):', err.message);
 });
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled rejection (non-fatal):', err);
+  log.error('Unhandled rejection (non-fatal):', err);
 });
 
 const app = express();
@@ -82,7 +83,7 @@ app.use('/api/recurring-invoices', authenticateToken, recurringRouter);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err.message);
+  log.error('Request error:', err.message);
   res.status(500).json({ error: 'Internal server error' });
 });
 
@@ -93,7 +94,7 @@ async function start() {
     await initializeDatabase();
 
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      log.info(`Server running on port ${PORT}`);
     });
 
     // Start email polling service (checks database for users with IMAP configured)
@@ -102,7 +103,7 @@ async function start() {
     // Start recurring invoice generation service
     startRecurringInvoiceGeneration();
   } catch (error) {
-    console.error('Failed to start server:', error);
+    log.error('Failed to start server:', error);
     process.exit(1);
   }
 }
