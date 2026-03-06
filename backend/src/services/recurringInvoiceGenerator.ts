@@ -2,6 +2,7 @@ import { query } from '../db/init';
 import { generateInvoiceNumber } from '../routes/invoices';
 import { generateSpayd } from '../utils/validation';
 import { sendInvoiceEmail } from './emailSender';
+import { log } from '../utils/logger';
 
 let generationInterval: NodeJS.Timeout | null = null;
 
@@ -129,7 +130,7 @@ export async function generateInvoiceFromRecurring(template: RecurringInvoiceRow
       [nextGenStr, template.id]
     );
 
-    console.log(`  Generated invoice ${invoice.invoice_number} from recurring template ${template.id}`);
+    log.info(`  Generated invoice ${invoice.invoice_number} from recurring template ${template.id}`);
 
     // Auto-send if enabled
     if (template.auto_send) {
@@ -151,25 +152,26 @@ export async function generateInvoiceFromRecurring(template: RecurringInvoiceRow
               `UPDATE invoices SET status = 'sent', sent_at = CURRENT_TIMESTAMP, primary_email_sent_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
               [invoice.id]
             );
-            console.log(`    Auto-sent invoice ${invoice.invoice_number}`);
+            log.info(`    Auto-sent invoice ${invoice.invoice_number}`);
           } else {
-            console.error(`    Failed to auto-send: ${sendResult.error}`);
+            log.error(`    Failed to auto-send: ${sendResult.error}`);
           }
         }
       } catch (sendError) {
-        console.error(`    Auto-send error:`, sendError);
+        log.error(`    Auto-send error:`, sendError);
       }
     }
 
     return { success: true, invoiceId: invoice.id };
   } catch (error) {
-    console.error('Generate invoice from recurring error:', error);
+    log.error('Generate invoice from recurring error:', error);
     return { success: false, error: 'Failed to generate invoice' };
   }
 }
 
 async function checkAndGenerateRecurring(): Promise<void> {
-  console.log('Checking recurring invoices...');
+  const startTime = Date.now();
+  log.info('Checking recurring invoices...');
 
   try {
     const today = new Date().toISOString().split('T')[0];
@@ -183,38 +185,39 @@ async function checkAndGenerateRecurring(): Promise<void> {
     );
 
     if (templates.rows.length === 0) {
-      console.log('No recurring invoices due for generation');
+      log.info('No recurring invoices due for generation');
       return;
     }
 
-    console.log(`Found ${templates.rows.length} recurring invoice(s) due for generation`);
+    log.info(`Found ${templates.rows.length} recurring invoice(s) due for generation`);
 
     for (const template of templates.rows) {
       try {
         await generateInvoiceFromRecurring(template);
       } catch (error) {
-        console.error(`Failed to generate invoice for template ${template.id}:`, error);
+        log.error(`Failed to generate invoice for template ${template.id}:`, error);
       }
     }
   } catch (error) {
-    console.error('Recurring invoice check error:', error);
+    log.error('Recurring invoice check error:', error);
   }
 
-  console.log('Recurring invoice check complete');
+  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+  log.info(`Recurring invoice check complete (${duration}s)`);
 }
 
 export function startRecurringInvoiceGeneration(): void {
   const intervalSeconds = parseInt(process.env.RECURRING_INVOICE_INTERVAL || '86400'); // Default 24 hours (in seconds)
   const intervalMs = intervalSeconds * 1000;
 
-  console.log(`Starting recurring invoice generation with interval ${intervalSeconds}s`);
+  log.info(`Starting recurring invoice generation service (interval: ${intervalSeconds}s)`);
 
   // Initial check
-  checkAndGenerateRecurring().catch(err => console.error('Initial recurring invoice check failed:', err));
+  checkAndGenerateRecurring().catch(err => log.error('Initial recurring invoice check failed:', err));
 
   // Set up recurring check
   generationInterval = setInterval(() => {
-    checkAndGenerateRecurring().catch(err => console.error('Recurring invoice check failed:', err));
+    checkAndGenerateRecurring().catch(err => log.error('Recurring invoice check failed:', err));
   }, intervalMs);
 }
 
@@ -222,6 +225,6 @@ export function stopRecurringInvoiceGeneration(): void {
   if (generationInterval) {
     clearInterval(generationInterval);
     generationInterval = null;
-    console.log('Recurring invoice generation stopped');
+    log.info('Recurring invoice generation stopped');
   }
 }

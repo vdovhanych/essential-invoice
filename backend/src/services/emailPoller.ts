@@ -4,6 +4,7 @@ import { query } from '../db/init';
 import { parsePaymentEmail } from './bankParsers/index';
 import type { ParsedPayment } from './bankParsers/index';
 import { decrypt } from '../utils/encryption';
+import { log } from '../utils/logger';
 
 let pollingInterval: NodeJS.Timeout | null = null;
 
@@ -83,21 +84,21 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
   const emailDate = mail.date || new Date();
   const subject = mail.subject || '';
 
-  console.log(`  Processing email from ${senderEmail}`);
-  console.log(`    Subject: ${subject}`);
+  log.info(`  Processing email from ${senderEmail}`);
+  log.info(`    Subject: ${subject}`);
 
   // Parse the email using bank parsers
   const { payment, bankType } = parsePaymentEmail(senderEmail, emailBody, emailDate);
 
   if (!payment) {
     // Not a recognized bank payment email or outgoing payment
-    console.log(`    ⊘ Not a recognized bank payment notification (or outgoing payment)`);
+    log.info(`    ⊘ Not a recognized bank payment notification (or outgoing payment)`);
     return;
   }
 
-  console.log(`    ✓ Parsed ${bankType} payment: ${payment.amount} ${payment.currency}`);
-  console.log(`      Variable Symbol: ${payment.variableSymbol || 'none'}`);
-  console.log(`      Sender: ${payment.senderName || 'unknown'}`);
+  log.info(`    ✓ Parsed ${bankType} payment: ${payment.amount} ${payment.currency}`);
+  log.info(`      Variable Symbol: ${payment.variableSymbol || 'none'}`);
+  log.info(`      Sender: ${payment.senderName || 'unknown'}`);
 
   // Check if payment already exists (by transaction code)
   if (payment.transactionCode) {
@@ -107,7 +108,7 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
     );
 
     if (existing.rows.length > 0) {
-      console.log(`    ⊘ Payment ${payment.transactionCode} already exists, skipping`);
+      log.info(`    ⊘ Payment ${payment.transactionCode} already exists, skipping`);
       return;
     }
   }
@@ -127,9 +128,9 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
     if (invoiceResult.rows.length === 1) {
       invoiceId = invoiceResult.rows[0].id;
       matchMethod = 'variable_symbol';
-      console.log(`    ✓ Matched to invoice by variable symbol: ${payment.variableSymbol}`);
+      log.info(`    ✓ Matched to invoice by variable symbol: ${payment.variableSymbol}`);
     } else if (invoiceResult.rows.length > 1) {
-      console.log(`    ! Multiple invoices match VS ${payment.variableSymbol}, manual matching required`);
+      log.warn(`    ! Multiple invoices match VS ${payment.variableSymbol}, manual matching required`);
     }
   }
 
@@ -147,9 +148,9 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
     if (invoiceResult.rows.length === 1) {
       invoiceId = invoiceResult.rows[0].id;
       matchMethod = 'exact_amount';
-      console.log(`    ✓ Matched to invoice by exact amount: ${payment.amount} ${payment.currency}`);
+      log.info(`    ✓ Matched to invoice by exact amount: ${payment.amount} ${payment.currency}`);
     } else if (invoiceResult.rows.length > 1) {
-      console.log(`    ! Multiple invoices match amount ${payment.amount}, manual matching required`);
+      log.warn(`    ! Multiple invoices match amount ${payment.amount}, manual matching required`);
     }
   }
 
@@ -180,7 +181,7 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
   );
 
   const createdPaymentId = paymentResult.rows[0].id;
-  console.log(`    ✓ Created payment record: ${createdPaymentId}`);
+  log.info(`    ✓ Created payment record: ${createdPaymentId}`);
 
   // If matched, update invoice status
   if (invoiceId) {
@@ -190,9 +191,9 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
        WHERE id = $2`,
       [payment.transactionDate || new Date(), invoiceId]
     );
-    console.log(`    ✓ Marked invoice ${invoiceId} as paid`);
+    log.info(`    ✓ Marked invoice ${invoiceId} as paid`);
   } else {
-    console.log(`    ! No matching invoice found - payment saved as unmatched`);
+    log.warn(`    ! No matching invoice found - payment saved as unmatched`);
   }
 
   // Log the bank notification
@@ -236,12 +237,12 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
           }
 
           if (results.length === 0) {
-            console.log(`  ✓ No new unseen emails found for user ${settings.userId}`);
+            log.info(`  ✓ No new unseen emails found for user ${settings.userId}`);
             imap.end();
             return resolve();
           }
 
-          console.log(`  → Found ${results.length} new unseen email(s) for user ${settings.userId}`);
+          log.info(`  → Found ${results.length} new unseen email(s) for user ${settings.userId}`);
 
           const fetch = imap.fetch(results, {
             bodies: '',
@@ -255,7 +256,7 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
               msg.on('body', (stream) => {
                 simpleParser(stream as any, async (err, mail) => {
                   if (err) {
-                    console.error('Parse error:', err);
+                    log.error('Parse error:', err);
                     resolveEmail();
                     return;
                   }
@@ -263,7 +264,7 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
                   try {
                     await processEmail(settings.userId, mail);
                   } catch (processError) {
-                    console.error('Process error:', processError);
+                    log.error('Process error:', processError);
                   }
                   resolveEmail();
                 });
@@ -273,7 +274,7 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
           });
 
           fetch.once('error', (err) => {
-            console.error('Fetch error:', err);
+            log.error('Fetch error:', err);
           });
 
           fetch.once('end', async () => {
@@ -286,12 +287,12 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
     });
 
     imap.once('error', (err: Error) => {
-      console.error(`IMAP error for user ${settings.userId}:`, err.message);
+      log.error(`IMAP error for user ${settings.userId}:`, err.message);
       reject(err);
     });
 
     imap.once('end', () => {
-      console.log(`IMAP connection ended for user ${settings.userId}`);
+      log.info(`IMAP connection ended for user ${settings.userId}`);
     });
 
     try {
@@ -303,44 +304,46 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
 }
 
 async function pollAllUsers(): Promise<void> {
-  console.log('Starting email poll...');
+  const startTime = Date.now();
+  log.info('Starting email poll...');
 
   try {
     const allSettings = await getAllUserSettings();
-    console.log(`Found ${allSettings.length} user(s) with IMAP configured`);
+    log.info(`Found ${allSettings.length} user(s) with IMAP configured`);
 
     if (allSettings.length === 0) {
-      console.log('No users have IMAP configured, skipping poll');
+      log.info('No users have IMAP configured, skipping poll');
       return;
     }
 
     for (const settings of allSettings) {
-      console.log(`Polling emails for user ${settings.userId} (${settings.imapHost})`);
+      log.info(`Polling emails for user ${settings.userId} (${settings.imapHost})`);
       try {
         await fetchEmails(settings);
       } catch (error) {
-        console.error(`Failed to fetch emails for user ${settings.userId}:`, error);
+        log.error(`Failed to fetch emails for user ${settings.userId}:`, error);
       }
     }
   } catch (error) {
-    console.error('Email polling error:', error);
+    log.error('Email polling error:', error);
   }
 
-  console.log('Email poll complete');
+  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+  log.info(`Email poll complete (${duration}s)`);
 }
 
 export function startEmailPolling(): void {
   const intervalSeconds = parseInt(process.env.EMAIL_POLLING_INTERVAL || '600'); // Default 10 minutes (in seconds)
   const intervalMs = intervalSeconds * 1000;
 
-  console.log(`Starting email polling with interval ${intervalSeconds}s`);
+  log.info(`Starting email polling service (interval: ${intervalSeconds}s)`);
 
   // Initial poll
-  pollAllUsers().catch(err => console.error('Initial email poll failed:', err));
+  pollAllUsers().catch(err => log.error('Initial email poll failed:', err));
 
   // Set up recurring poll
   pollingInterval = setInterval(() => {
-    pollAllUsers().catch(err => console.error('Email poll failed:', err));
+    pollAllUsers().catch(err => log.error('Email poll failed:', err));
   }, intervalMs);
 }
 
@@ -348,7 +351,7 @@ export function stopEmailPolling(): void {
   if (pollingInterval) {
     clearInterval(pollingInterval);
     pollingInterval = null;
-    console.log('Email polling stopped');
+    log.info('Email polling stopped');
   }
 }
 
