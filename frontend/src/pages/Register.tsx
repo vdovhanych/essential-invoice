@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { FileText } from 'lucide-react';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Register() {
   const { register } = useAuth();
@@ -43,7 +44,8 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-8 relative">
+      <ThemeToggle />
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">

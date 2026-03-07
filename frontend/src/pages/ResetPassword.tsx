@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import ThemeToggle from '../components/ThemeToggle';
 import { api } from '../utils/api';
 
 export default function ResetPassword() {
@@ -40,7 +41,8 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 relative">
+        <ThemeToggle />
         <div className="max-w-md w-full">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
@@ -65,7 +67,8 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 relative">
+      <ThemeToggle />
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
