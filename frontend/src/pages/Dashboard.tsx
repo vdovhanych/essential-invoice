@@ -145,16 +145,16 @@ export default function Dashboard() {
       </div>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card-interactive">
-          <div className="flex items-center justify-between">
-            <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="card-interactive min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
               <p className="text-sm text-gray-500 dark:text-gray-400">K úhradě</p>
               <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
                 {formatCurrency(data.stats.outstandingAmount)}
               </p>
             </div>
-            <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-full">
+            <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-full shrink-0">
               <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
             </div>
           </div>
@@ -163,15 +163,15 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="card-interactive">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="card-interactive min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
               <p className="text-sm text-gray-500 dark:text-gray-400">Zaplaceno tento měsíc</p>
               <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
                 {formatCurrency(data.stats.paidThisMonth)}
               </p>
             </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full shrink-0">
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
           </div>
@@ -180,15 +180,15 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="card-interactive">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="card-interactive min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
               <p className="text-sm text-gray-500 dark:text-gray-400">Po splatnosti</p>
               <p className="text-2xl font-bold tabular-nums text-red-600">
                 {data.stats.overdueCount}
               </p>
             </div>
-            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full shrink-0">
               <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
           </div>
@@ -197,15 +197,15 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="card-interactive">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="card-interactive min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
               <p className="text-sm text-gray-500 dark:text-gray-400">Celkem zaplaceno</p>
               <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
                 {formatCurrency(data.stats.paidAmount)}
               </p>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full shrink-0">
               <TrendingUp className="h-6 w-6 text-blue-600" />
             </div>
           </div>
@@ -376,15 +376,15 @@ export default function Dashboard() {
                   to={`/invoices/${invoice.id}`}
                   className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                 >
-                  <div className="flex items-center space-x-3">
-                    <FileText className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-100">{invoice.invoiceNumber}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{invoice.clientName}</p>
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
+                    <FileText className="h-5 w-5 text-gray-400 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{invoice.invoiceNumber}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{invoice.clientName}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-900 dark:text-gray-100">
+                  <div className="text-right shrink-0">
+                    <p className="font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
                       {formatCurrency(invoice.total, invoice.currency)}
                     </p>
                     <span className={`badge ${getStatusColor(invoice.status)}`}>
