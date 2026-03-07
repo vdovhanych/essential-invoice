@@ -1,4 +1,4 @@
-import { query } from '../db/init';
+import { query, pool } from '../db/init';
 import { generateInvoiceNumber } from '../routes/invoices';
 import { generateSpayd } from '../utils/validation';
 import { sendInvoiceEmail } from './emailSender';
@@ -31,6 +31,18 @@ interface GenerateResult {
 export async function generateInvoiceFromRecurring(template: RecurringInvoiceRow): Promise<GenerateResult> {
   try {
     const vatRate = parseFloat(template.vat_rate);
+
+    // Idempotency check: skip if an invoice was already generated for this template in the current billing period
+    const existingInvoice = await query(
+      `SELECT id FROM invoices
+       WHERE recurring_invoice_id = $1
+         AND DATE_TRUNC('month', issue_date::date) = DATE_TRUNC('month', CURRENT_DATE)`,
+      [template.id]
+    );
+    if (existingInvoice.rows.length > 0) {
+      log.info(`  Skipping template ${template.id} - invoice already generated this month`);
+      return { success: false, error: 'Invoice already generated for this billing period' };
+    }
 
     // Get template items
     const itemsResult = await query(
@@ -169,41 +181,60 @@ export async function generateInvoiceFromRecurring(template: RecurringInvoiceRow
   }
 }
 
+// Advisory lock ID for recurring invoice generation (arbitrary fixed number)
+const RECURRING_INVOICE_LOCK_ID = 1001;
+
 async function checkAndGenerateRecurring(): Promise<void> {
   const startTime = Date.now();
-  log.info('Checking recurring invoices...');
 
+  // Use a dedicated client so lock and unlock happen on the same connection
+  const client = await pool.connect();
   try {
-    const today = new Date().toISOString().split('T')[0];
-
-    const templates = await query(
-      `SELECT * FROM recurring_invoices
-       WHERE active = true
-         AND next_generation_date <= $1
-         AND (end_date IS NULL OR end_date >= $1)`,
-      [today]
-    );
-
-    if (templates.rows.length === 0) {
-      log.info('No recurring invoices due for generation');
+    // Try to acquire advisory lock - if another instance holds it, skip this run
+    const lockResult = await client.query('SELECT pg_try_advisory_lock($1) AS acquired', [RECURRING_INVOICE_LOCK_ID]);
+    if (!lockResult.rows[0].acquired) {
+      log.info('Recurring invoice check skipped - another instance holds the lock');
       return;
     }
 
-    log.info(`Found ${templates.rows.length} recurring invoice(s) due for generation`);
+    try {
+      log.info('Checking recurring invoices...');
+      const today = new Date().toISOString().split('T')[0];
 
-    for (const template of templates.rows) {
-      try {
-        await generateInvoiceFromRecurring(template);
-      } catch (error) {
-        log.error(`Failed to generate invoice for template ${template.id}:`, error);
+      const templates = await query(
+        `SELECT * FROM recurring_invoices
+         WHERE active = true
+           AND next_generation_date <= $1
+           AND (end_date IS NULL OR end_date >= $1)`,
+        [today]
+      );
+
+      if (templates.rows.length === 0) {
+        log.info('No recurring invoices due for generation');
+        return;
       }
-    }
-  } catch (error) {
-    log.error('Recurring invoice check error:', error);
-  }
 
-  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-  log.info(`Recurring invoice check complete (${duration}s)`);
+      log.info(`Found ${templates.rows.length} recurring invoice(s) due for generation`);
+
+      for (const template of templates.rows) {
+        try {
+          await generateInvoiceFromRecurring(template);
+        } catch (error) {
+          log.error(`Failed to generate invoice for template ${template.id}:`, error);
+        }
+      }
+    } catch (error) {
+      log.error('Recurring invoice check error:', error);
+    } finally {
+      // Release the lock on the same connection that acquired it
+      await client.query('SELECT pg_advisory_unlock($1)', [RECURRING_INVOICE_LOCK_ID]);
+    }
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    log.info(`Recurring invoice check complete (${duration}s)`);
+  } finally {
+    client.release();
+  }
 }
 
 export function startRecurringInvoiceGeneration(): void {
