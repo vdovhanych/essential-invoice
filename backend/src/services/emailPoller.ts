@@ -1,6 +1,6 @@
 import Imap from 'imap';
 import { simpleParser, ParsedMail } from 'mailparser';
-import { query } from '../db/init';
+import { query, pool } from '../db/init';
 import { parsePaymentEmail } from './bankParsers/index';
 import type { ParsedPayment } from './bankParsers/index';
 import { decrypt } from '../utils/encryption';
@@ -303,33 +303,52 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
   });
 }
 
+// Advisory lock ID for email polling (arbitrary fixed number, different from recurring invoice lock)
+const EMAIL_POLLING_LOCK_ID = 1002;
+
 async function pollAllUsers(): Promise<void> {
   const startTime = Date.now();
-  log.info('Starting email poll...');
 
+  // Use a dedicated client so lock and unlock happen on the same connection
+  const client = await pool.connect();
   try {
-    const allSettings = await getAllUserSettings();
-    log.info(`Found ${allSettings.length} user(s) with IMAP configured`);
-
-    if (allSettings.length === 0) {
-      log.info('No users have IMAP configured, skipping poll');
+    // Try to acquire advisory lock - if another instance holds it, skip this run
+    const lockResult = await client.query('SELECT pg_try_advisory_lock($1) AS acquired', [EMAIL_POLLING_LOCK_ID]);
+    if (!lockResult.rows[0].acquired) {
+      log.info('Email poll skipped - another instance holds the lock');
       return;
     }
 
-    for (const settings of allSettings) {
-      log.info(`Polling emails for user ${settings.userId} (${settings.imapHost})`);
-      try {
-        await fetchEmails(settings);
-      } catch (error) {
-        log.error(`Failed to fetch emails for user ${settings.userId}:`, error);
-      }
-    }
-  } catch (error) {
-    log.error('Email polling error:', error);
-  }
+    try {
+      log.info('Starting email poll...');
+      const allSettings = await getAllUserSettings();
+      log.info(`Found ${allSettings.length} user(s) with IMAP configured`);
 
-  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-  log.info(`Email poll complete (${duration}s)`);
+      if (allSettings.length === 0) {
+        log.info('No users have IMAP configured, skipping poll');
+        return;
+      }
+
+      for (const settings of allSettings) {
+        log.info(`Polling emails for user ${settings.userId} (${settings.imapHost})`);
+        try {
+          await fetchEmails(settings);
+        } catch (error) {
+          log.error(`Failed to fetch emails for user ${settings.userId}:`, error);
+        }
+      }
+    } catch (error) {
+      log.error('Email polling error:', error);
+    } finally {
+      // Release the lock on the same connection that acquired it
+      await client.query('SELECT pg_advisory_unlock($1)', [EMAIL_POLLING_LOCK_ID]);
+    }
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    log.info(`Email poll complete (${duration}s)`);
+  } finally {
+    client.release();
+  }
 }
 
 export function startEmailPolling(): void {

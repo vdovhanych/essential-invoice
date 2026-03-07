@@ -1,9 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock the database query function
-const mockQuery = vi.fn();
+// Mock the database query function and pool
+const { mockQuery, mockClientQuery, mockClientRelease } = vi.hoisted(() => ({
+  mockQuery: vi.fn(),
+  mockClientQuery: vi.fn(),
+  mockClientRelease: vi.fn(),
+}));
 vi.mock('../db/init.js', () => ({
-  query: (...args: unknown[]) => mockQuery(...args)
+  query: (...args: unknown[]) => mockQuery(...args),
+  pool: {
+    connect: vi.fn().mockResolvedValue({
+      query: (...args: unknown[]) => mockClientQuery(...args),
+      release: mockClientRelease,
+    }),
+  },
 }));
 
 // Mock generateInvoiceNumber
@@ -24,8 +34,23 @@ vi.mock('./emailSender.js', () => ({
   sendInvoiceEmail: vi.fn().mockResolvedValue({ success: true, sentTo: ['test@test.cz'] })
 }));
 
+// Mock logger to keep test output clean
+vi.mock('../utils/logger.js', () => ({
+  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
+}));
+
 import { generateInvoiceFromRecurring } from './recurringInvoiceGenerator';
 import { sendInvoiceEmail } from './emailSender';
+
+// Helper: mock the idempotency check to return no existing invoice (allow generation)
+function mockIdempotencyCheckPass() {
+  mockQuery.mockResolvedValueOnce({ rows: [] });
+}
+
+// Helper: mock the idempotency check to return an existing invoice (block generation)
+function mockIdempotencyCheckFail() {
+  mockQuery.mockResolvedValueOnce({ rows: [{ id: 'existing-inv' }] });
+}
 
 describe('Recurring Invoice Generator', () => {
   beforeEach(() => {
@@ -49,6 +74,7 @@ describe('Recurring Invoice Generator', () => {
   };
 
   it('should generate an invoice from a recurring template', async () => {
+    mockIdempotencyCheckPass();
     // Mock items query
     mockQuery.mockResolvedValueOnce({
       rows: [
@@ -78,8 +104,12 @@ describe('Recurring Invoice Generator', () => {
     expect(result.success).toBe(true);
     expect(result.invoiceId).toBe('inv-1');
 
-    // Verify invoice was created with correct data
-    const insertCall = mockQuery.mock.calls[2];
+    // Verify idempotency check was called first
+    expect(mockQuery.mock.calls[0][0]).toContain('SELECT id FROM invoices');
+    expect(mockQuery.mock.calls[0][0]).toContain('recurring_invoice_id');
+
+    // Verify invoice was created with correct data (call index shifted by +1 due to idempotency check)
+    const insertCall = mockQuery.mock.calls[3];
     const insertSql = insertCall[0];
     const insertParams = insertCall[1];
     expect(insertSql).toContain('INSERT INTO invoices');
@@ -89,13 +119,25 @@ describe('Recurring Invoice Generator', () => {
     expect(insertParams).toContain('ri-1'); // recurring_invoice_id
 
     // Verify next_generation_date was advanced
-    const updateCall = mockQuery.mock.calls[4];
+    const updateCall = mockQuery.mock.calls[5];
     const updateParams = updateCall[1];
     expect(updateParams[0]).toBe('2026-04-15'); // next month
     expect(updateParams[1]).toBe('ri-1');
   });
 
+  it('should skip generation when invoice already exists for this billing period', async () => {
+    mockIdempotencyCheckFail();
+
+    const result = await generateInvoiceFromRecurring(baseTemplate);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('already generated');
+    // Should only have made the idempotency check query, nothing else
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+  });
+
   it('should return error when template has no items', async () => {
+    mockIdempotencyCheckPass();
     mockQuery.mockResolvedValueOnce({ rows: [] });
 
     const result = await generateInvoiceFromRecurring(baseTemplate);
@@ -105,6 +147,7 @@ describe('Recurring Invoice Generator', () => {
   });
 
   it('should calculate totals correctly', async () => {
+    mockIdempotencyCheckPass();
     mockQuery.mockResolvedValueOnce({
       rows: [
         { description: 'Item A', quantity: '2.00', unit: 'ks', unit_price: '500.00', sort_order: 0 },
@@ -121,8 +164,8 @@ describe('Recurring Invoice Generator', () => {
 
     await generateInvoiceFromRecurring(baseTemplate);
 
-    // Check INSERT params: subtotal=2000, vatAmount=420, total=2420
-    const insertParams = mockQuery.mock.calls[2][1];
+    // Check INSERT params: subtotal=2000, vatAmount=420, total=2420 (index shifted +1)
+    const insertParams = mockQuery.mock.calls[3][1];
     expect(insertParams).toContain(2000);  // subtotal
     expect(insertParams).toContain(420);   // vatAmount (2000 * 0.21)
     expect(insertParams).toContain(2420);  // total
@@ -131,6 +174,7 @@ describe('Recurring Invoice Generator', () => {
   it('should auto-send when enabled', async () => {
     const autoSendTemplate = { ...baseTemplate, auto_send: true };
 
+    mockIdempotencyCheckPass();
     mockQuery.mockResolvedValueOnce({
       rows: [{ description: 'Work', quantity: '1.00', unit: 'ks', unit_price: '1000.00', sort_order: 0 }]
     });
@@ -152,12 +196,13 @@ describe('Recurring Invoice Generator', () => {
     expect(result.success).toBe(true);
     expect(sendInvoiceEmail).toHaveBeenCalledWith('inv-1', 'user-1', 'client@test.cz', null);
 
-    // Verify invoice status was updated to 'sent'
-    const statusUpdateSql = mockQuery.mock.calls[6][0];
+    // Verify invoice status was updated to 'sent' (index shifted +1)
+    const statusUpdateSql = mockQuery.mock.calls[7][0];
     expect(statusUpdateSql).toContain("status = 'sent'");
   });
 
   it('should not auto-send when disabled', async () => {
+    mockIdempotencyCheckPass();
     mockQuery.mockResolvedValueOnce({
       rows: [{ description: 'Work', quantity: '1.00', unit: 'ks', unit_price: '1000.00', sort_order: 0 }]
     });
@@ -185,6 +230,7 @@ describe('Recurring Invoice Generator', () => {
     for (let i = 0; i < templates.length; i++) {
       vi.clearAllMocks();
 
+      mockIdempotencyCheckPass();
       mockQuery.mockResolvedValueOnce({
         rows: [{ description: 'Work', quantity: '1.00', unit: 'ks', unit_price: '100.00', sort_order: 0 }]
       });
@@ -197,12 +243,13 @@ describe('Recurring Invoice Generator', () => {
 
       await generateInvoiceFromRecurring(templates[i]);
 
-      const updateParams = mockQuery.mock.calls[4][1];
+      const updateParams = mockQuery.mock.calls[5][1];
       expect(updateParams[0]).toBe(expectedNextDates[i]);
     }
   });
 
   it('should use fresh dates (today) for generated invoices', async () => {
+    mockIdempotencyCheckPass();
     mockQuery.mockResolvedValueOnce({
       rows: [{ description: 'Work', quantity: '1.00', unit: 'ks', unit_price: '100.00', sort_order: 0 }]
     });
@@ -215,7 +262,7 @@ describe('Recurring Invoice Generator', () => {
 
     await generateInvoiceFromRecurring(baseTemplate);
 
-    const insertParams = mockQuery.mock.calls[2][1];
+    const insertParams = mockQuery.mock.calls[3][1];
     const today = new Date().toISOString().split('T')[0];
     // issueDate should be today
     expect(insertParams).toContain(today);
