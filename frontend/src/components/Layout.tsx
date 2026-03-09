@@ -58,7 +58,7 @@ export default function Layout() {
   const navItems = [
     ...baseNavItems,
     ...(calculatorEnabled ? [{ path: '/calculator', icon: Calculator, label: 'Kalkulačka' }] : []),
-    { path: '/settings', icon: Settings, label: 'Nastaveni' },
+    { path: '/settings', icon: Settings, label: 'Nastavení' },
   ];
 
   const themeOptions = [
@@ -170,7 +170,7 @@ export default function Layout() {
                       onClick={() => setUserMenuOpen(false)}
                     >
                       <Settings className="h-4 w-4" />
-                      <span>Nastaveni</span>
+                      <span>Nastavení</span>
                     </Link>
                     <hr className="my-1 dark:border-gray-700" />
                     <div className="px-4 py-2">
