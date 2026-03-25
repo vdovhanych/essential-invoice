@@ -71,7 +71,10 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `perplexityAI.ts` - Perplexity AI integration for tax advice and financial guidance
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
 - **i18n**: `i18n/translations.ts` - Plain TypeScript translation maps (cs/en) for PDF labels and email templates. Backend services (pdfGenerator, emailSender, globalEmailSender) use the user's `language` preference to select translations
-- **Utils**: `utils/validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
+- **Utils**: `utils/` - Utility functions:
+  - `validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
+  - `encryption.ts` - AES-256-GCM encryption/decryption for sensitive data at rest (SMTP/IMAP credentials)
+  - `logger.ts` - Timestamped logging utility (info, warn, error)
 - **Scripts**: `scripts/delete-user.ts` - Admin CLI script to delete a user by email
 - **Seed**: `db/seed.ts` - Seeds test data (user, clients, invoices, expenses, payments) for development. Run with `bun run seed [email] [password]`
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
@@ -79,10 +82,11 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 
 ### Frontend (`frontend/src/`)
 - **React 18** with TypeScript, Vite, and TailwindCSS
-- **i18n**: react-i18next with 10 namespaces (common, dashboard, invoices, expenses, clients, payments, settings, profile, auth, calculator). Translation JSON files live in `i18n/locales/{cs,en}/`. Configured in `i18n/index.ts`. Format utilities in `utils/format.ts` are locale-aware via `i18n.language`
+- **i18n**: react-i18next with 10 namespaces (common, dashboard, invoices, expenses, clients, payments, settings, profile, auth, calculator). Translation JSON files live in `i18n/locales/{cs,en}/`. Configured in `i18n/i18n.ts`. Format utilities in `utils/format.ts` are locale-aware via `i18n.language`
 - **Context**:
   - `context/AuthContext.tsx` - Authentication state management
   - `context/AIContext.tsx` - AI assistant state management
+  - `context/ThemeContext.tsx` - Dark/light theme state management
 - **Components**: `components/` - Reusable UI:
   - `Layout.tsx` - Main layout wrapper with navigation
   - `ThemeToggle.tsx` - Theme switcher + language picker dropdown (used on auth pages)
@@ -120,7 +124,7 @@ cd frontend && bun vitest run src/utils/format.test.ts
 2. Run all tests in both frontend and backend to ensure no regressions:
    ```bash
    cd backend && bun run test
-   cd frontend && bun runtest
+   cd frontend && bun run test
    ```
 
 ## Environment

@@ -12,6 +12,9 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 - `POST /api/auth/forgot-password` - Request password reset email
 - `POST /api/auth/reset-password` - Reset password with token
 - `DELETE /api/auth/me` - Delete account (requires password confirmation)
+- `GET /api/auth/me/logo` - Get user logo image
+- `POST /api/auth/me/logo` - Upload user logo (multipart form data)
+- `DELETE /api/auth/me/logo` - Delete user logo
 
 ## Clients
 
@@ -33,6 +36,7 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 - `POST /api/invoices/:id/send` - Send via email
 - `POST /api/invoices/:id/mark-paid` - Mark as paid
 - `POST /api/invoices/:id/cancel` - Cancel invoice
+- `GET /api/invoices/:id/preview` - Preview invoice email before sending
 
 ## Recurring Invoices
 
@@ -54,6 +58,7 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 - `DELETE /api/expenses/:id` - Delete expense
 - `POST /api/expenses/:id/mark-paid` - Mark as paid
 - `POST /api/expenses/:id/cancel` - Cancel expense
+- `POST /api/expenses/:id/mark-unpaid` - Mark expense as unpaid
 
 ## Payments
 
@@ -73,6 +78,7 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 ## Dashboard
 
 - `GET /api/dashboard` - Get dashboard statistics
+- `GET /api/dashboard/quick-stats` - Get quick stats for header
 
 ## Settings
 

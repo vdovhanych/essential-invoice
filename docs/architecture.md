@@ -16,7 +16,10 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
   - `perplexityAI.ts` - Perplexity AI integration for tax advice and financial guidance
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
 - **i18n**: `i18n/translations.ts` - Plain TypeScript translation maps (cs/en) for PDF labels and email templates. Services look up translations by the user's `language` column. Backend error messages use language-neutral error codes (e.g., `TOO_MANY_LOGIN_ATTEMPTS`) that the frontend maps to localized strings
-- **Utils**: `utils/validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
+- **Utils**: `utils/` - Utility functions:
+  - `validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
+  - `encryption.ts` - AES-256-GCM encryption/decryption for sensitive data at rest (SMTP/IMAP credentials)
+  - `logger.ts` - Timestamped logging utility (info, warn, error)
 - **Scripts**: `scripts/delete-user.ts` - Admin CLI script to delete a user by email
 - **Seed**: `db/seed.ts` - Seeds test data (user, clients, invoices, expenses, payments) for development. Run with `bun run seed [email] [password]`
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
@@ -29,10 +32,11 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
 - **Context**:
   - `context/AuthContext.tsx` - Authentication state management
   - `context/AIContext.tsx` - AI assistant state management
+  - `context/ThemeContext.tsx` - Dark/light theme state management
 - **Components**: `components/` - Reusable UI:
   - `Layout.tsx` - Main layout wrapper with navigation
   - `AIAssistant.tsx` - AI assistant chat component
-- **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
+- **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, RecurringInvoices, RecurringInvoiceCreate, RecurringInvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
 - **Utils**:
   - `utils/format.ts` - Date/currency formatting helpers
   - `utils/api.ts` - API client and request utilities

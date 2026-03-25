@@ -19,6 +19,7 @@ helm install essential-invoice . \
   --namespace essential-invoice \
   --create-namespace \
   --set jwtSecret=$(openssl rand -base64 32) \
+  --set encryptionKey=$(openssl rand -hex 32) \
   --set postgresql.auth.password=$(openssl rand -base64 16)
 ```
 
@@ -120,7 +121,8 @@ helm uninstall essential-invoice -n essential-invoice
 | Parameter | Description | Default |
 |---|---|---|
 | `jwtSecret` | JWT signing secret (required) | `""` |
-| `existingSecret` | Use existing secret (key: `JWT_SECRET`; also `DB_PASSWORD` for external DB) | `""` |
+| `encryptionKey` | AES-256 encryption key for secrets at rest (64-char hex, required) | `""` |
+| `existingSecret` | Use existing secret (key: `JWT_SECRET`, `ENCRYPTION_KEY`; also `DB_PASSWORD` for external DB) | `""` |
 
 ### PostgreSQL (Bitnami subchart)
 
