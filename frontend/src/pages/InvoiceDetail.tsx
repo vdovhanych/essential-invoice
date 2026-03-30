@@ -47,6 +47,8 @@ interface Invoice {
   notes: string;
   sentAt: string | null;
   paidAt: string | null;
+  exchangeRate: number | null;
+  totalCzk: number | null;
   items: InvoiceItem[];
 }
 
@@ -346,6 +348,23 @@ export default function InvoiceDetail() {
                 <div className="flex justify-between">
                   <dt className="text-gray-500 dark:text-gray-400">{t('detail.paidAt')}</dt>
                   <dd className="font-medium">{formatDate(invoice.paidAt)}</dd>
+                </div>
+              )}
+              {invoice.currency === 'EUR' && invoice.exchangeRate && (
+                <>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500 dark:text-gray-400">{t('detail.exchangeRate')}</dt>
+                    <dd className="font-medium">{invoice.exchangeRate.toFixed(4)} CZK/EUR</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500 dark:text-gray-400">{t('detail.czkEquivalent')}</dt>
+                    <dd className="font-medium">{formatCurrency(invoice.totalCzk!, 'CZK')}</dd>
+                  </div>
+                </>
+              )}
+              {invoice.currency === 'EUR' && !invoice.exchangeRate && (
+                <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                  {t('detail.exchangeRateUnavailable')}
                 </div>
               )}
             </dl>

@@ -6,6 +6,7 @@ import { generateInvoicePDF } from '../services/pdfGenerator';
 import { sendInvoiceEmail } from '../services/emailSender';
 import { generateSpayd } from '../utils/validation';
 import { t, formatDateLocale, formatCurrencyLocale } from '../i18n/translations';
+import { convertEurToCzk } from '../services/cnbExchangeRate';
 
 export const invoiceRouter: ReturnType<typeof Router> = Router();
 
@@ -103,6 +104,8 @@ invoiceRouter.get('/', async (req: AuthRequest, res: Response) => {
       sentAt: row.sent_at,
       paidAt: row.paid_at,
       recurringInvoiceId: row.recurring_invoice_id,
+      exchangeRate: row.exchange_rate ? parseFloat(row.exchange_rate) : null,
+      totalCzk: row.total_czk ? parseFloat(row.total_czk) : null,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }));
@@ -165,6 +168,8 @@ invoiceRouter.get('/:id', async (req: AuthRequest, res: Response) => {
       paidAt: row.paid_at,
       primaryEmailSentAt: row.primary_email_sent_at,
       secondaryEmailSentAt: row.secondary_email_sent_at,
+      exchangeRate: row.exchange_rate ? parseFloat(row.exchange_rate) : null,
+      totalCzk: row.total_czk ? parseFloat(row.total_czk) : null,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       items: itemsResult.rows.map(item => ({
@@ -247,12 +252,23 @@ invoiceRouter.post('/',
             );
           }
 
+          // Fetch exchange rate for EUR invoices
+          let exchangeRate: number | null = null;
+          let totalCzk: number | null = null;
+          if (currency === 'EUR') {
+            const conversion = await convertEurToCzk(total, issueDate);
+            if (conversion) {
+              exchangeRate = conversion.rate;
+              totalCzk = conversion.czkAmount;
+            }
+          }
+
           // Create invoice
           const invoiceResult = await query(
-            `INSERT INTO invoices (user_id, client_id, invoice_number, variable_symbol, status, currency, issue_date, due_date, delivery_date, subtotal, vat_rate, vat_amount, total, notes, qr_payment_data)
-             VALUES ($1, $2, $3, $4, 'draft', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            `INSERT INTO invoices (user_id, client_id, invoice_number, variable_symbol, status, currency, issue_date, due_date, delivery_date, subtotal, vat_rate, vat_amount, total, notes, qr_payment_data, exchange_rate, total_czk)
+             VALUES ($1, $2, $3, $4, 'draft', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
              RETURNING *`,
-            [req.userId, clientId, invoiceNumber, variableSymbol, currency, issueDate, dueDate, deliveryDate || issueDate, subtotal, vatRate, vatAmount, total, notes, qrPaymentData]
+            [req.userId, clientId, invoiceNumber, variableSymbol, currency, issueDate, dueDate, deliveryDate || issueDate, subtotal, vatRate, vatAmount, total, notes, qrPaymentData, exchangeRate, totalCzk]
           );
 
           invoice = invoiceResult.rows[0];
@@ -308,7 +324,7 @@ invoiceRouter.put('/:id',
     try {
       // Check invoice exists and is draft (can only edit drafts)
       const invoiceCheck = await query(
-        'SELECT status FROM invoices WHERE id = $1 AND user_id = $2',
+        'SELECT status, issue_date, currency FROM invoices WHERE id = $1 AND user_id = $2',
         [req.params.id, req.userId]
       );
 
@@ -357,6 +373,19 @@ invoiceRouter.put('/:id',
         }
       }
 
+      // Fetch exchange rate for EUR invoices when items are recalculated
+      let exchangeRate: number | null = null;
+      let totalCzk: number | null = null;
+      const effectiveCurrency = currency || invoiceCheck.rows[0].currency;
+      if (items && effectiveCurrency === 'EUR') {
+        const effectiveIssueDate = issueDate || invoiceCheck.rows[0].issue_date;
+        const conversion = await convertEurToCzk(total, typeof effectiveIssueDate === 'string' ? effectiveIssueDate : new Date(effectiveIssueDate).toISOString().split('T')[0]);
+        if (conversion) {
+          exchangeRate = conversion.rate;
+          totalCzk = conversion.czkAmount;
+        }
+      }
+
       // Update invoice
       const result = await query(
         `UPDATE invoices SET
@@ -371,12 +400,14 @@ invoiceRouter.put('/:id',
           total = COALESCE($9, total),
           notes = $10,
           status = COALESCE($11, status),
+          exchange_rate = COALESCE($14, exchange_rate),
+          total_czk = COALESCE($15, total_czk),
           updated_at = CURRENT_TIMESTAMP
          WHERE id = $12 AND user_id = $13
          RETURNING *`,
         [clientId, issueDate, dueDate, deliveryDate, currency, actualVatRate,
          items ? subtotal : null, items ? vatAmount : null, items ? total : null,
-         notes, status, req.params.id, req.userId]
+         notes, status, req.params.id, req.userId, exchangeRate, totalCzk]
       );
 
       res.json({

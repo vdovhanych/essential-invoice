@@ -22,6 +22,8 @@ interface PdfTranslations {
   notes: string;
   issuedOn: string;
   nonVatPayer: string;
+  exchangeRate: string;
+  czkEquivalent: string;
 }
 
 interface EmailTranslations {
@@ -65,6 +67,8 @@ const translations: Record<Locale, Translations> = {
       notes: 'Poznámky:',
       issuedOn: 'Vystaveno dne',
       nonVatPayer: 'Neplátce DPH',
+      exchangeRate: 'Kurz CNB:',
+      czkEquivalent: 'Ekvivalent v CZK:',
     },
     email: {
       invoiceSubject: 'Faktura č. {{number}}',
@@ -135,6 +139,8 @@ S pozdravem,
       notes: 'Notes:',
       issuedOn: 'Issued on',
       nonVatPayer: 'Non-VAT payer',
+      exchangeRate: 'CNB rate:',
+      czkEquivalent: 'CZK equivalent:',
     },
     email: {
       invoiceSubject: 'Invoice No. {{number}}',

@@ -15,9 +15,9 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
         COUNT(*) FILTER (WHERE status = 'paid') as paid_count,
         COUNT(*) FILTER (WHERE status = 'overdue') as overdue_count,
         COUNT(*) FILTER (WHERE status = 'cancelled') as cancelled_count,
-        COALESCE(SUM(total) FILTER (WHERE status IN ('sent', 'overdue')), 0) as outstanding_amount,
-        COALESCE(SUM(total) FILTER (WHERE status = 'paid'), 0) as paid_amount,
-        COALESCE(SUM(total) FILTER (WHERE status = 'paid' AND paid_at >= date_trunc('month', CURRENT_DATE)), 0) as paid_this_month
+        COALESCE(SUM(CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END) FILTER (WHERE status IN ('sent', 'overdue')), 0) as outstanding_amount,
+        COALESCE(SUM(CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END) FILTER (WHERE status = 'paid'), 0) as paid_amount,
+        COALESCE(SUM(CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END) FILTER (WHERE status = 'paid' AND paid_at >= date_trunc('month', CURRENT_DATE)), 0) as paid_this_month
       FROM invoices
       WHERE user_id = $1
     `, [req.userId]);
@@ -39,7 +39,7 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
     const revenueResult = await query(`
       SELECT
         date_trunc('month', paid_at) as month,
-        SUM(total) as revenue,
+        SUM(CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END) as revenue,
         COUNT(*) as invoice_count
       FROM invoices
       WHERE user_id = $1
@@ -93,13 +93,14 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
       WHERE id = $1
     `, [req.userId]);
 
-    // Get total invoiced this year (paid invoices in CZK only)
+    // Get total invoiced this year (all paid invoices, EUR converted to CZK)
     const yearlyInvoicedResult = await query(`
-      SELECT COALESCE(SUM(total), 0) as total_invoiced
+      SELECT COALESCE(SUM(
+        CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END
+      ), 0) as total_invoiced
       FROM invoices
       WHERE user_id = $1
         AND status = 'paid'
-        AND currency = 'CZK'
         AND paid_at >= date_trunc('year', CURRENT_DATE)
     `, [req.userId]);
 
@@ -161,7 +162,7 @@ dashboardRouter.get('/quick-stats', async (req: AuthRequest, res: Response) => {
     const result = await query(`
       SELECT
         COUNT(*) FILTER (WHERE status IN ('sent', 'overdue')) as unpaid_count,
-        COALESCE(SUM(total) FILTER (WHERE status IN ('sent', 'overdue')), 0) as unpaid_amount
+        COALESCE(SUM(CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END) FILTER (WHERE status IN ('sent', 'overdue')), 0) as unpaid_amount
       FROM invoices
       WHERE user_id = $1
     `, [req.userId]);

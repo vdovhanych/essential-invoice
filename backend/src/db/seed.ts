@@ -430,6 +430,7 @@ async function seed() {
       vatRate: 0,
       paidAt: null,
       notes: 'Fakturace v EUR dle smlouvy',
+      exchangeRate: 25.125,
       items: [
         { description: 'API integration consulting', quantity: 20, unit: 'hod', unitPrice: 65 },
       ],
@@ -442,14 +443,18 @@ async function seed() {
     const vatAmount = inv.vatRate > 0 ? Math.round(subtotal * (inv.vatRate / 100) * 100) / 100 : 0;
     const total = subtotal + vatAmount;
 
+    // Calculate exchange rate fields for EUR invoices
+    const exchangeRate = ('exchangeRate' in inv && inv.exchangeRate) ? inv.exchangeRate : null;
+    const totalCzk = exchangeRate ? Math.round(total * exchangeRate * 100) / 100 : null;
+
     const result = await query(
-      `INSERT INTO invoices (user_id, client_id, invoice_number, variable_symbol, status, currency, issue_date, due_date, delivery_date, subtotal, vat_rate, vat_amount, total, notes, paid_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      `INSERT INTO invoices (user_id, client_id, invoice_number, variable_symbol, status, currency, issue_date, due_date, delivery_date, subtotal, vat_rate, vat_amount, total, notes, paid_at, exchange_rate, total_czk)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
        RETURNING id`,
       [
         userId, clientIds[inv.clientIdx], inv.number, inv.vs, inv.status, inv.currency,
         inv.issueDate, inv.dueDate, inv.deliveryDate, subtotal, inv.vatRate, vatAmount, total,
-        inv.notes, inv.paidAt,
+        inv.notes, inv.paidAt, exchangeRate, totalCzk,
       ]
     );
     const invoiceId = result.rows[0].id;
