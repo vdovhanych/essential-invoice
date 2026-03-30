@@ -268,6 +268,34 @@ export async function initializeDatabase() {
           ALTER TABLE users ADD COLUMN language VARCHAR(5) DEFAULT 'cs';
         END IF;
       END $$;
+
+      -- Add exchange rate columns to invoices table
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'invoices' AND column_name = 'exchange_rate'
+        ) THEN
+          ALTER TABLE invoices ADD COLUMN exchange_rate DECIMAL(10, 4);
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'invoices' AND column_name = 'total_czk'
+        ) THEN
+          ALTER TABLE invoices ADD COLUMN total_czk DECIMAL(12, 2);
+        END IF;
+      END $$;
+
+      -- Exchange rates cache table
+      CREATE TABLE IF NOT EXISTS exchange_rates (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        rate_date DATE NOT NULL,
+        currency VARCHAR(3) NOT NULL,
+        rate DECIMAL(10, 4) NOT NULL,
+        fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT exchange_rates_date_currency_key UNIQUE (rate_date, currency)
+      );
+      CREATE INDEX IF NOT EXISTS idx_exchange_rates_date ON exchange_rates(rate_date);
     `);
 
     console.log('Database initialized successfully');

@@ -25,6 +25,8 @@ interface InvoiceData {
   total: number;
   notes: string;
   qrPaymentData: string;
+  exchangeRate: number | null;
+  totalCzk: number | null;
   // Client info
   clientName: string;
   clientAddress: string;
@@ -226,6 +228,18 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
     { text: tr.totalDue, bold: true, fontSize: 14, color: BLUE, margin: [0, 8, 0, 0] as [number, number, number, number] },
     { text: formatCurrency(invoice.total, invoice.currency, lang), bold: true, fontSize: 14, color: BLUE, alignment: 'right' as const, margin: [0, 8, 0, 0] as [number, number, number, number] },
   ]);
+
+  // Show CZK equivalent for EUR invoices
+  if (invoice.currency === 'EUR' && invoice.exchangeRate && invoice.totalCzk) {
+    totalsRows.push([
+      { text: `${tr.exchangeRate} ${invoice.exchangeRate.toFixed(4)} CZK/EUR`, fontSize: 8, color: '#666' },
+      { text: '', alignment: 'right' as const },
+    ]);
+    totalsRows.push([
+      { text: tr.czkEquivalent, color: '#666' },
+      { text: formatCurrency(invoice.totalCzk, 'CZK', lang), color: '#666', alignment: 'right' as const },
+    ]);
+  }
 
   const totalsTable: Column = {
     width: 250,
@@ -451,6 +465,8 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
     total: parseFloat(row.total),
     notes: row.notes,
     qrPaymentData: row.qr_payment_data,
+    exchangeRate: row.exchange_rate ? parseFloat(row.exchange_rate) : null,
+    totalCzk: row.total_czk ? parseFloat(row.total_czk) : null,
     clientName: row.client_name,
     clientAddress: row.client_address,
     clientIco: row.client_ico,

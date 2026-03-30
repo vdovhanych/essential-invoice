@@ -69,6 +69,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `emailPoller.ts` - IMAP polling for bank payment notifications
   - `recurringInvoiceGenerator.ts` - In-process scheduler for auto-generating invoices from recurring templates (monthly), with optional auto-send
   - `perplexityAI.ts` - Perplexity AI integration for tax advice and financial guidance
+  - `cnbExchangeRate.ts` - CNB (Czech National Bank) exchange rate fetching with DB caching and weekend/holiday fallback. Converts EUR invoices to CZK for dashboard totals and paušální daň tracking
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
 - **i18n**: `i18n/translations.ts` - Plain TypeScript translation maps (cs/en) for PDF labels and email templates. Backend services (pdfGenerator, emailSender, globalEmailSender) use the user's `language` preference to select translations
 - **Utils**: `utils/` - Utility functions:
@@ -78,7 +79,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 - **Scripts**: `scripts/delete-user.ts` - Admin CLI script to delete a user by email
 - **Seed**: `db/seed.ts` - Seeds test data (user, clients, invoices, expenses, payments) for development. Run with `bun run seed [email] [password]`
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
-- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, `language` (VARCHAR(5), default 'cs') for UI/PDF/email language preference, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow. `recurring_invoices` and `recurring_invoice_items` tables store monthly recurring invoice templates; `invoices.recurring_invoice_id` tracks which invoices were auto-generated from templates.
+- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, `language` (VARCHAR(5), default 'cs') for UI/PDF/email language preference, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow. `recurring_invoices` and `recurring_invoice_items` tables store monthly recurring invoice templates; `invoices.recurring_invoice_id` tracks which invoices were auto-generated from templates. Invoices table includes `exchange_rate` (DECIMAL) and `total_czk` (DECIMAL) for EUR→CZK conversion at CNB rates. `exchange_rates` table caches fetched CNB rates by date and currency.
 
 ### Frontend (`frontend/src/`)
 - **React 18** with TypeScript, Vite, and TailwindCSS
@@ -108,6 +109,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 - **SPAYD**: Czech QR payment code standard for bank transfers
 - **Air Bank**: Email notification parsing for automatic payment matching
 - **Perplexity AI**: AI-powered Czech tax advisor, payment matching, and financial insights (`routes/ai.ts`, `services/perplexityAI.ts`)
+- **CNB Exchange Rates**: Auto-fetches daily EUR/CZK rates from the Czech National Bank. EUR invoices store `exchange_rate` and `total_czk` for accurate dashboard totals and paušální daň tracking (`services/cnbExchangeRate.ts`)
 
 ## Testing
 

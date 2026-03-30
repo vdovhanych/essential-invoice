@@ -2,6 +2,7 @@ import { query, pool } from '../db/init';
 import { generateInvoiceNumber } from '../routes/invoices';
 import { generateSpayd } from '../utils/validation';
 import { sendInvoiceEmail } from './emailSender';
+import { convertEurToCzk } from './cnbExchangeRate';
 import { log } from '../utils/logger';
 
 let generationInterval: NodeJS.Timeout | null = null;
@@ -93,11 +94,22 @@ export async function generateInvoiceFromRecurring(template: RecurringInvoiceRow
           );
         }
 
+        // Fetch exchange rate for EUR invoices
+        let exchangeRate: number | null = null;
+        let totalCzk: number | null = null;
+        if (template.currency === 'EUR') {
+          const conversion = await convertEurToCzk(total, issueDate);
+          if (conversion) {
+            exchangeRate = conversion.rate;
+            totalCzk = conversion.czkAmount;
+          }
+        }
+
         const invoiceResult = await query(
-          `INSERT INTO invoices (user_id, client_id, invoice_number, variable_symbol, status, currency, issue_date, due_date, delivery_date, subtotal, vat_rate, vat_amount, total, notes, qr_payment_data, recurring_invoice_id)
-           VALUES ($1, $2, $3, $4, 'draft', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+          `INSERT INTO invoices (user_id, client_id, invoice_number, variable_symbol, status, currency, issue_date, due_date, delivery_date, subtotal, vat_rate, vat_amount, total, notes, qr_payment_data, recurring_invoice_id, exchange_rate, total_czk)
+           VALUES ($1, $2, $3, $4, 'draft', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
            RETURNING *`,
-          [template.user_id, template.client_id, invoiceNumber, variableSymbol, template.currency, issueDate, dueDate, issueDate, subtotal, vatRate, vatAmount, total, template.notes, qrPaymentData, template.id]
+          [template.user_id, template.client_id, invoiceNumber, variableSymbol, template.currency, issueDate, dueDate, issueDate, subtotal, vatRate, vatAmount, total, template.notes, qrPaymentData, template.id, exchangeRate, totalCzk]
         );
 
         invoice = invoiceResult.rows[0];

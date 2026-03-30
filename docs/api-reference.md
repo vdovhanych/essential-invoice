@@ -38,6 +38,8 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 - `POST /api/invoices/:id/cancel` - Cancel invoice
 - `GET /api/invoices/:id/preview` - Preview invoice email before sending
 
+EUR invoices include `exchangeRate` (CNB rate at issue date) and `totalCzk` (converted CZK equivalent) in responses. These are auto-fetched from the Czech National Bank when the invoice is created or updated. Dashboard totals and paušální daň tracking use the CZK equivalent for EUR invoices.
+
 ## Recurring Invoices
 
 - `GET /api/recurring-invoices` - List all recurring invoice templates
