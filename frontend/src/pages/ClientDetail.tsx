@@ -59,7 +59,7 @@ export default function ClientDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -88,8 +88,8 @@ export default function ClientDetail() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex items-center space-x-3">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-              <Building className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
+              <Building className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{client.companyName}</h1>
@@ -116,7 +116,7 @@ export default function ClientDetail() {
                 <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{t('detail.contactInfo.primaryEmail')}</p>
-                  <a href={`mailto:${client.primaryEmail}`} className="text-blue-600 hover:underline">
+                  <a href={`mailto:${client.primaryEmail}`} className="text-indigo-600 hover:underline">
                     {client.primaryEmail}
                   </a>
                 </div>
@@ -127,7 +127,7 @@ export default function ClientDetail() {
                   <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{t('detail.contactInfo.secondaryEmail')}</p>
-                    <a href={`mailto:${client.secondaryEmail}`} className="text-blue-600 hover:underline">
+                    <a href={`mailto:${client.secondaryEmail}`} className="text-indigo-600 hover:underline">
                       {client.secondaryEmail}
                     </a>
                   </div>
@@ -149,7 +149,7 @@ export default function ClientDetail() {
                   <Phone className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{t('detail.contactInfo.phone')}</p>
-                    <a href={`tel:${client.contactPhone}`} className="text-blue-600 hover:underline">
+                    <a href={`tel:${client.contactPhone}`} className="text-indigo-600 hover:underline">
                       {client.contactPhone}
                     </a>
                   </div>
@@ -228,7 +228,7 @@ export default function ClientDetail() {
                         <td className="py-3">
                           <Link
                             to={`/invoices/${invoice.id}`}
-                            className="font-medium text-blue-600 hover:underline"
+                            className="font-medium text-indigo-600 hover:underline"
                           >
                             {invoice.invoiceNumber}
                           </Link>

@@ -178,8 +178,8 @@ export default function Profile() {
       {/* Profile form */}
       <form onSubmit={handleSubmit} className="card space-y-6">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-            <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+            <User className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('personal.heading')}</h2>
         </div>
@@ -272,14 +272,14 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="flex items-start space-x-3 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="flex items-start space-x-3 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
           <input
             type="checkbox"
             id="vatPayer"
             name="vatPayer"
             checked={formData.vatPayer}
             onChange={handleChange}
-            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
           />
           <div className="flex-1">
             <label htmlFor="vatPayer" className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">
@@ -349,7 +349,7 @@ export default function Profile() {
               name="pausalniDanEnabled"
               checked={formData.pausalniDanEnabled}
               onChange={handleChange}
-              className="rounded border-gray-300 text-blue-600"
+              className="rounded border-gray-300 text-indigo-600"
             />
             <span className="text-sm text-gray-600 dark:text-gray-400">{t('pausalniDan.enable')}</span>
           </label>

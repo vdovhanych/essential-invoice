@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
-import { FileText } from 'lucide-react';
+
 import ThemeToggle from '../components/ThemeToggle';
 import { useTranslation } from 'react-i18next';
 
@@ -51,7 +51,7 @@ export default function Register() {
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <FileText className="h-12 w-12 text-blue-600" />
+            <img src="/favicon.svg" alt="essentialInvoice" className="h-12 w-12" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">{t('register.subtitle')}</p>
@@ -125,7 +125,7 @@ export default function Register() {
 
           <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
             {t('register.hasAccountText')}{' '}
-            <Link to="/login" className="text-blue-600 hover:underline">
+            <Link to="/login" className="text-indigo-600 hover:underline">
               {t('register.loginLink')}
             </Link>
           </p>

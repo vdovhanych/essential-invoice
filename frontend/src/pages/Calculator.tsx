@@ -80,7 +80,7 @@ export default function Calculator() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -163,9 +163,9 @@ export default function Calculator() {
             <span className="text-gray-600 dark:text-gray-300">{t('results.hoursTotal')}</span>
             <span className="font-medium">{formatCurrency(calculations.hoursTotal)}</span>
           </div>
-          <div className="flex justify-between items-center py-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg px-3 -mx-3">
+          <div className="flex justify-between items-center py-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg px-3 -mx-3">
             <span className="font-bold text-gray-900 dark:text-gray-100">{t('results.grandTotal')}</span>
-            <span className="font-bold text-xl text-blue-600">
+            <span className="font-bold text-xl text-indigo-600">
               {formatCurrency(calculations.grandTotal)}
             </span>
           </div>

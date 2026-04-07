@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
-import { FileText } from 'lucide-react';
+
 import ThemeToggle from '../components/ThemeToggle';
 import { useTranslation } from 'react-i18next';
 
@@ -33,7 +33,7 @@ export default function Login() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <FileText className="h-12 w-12 text-blue-600" />
+            <img src="/favicon.svg" alt="essentialInvoice" className="h-12 w-12" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">{t('login.subtitle')}</p>
@@ -66,7 +66,7 @@ export default function Login() {
             </div>
 
             <div className="text-right">
-              <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+              <Link to="/forgot-password" className="text-sm text-indigo-600 hover:underline">
                 {t('login.forgotPasswordLink')}
               </Link>
             </div>
@@ -82,7 +82,7 @@ export default function Login() {
 
           <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
             {t('login.noAccountText')}{' '}
-            <Link to="/register" className="text-blue-600 hover:underline">
+            <Link to="/register" className="text-indigo-600 hover:underline">
               {t('login.registerLink')}
             </Link>
           </p>

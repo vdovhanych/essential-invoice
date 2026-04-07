@@ -160,7 +160,7 @@ export default function ExpenseCreate() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -310,7 +310,7 @@ export default function ExpenseCreate() {
               </div>
               <div className="flex justify-between w-full max-w-xs text-lg">
                 <span className="font-bold">{t('create.amount.total')}</span>
-                <span className="font-bold text-blue-600">{formatCurrencyLocal(calculateTotal())}</span>
+                <span className="font-bold text-indigo-600">{formatCurrencyLocal(calculateTotal())}</span>
               </div>
             </div>
           </div>

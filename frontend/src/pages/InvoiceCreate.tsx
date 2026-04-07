@@ -192,7 +192,7 @@ export default function InvoiceCreate() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -239,7 +239,7 @@ export default function InvoiceCreate() {
             {clients.length === 0 && (
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                 {t('create.noContacts')}{' '}
-                <a href="/clients" className="text-blue-600 hover:underline">{t('create.addContact')}</a>
+                <a href="/clients" className="text-indigo-600 hover:underline">{t('create.addContact')}</a>
               </p>
             )}
           </div>
@@ -391,7 +391,7 @@ export default function InvoiceCreate() {
               </div>
               <div className="flex justify-between w-full max-w-xs text-lg">
                 <span className="font-bold">{t('create.total')}</span>
-                <span className="font-bold text-blue-600">{formatCurrency(calculateTotal())}</span>
+                <span className="font-bold text-indigo-600">{formatCurrency(calculateTotal())}</span>
               </div>
             </div>
           </div>

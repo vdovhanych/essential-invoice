@@ -157,7 +157,7 @@ export default function Clients() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -191,13 +191,13 @@ export default function Clients() {
             <div key={client.id} className="card hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                    <Building className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                    <Building className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <div>
                     <Link
                       to={`/clients/${client.id}`}
-                      className="font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600"
+                      className="font-semibold text-gray-900 dark:text-gray-100 hover:text-indigo-600"
                     >
                       {client.companyName}
                     </Link>
@@ -209,7 +209,7 @@ export default function Clients() {
                 <div className="flex space-x-1">
                   <button
                     onClick={() => openEditModal(client)}
-                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
+                    className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded"
                   >
                     <Edit className="h-4 w-4" />
                   </button>

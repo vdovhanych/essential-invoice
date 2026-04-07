@@ -144,7 +144,7 @@ export default function Settings() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -157,8 +157,8 @@ export default function Settings() {
         {/* SMTP Settings */}
         <div className="card">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+              <Mail className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('smtp.heading')}</h2>
           </div>
@@ -246,7 +246,7 @@ export default function Settings() {
                 name="smtpSecure"
                 checked={formData.smtpSecure}
                 onChange={handleChange}
-                className="rounded border-gray-300 text-blue-600"
+                className="rounded border-gray-300 text-indigo-600"
               />
               <span className="text-sm text-gray-600 dark:text-gray-400">{t('smtp.useTls')}</span>
             </label>
@@ -349,7 +349,7 @@ export default function Settings() {
                 name="imapTls"
                 checked={formData.imapTls}
                 onChange={handleChange}
-                className="rounded border-gray-300 text-blue-600"
+                className="rounded border-gray-300 text-indigo-600"
               />
               <span className="text-sm text-gray-600 dark:text-gray-400">{t('imap.useTls')}</span>
             </label>
@@ -383,7 +383,7 @@ export default function Settings() {
               name="aiEnabled"
               checked={formData.aiEnabled}
               onChange={handleChange}
-              className="rounded border-gray-300 text-blue-600"
+              className="rounded border-gray-300 text-indigo-600"
             />
             <span className="text-sm text-gray-600 dark:text-gray-400">{t('ai.enableAi')}</span>
           </label>
@@ -413,7 +413,7 @@ export default function Settings() {
                 href="https://www.perplexity.ai/settings/api"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-indigo-600 hover:underline"
               >
                 {t('ai.apiKeyLink')}
               </a>
@@ -483,7 +483,7 @@ export default function Settings() {
               name="calculatorEnabled"
               checked={formData.calculatorEnabled}
               onChange={handleChange}
-              className="rounded border-gray-300 text-blue-600"
+              className="rounded border-gray-300 text-indigo-600"
             />
             <span className="text-sm text-gray-600 dark:text-gray-400">{t('calculator.enable')}</span>
           </label>

@@ -128,7 +128,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -208,8 +208,8 @@ export default function Dashboard() {
                 {formatCurrency(data.stats.paidAmount)}
               </p>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full shrink-0">
-              <TrendingUp className="h-6 w-6 text-blue-600" />
+            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full shrink-0">
+              <TrendingUp className="h-6 w-6 text-indigo-600" />
             </div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
@@ -247,7 +247,7 @@ export default function Dashboard() {
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="appearance-none bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg px-3 py-1.5 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="appearance-none bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg px-3 py-1.5 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {availableYears.map(year => (
                   <option key={year} value={year}>{year}</option>
@@ -258,7 +258,7 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center space-x-4 mb-4">
             <div className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
               <span className="text-xs text-gray-500 dark:text-gray-400">{t('chart.income')}</span>
             </div>
             <div className="flex items-center space-x-1.5">
@@ -367,7 +367,7 @@ export default function Dashboard() {
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('recentInvoices.title')}</h2>
-            <Link to="/invoices" className="text-blue-600 hover:underline text-sm">
+            <Link to="/invoices" className="text-indigo-600 hover:underline text-sm">
               {t('recentInvoices.viewAll')}
             </Link>
           </div>

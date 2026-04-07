@@ -173,7 +173,7 @@ export default function RecurringInvoiceCreate() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -299,7 +299,7 @@ export default function RecurringInvoiceCreate() {
                 name="autoSend"
                 checked={formData.autoSend}
                 onChange={handleChange}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
+                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-2"
               />
               <label htmlFor="autoSend" className="text-sm text-gray-700 dark:text-gray-300">
                 {t('recurring.create.autoSend')}
@@ -410,7 +410,7 @@ export default function RecurringInvoiceCreate() {
               </div>
               <div className="flex justify-between w-full max-w-xs text-lg">
                 <span className="font-bold">{t('recurring.create.total')}</span>
-                <span className="font-bold text-blue-600">{formatCurrency(calculateTotal())}</span>
+                <span className="font-bold text-indigo-600">{formatCurrency(calculateTotal())}</span>
               </div>
             </div>
           </div>
