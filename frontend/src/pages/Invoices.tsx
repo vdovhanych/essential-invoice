@@ -93,7 +93,7 @@ export default function Invoices() {
             onClick={() => setTab('invoices')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'invoices'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300'
             }`}
           >
@@ -103,7 +103,7 @@ export default function Invoices() {
             onClick={() => setTab('recurring')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'recurring'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300'
             }`}
           >
@@ -148,7 +148,7 @@ export default function Invoices() {
           {/* Invoice list */}
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>
           ) : (
             <div className="card overflow-hidden">
@@ -172,7 +172,7 @@ export default function Invoices() {
                           <td className="py-3 px-4">
                             <Link
                               to={`/invoices/${invoice.id}`}
-                              className="font-medium text-blue-600 hover:underline"
+                              className="font-medium text-indigo-600 hover:underline"
                             >
                               {invoice.invoiceNumber}
                             </Link>
@@ -198,7 +198,7 @@ export default function Invoices() {
                           <td className="py-3 px-4 text-right">
                             <button
                               onClick={() => handleDownloadPDF(invoice.id, invoice.invoiceNumber)}
-                              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
+                              className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg"
                               title={t('list.downloadPdf')}
                             >
                               <Download className="h-4 w-4" />

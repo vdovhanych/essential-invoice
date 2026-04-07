@@ -146,7 +146,7 @@ export default function Payments() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -239,7 +239,7 @@ export default function Payments() {
                       {payment.invoiceId ? (
                         <Link
                           to={`/invoices/${payment.invoiceId}`}
-                          className="text-blue-600 hover:underline flex items-center space-x-1"
+                          className="text-indigo-600 hover:underline flex items-center space-x-1"
                         >
                           <Link2 className="h-4 w-4" />
                           <span>{payment.invoiceNumber}</span>
@@ -330,14 +330,14 @@ export default function Payments() {
             <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">{t('matchModal.potentialMatches')}</h3>
             {matchLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
               </div>
             ) : potentialMatches.length > 0 ? (
               <div className="space-y-2">
                 {potentialMatches.map(match => (
                   <div
                     key={match.id}
-                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
                   >
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">

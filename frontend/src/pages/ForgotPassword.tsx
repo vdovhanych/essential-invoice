@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { FileText, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import { api } from '../utils/api';
 import { useTranslation } from 'react-i18next';
@@ -33,7 +33,7 @@ export default function ForgotPassword() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <FileText className="h-12 w-12 text-blue-600" />
+            <img src="/favicon.svg" alt="essentialInvoice" className="h-12 w-12" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">{t('forgotPassword.subtitle')}</p>
@@ -47,7 +47,7 @@ export default function ForgotPassword() {
                 <span>{t('forgotPassword.successMessage')}</span>
               </div>
               <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
-                <Link to="/login" className="text-blue-600 hover:underline">
+                <Link to="/login" className="text-indigo-600 hover:underline">
                   {t('forgotPassword.backToLoginLink')}
                 </Link>
               </p>
@@ -81,7 +81,7 @@ export default function ForgotPassword() {
               </form>
 
               <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
-                <Link to="/login" className="text-blue-600 hover:underline">
+                <Link to="/login" className="text-indigo-600 hover:underline">
                   {t('forgotPassword.backToLoginLink')}
                 </Link>
               </p>

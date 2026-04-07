@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
-import { FileText, Building, CreditCard, Upload, Trash2, ChevronRight, ChevronLeft, Landmark } from 'lucide-react';
+import { Building, CreditCard, Upload, Trash2, ChevronRight, ChevronLeft, Landmark } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function Onboarding() {
@@ -124,7 +124,7 @@ export default function Onboarding() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <FileText className="h-12 w-12 text-blue-600" />
+            <img src="/favicon.svg" alt="essentialInvoice" className="h-12 w-12" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('onboarding.welcomeTitle', { name: user?.name })}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">{t('onboarding.subtitle')}</p>
@@ -133,15 +133,15 @@ export default function Onboarding() {
         {/* Progress indicator */}
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center space-x-4">
-            <div className={`flex items-center space-x-2 ${step === 1 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${step === 1 ? 'bg-blue-600 text-white' : step > 1 ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
+            <div className={`flex items-center space-x-2 ${step === 1 ? 'text-indigo-600 font-semibold' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${step === 1 ? 'bg-indigo-600 text-white' : step > 1 ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
                 {step > 1 ? '✓' : '1'}
               </div>
               <span className="hidden sm:inline">{t('onboarding.step1Label')}</span>
             </div>
             <div className="w-8 h-px bg-gray-300 dark:bg-gray-600" />
-            <div className={`flex items-center space-x-2 ${step === 2 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
+            <div className={`flex items-center space-x-2 ${step === 2 ? 'text-indigo-600 font-semibold' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${step === 2 ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
                 2
               </div>
               <span className="hidden sm:inline">{t('onboarding.step2Label')}</span>
@@ -213,14 +213,14 @@ export default function Onboarding() {
               />
             </div>
 
-            <div className="flex items-start space-x-3 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start space-x-3 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
               <input
                 type="checkbox"
                 id="vatPayer"
                 name="vatPayer"
                 checked={formData.vatPayer}
                 onChange={handleChange}
-                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
               />
               <div className="flex-1">
                 <label htmlFor="vatPayer" className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">
@@ -252,7 +252,7 @@ export default function Onboarding() {
                 name="pausalniDanEnabled"
                 checked={formData.pausalniDanEnabled}
                 onChange={handleChange}
-                className="rounded border-gray-300 text-blue-600"
+                className="rounded border-gray-300 text-indigo-600"
               />
               <span className="text-sm text-gray-600 dark:text-gray-400">{t('onboarding.pausalniDan.enabledLabel')}</span>
             </label>
@@ -319,8 +319,8 @@ export default function Onboarding() {
         {step === 2 && (
           <div className="card space-y-6">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                <CreditCard className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               </div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('onboarding.bankSection.title')}</h2>
             </div>

@@ -79,5 +79,10 @@
     "exampleVat": "Kdy musím podat přiznání k DPH?",
     "exampleInsurance": "Jaké jsou sazby zdravotního pojištění pro OSVČ?",
     "examplePausalni": "Vyplatí se mi paušální daň?"
+  },
+  "pwa": {
+    "updateAvailable": "Je dostupná nová verze",
+    "reload": "Obnovit",
+    "offline": "Jste offline"
   }
 }

@@ -106,7 +106,7 @@ export default function ExpenseDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -188,7 +188,7 @@ export default function ExpenseDetail() {
               </div>
               <div className="flex justify-between text-lg border-t border-gray-200 dark:border-gray-700 pt-3">
                 <span className="font-bold">{t('detail.amount.total')}</span>
-                <span className="font-bold text-blue-600">{formatCurrency(expense.total, expense.currency)}</span>
+                <span className="font-bold text-indigo-600">{formatCurrency(expense.total, expense.currency)}</span>
               </div>
             </div>
           </div>

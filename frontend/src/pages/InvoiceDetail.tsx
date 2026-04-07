@@ -182,7 +182,7 @@ export default function InvoiceDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -302,7 +302,7 @@ export default function InvoiceDetail() {
                   </tr>
                   <tr className="text-lg">
                     <td colSpan={3} className="py-2 text-right font-bold">{t('detail.total')}</td>
-                    <td className="py-2 text-right font-bold text-blue-600">
+                    <td className="py-2 text-right font-bold text-indigo-600">
                       {formatCurrency(invoice.total, invoice.currency)}
                     </td>
                   </tr>
@@ -416,7 +416,7 @@ export default function InvoiceDetail() {
             {/* Content */}
             {previewLoading ? (
               <div className="flex-1 flex items-center justify-center p-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
               </div>
             ) : previewData ? (
               <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
@@ -433,7 +433,7 @@ export default function InvoiceDetail() {
                       <a
                         href={`data:application/pdf;base64,${previewData.pdfBase64}`}
                         download={`${invoice.invoiceNumber}.pdf`}
-                        className="text-blue-600 hover:underline"
+                        className="text-indigo-600 hover:underline"
                       >
                         {t('detail.sendModal.downloadPdf')}
                       </a>
@@ -469,7 +469,7 @@ export default function InvoiceDetail() {
                           type="checkbox"
                           checked={sendToSecondary}
                           onChange={(e) => setSendToSecondary(e.target.checked)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
                         <span className="text-sm text-gray-600 dark:text-gray-400">{t('detail.sendModal.sendToSecondary')}</span>
                       </label>

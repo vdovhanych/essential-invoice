@@ -112,7 +112,7 @@ export default function RecurringInvoiceDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -206,7 +206,7 @@ export default function RecurringInvoiceDetail() {
                   </tr>
                   <tr className="text-lg">
                     <td colSpan={3} className="py-2 text-right font-bold">{t('recurring.detail.total')}</td>
-                    <td className="py-2 text-right font-bold text-blue-600">
+                    <td className="py-2 text-right font-bold text-indigo-600">
                       {formatCurrency(total, template.currency)}
                     </td>
                   </tr>
@@ -241,7 +241,7 @@ export default function RecurringInvoiceDetail() {
                     {generatedInvoices.map((invoice) => (
                       <tr key={invoice.id} className="border-b border-gray-100 dark:border-gray-700">
                         <td className="py-3">
-                          <Link to={`/invoices/${invoice.id}`} className="text-blue-600 hover:underline">
+                          <Link to={`/invoices/${invoice.id}`} className="text-indigo-600 hover:underline">
                             {invoice.invoiceNumber}
                           </Link>
                         </td>

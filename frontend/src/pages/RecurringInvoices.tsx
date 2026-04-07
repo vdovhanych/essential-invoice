@@ -65,7 +65,7 @@ export default function RecurringInvoices() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default function RecurringInvoices() {
                   <td className="py-3 px-4">
                     <Link
                       to={`/recurring/${template.id}`}
-                      className="font-medium text-blue-600 hover:underline"
+                      className="font-medium text-indigo-600 hover:underline"
                     >
                       {template.clientName}
                     </Link>
@@ -106,7 +106,7 @@ export default function RecurringInvoices() {
                   </td>
                   <td className="py-3 px-4 text-center">
                     {template.autoSend ? (
-                      <span className="badge bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">{t('recurring.list.autoSendYes')}</span>
+                      <span className="badge bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400">{t('recurring.list.autoSendYes')}</span>
                     ) : (
                       <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">{t('recurring.list.autoSendNo')}</span>
                     )}
@@ -122,7 +122,7 @@ export default function RecurringInvoices() {
                     <div className="flex items-center justify-end space-x-1">
                       <button
                         onClick={() => handleToggle(template.id)}
-                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
+                        className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg"
                         title={template.active ? t('recurring.list.togglePause') : t('recurring.list.toggleActivate')}
                       >
                         {template.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
