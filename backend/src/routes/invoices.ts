@@ -324,7 +324,7 @@ invoiceRouter.put('/:id',
     try {
       // Check invoice exists and is draft (can only edit drafts)
       const invoiceCheck = await query(
-        'SELECT status, issue_date, currency FROM invoices WHERE id = $1 AND user_id = $2',
+        'SELECT status, issue_date, currency, invoice_number, variable_symbol, total FROM invoices WHERE id = $1 AND user_id = $2',
         [req.params.id, req.userId]
       );
 
@@ -386,6 +386,35 @@ invoiceRouter.put('/:id',
         }
       }
 
+      // Regenerate QR payment data when totals or currency change so the SPAYD
+      // payload reflects the edited amount instead of the original draft amount.
+      let qrPaymentData: string | null | undefined = undefined;
+      if (items || currency) {
+        if (effectiveCurrency === 'CZK') {
+          const userResult = await query(
+            'SELECT bank_account, bank_code, language FROM users WHERE id = $1',
+            [req.userId]
+          );
+          const user = userResult.rows[0];
+          if (user?.bank_account && user?.bank_code) {
+            const qrTotal = items ? total : null;
+            const effectiveTotal = qrTotal ?? parseFloat(invoiceCheck.rows[0].total ?? '0');
+            qrPaymentData = generateSpayd(
+              user.bank_account,
+              user.bank_code,
+              effectiveTotal,
+              'CZK',
+              invoiceCheck.rows[0].variable_symbol,
+              `${user.language === 'en' ? 'Invoice' : 'Faktura'} ${invoiceCheck.rows[0].invoice_number}`
+            );
+          } else {
+            qrPaymentData = null;
+          }
+        } else {
+          qrPaymentData = null;
+        }
+      }
+
       // Update invoice
       const result = await query(
         `UPDATE invoices SET
@@ -402,12 +431,14 @@ invoiceRouter.put('/:id',
           status = COALESCE($11, status),
           exchange_rate = COALESCE($14, exchange_rate),
           total_czk = COALESCE($15, total_czk),
+          qr_payment_data = CASE WHEN $16::boolean THEN $17 ELSE qr_payment_data END,
           updated_at = CURRENT_TIMESTAMP
          WHERE id = $12 AND user_id = $13
          RETURNING *`,
         [clientId, issueDate, dueDate, deliveryDate, currency, actualVatRate,
          items ? subtotal : null, items ? vatAmount : null, items ? total : null,
-         notes, status, req.params.id, req.userId, exchangeRate, totalCzk]
+         notes, status, req.params.id, req.userId, exchangeRate, totalCzk,
+         qrPaymentData !== undefined, qrPaymentData ?? null]
       );
 
       res.json({
