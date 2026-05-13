@@ -585,6 +585,30 @@ invoiceRouter.post('/:id/send', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Mark invoice as sent manually (used when user downloads PDF and delivers it themselves)
+invoiceRouter.post('/:id/mark-sent', async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await query(
+      `UPDATE invoices SET
+        status = CASE WHEN status = 'draft' THEN 'sent' ELSE status END,
+        sent_at = COALESCE(sent_at, CURRENT_TIMESTAMP),
+        updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1 AND user_id = $2 AND status != 'cancelled'
+       RETURNING *`,
+      [req.params.id, req.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Invoice not found or cancelled' });
+    }
+
+    res.json({ message: 'Invoice marked as sent', invoice: result.rows[0] });
+  } catch (error) {
+    console.error('Mark sent error:', error);
+    res.status(500).json({ error: 'Failed to mark invoice as sent' });
+  }
+});
+
 // Mark invoice as paid manually
 invoiceRouter.post('/:id/mark-paid',
   body('paidAt').optional().isISO8601(),

@@ -34,6 +34,7 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 - `PUT /api/invoices/:id` - Update invoice
 - `DELETE /api/invoices/:id` - Delete draft invoice
 - `POST /api/invoices/:id/send` - Send via email
+- `POST /api/invoices/:id/mark-sent` - Mark as sent manually (without sending email)
 - `POST /api/invoices/:id/mark-paid` - Mark as paid
 - `POST /api/invoices/:id/cancel` - Cancel invoice
 - `GET /api/invoices/:id/preview` - Preview invoice email before sending
