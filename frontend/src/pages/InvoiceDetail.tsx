@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -13,6 +13,8 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
+  ChevronDown,
+  Mail,
 } from 'lucide-react';
 
 interface InvoiceItem {
@@ -72,10 +74,22 @@ export default function InvoiceDetail() {
   const [secondaryEmail, setSecondaryEmail] = useState('');
   const [showMarkPaidModal, setShowMarkPaidModal] = useState(false);
   const [paidDate, setPaidDate] = useState('');
+  const [sendMenuOpen, setSendMenuOpen] = useState(false);
+  const sendMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadInvoice();
   }, [id]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (sendMenuRef.current && !sendMenuRef.current.contains(e.target as Node)) {
+        setSendMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (showSendModal && id) {
@@ -118,6 +132,25 @@ export default function InvoiceDetail() {
       await api.download(`/invoices/${id}/pdf`, `${invoice.invoiceNumber}.pdf`);
     } catch (error) {
       toast.error(t('detail.downloadError'));
+    }
+  }
+
+  async function handleDownloadAndMarkSent() {
+    if (!invoice) return;
+    setSendMenuOpen(false);
+    try {
+      await api.download(`/invoices/${id}/pdf`, `${invoice.invoiceNumber}.pdf`);
+    } catch (error) {
+      toast.error(t('detail.downloadError'));
+      return;
+    }
+    try {
+      await api.post(`/invoices/${id}/mark-sent`);
+      toast.success(t('detail.markSentSuccess'));
+      loadInvoice();
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast.error(err.message || t('detail.markSentError'));
     }
   }
 
@@ -229,18 +262,30 @@ export default function InvoiceDetail() {
                 <Edit className="h-4 w-4" />
                 <span>{t('detail.edit')}</span>
               </Link>
-              <button onClick={() => setShowSendModal(true)} className="btn btn-primary flex items-center space-x-2">
-                <Send className="h-4 w-4" />
-                <span>{t('detail.send')}</span>
-              </button>
+              <SendMenu
+                label={t('detail.send')}
+                variant="primary"
+                open={sendMenuOpen}
+                setOpen={setSendMenuOpen}
+                menuRef={sendMenuRef}
+                onSendEmail={() => { setSendMenuOpen(false); setShowSendModal(true); }}
+                onDownloadAndMarkSent={handleDownloadAndMarkSent}
+                t={t}
+              />
             </>
           )}
           {(invoice.status === 'sent' || invoice.status === 'overdue') && (
             <>
-              <button onClick={() => setShowSendModal(true)} className="btn btn-secondary flex items-center space-x-2">
-                <Send className="h-4 w-4" />
-                <span>{t('detail.sendAgain')}</span>
-              </button>
+              <SendMenu
+                label={t('detail.sendAgain')}
+                variant="secondary"
+                open={sendMenuOpen}
+                setOpen={setSendMenuOpen}
+                menuRef={sendMenuRef}
+                onSendEmail={() => { setSendMenuOpen(false); setShowSendModal(true); }}
+                onDownloadAndMarkSent={handleDownloadAndMarkSent}
+                t={t}
+              />
               <button onClick={openMarkPaidModal} className="btn btn-success flex items-center space-x-2">
                 <CheckCircle className="h-4 w-4" />
                 <span>{t('detail.markPaid')}</span>
@@ -558,6 +603,63 @@ export default function InvoiceDetail() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface SendMenuProps {
+  label: string;
+  variant: 'primary' | 'secondary';
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  menuRef: React.RefObject<HTMLDivElement>;
+  onSendEmail: () => void;
+  onDownloadAndMarkSent: () => void;
+  t: (key: string) => string;
+}
+
+function SendMenu({ label, variant, open, setOpen, menuRef, onSendEmail, onDownloadAndMarkSent, t }: SendMenuProps) {
+  const baseStyles = variant === 'primary'
+    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+    : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600';
+  const dividerStyles = variant === 'primary'
+    ? 'border-indigo-500'
+    : 'border-gray-300 dark:border-gray-600';
+
+  return (
+    <div className="relative inline-flex" ref={menuRef}>
+      <button
+        onClick={onSendEmail}
+        className={`${baseStyles} px-4 py-2 rounded-l-lg font-medium transition-all duration-200 flex items-center space-x-2 active:scale-[0.97]`}
+      >
+        <Send className="h-4 w-4" />
+        <span>{label}</span>
+      </button>
+      <button
+        onClick={() => setOpen(!open)}
+        aria-label={t('detail.sendMenuToggle')}
+        className={`${baseStyles} ${dividerStyles} px-2 py-2 rounded-r-lg font-medium transition-all duration-200 border-l flex items-center active:scale-[0.97]`}
+      >
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-40 min-w-[260px]">
+          <button
+            onClick={onSendEmail}
+            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            <Mail className="h-4 w-4" />
+            <span>{t('detail.sendViaEmail')}</span>
+          </button>
+          <button
+            onClick={onDownloadAndMarkSent}
+            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            <Download className="h-4 w-4" />
+            <span>{t('detail.downloadAndMarkSent')}</span>
+          </button>
         </div>
       )}
     </div>
