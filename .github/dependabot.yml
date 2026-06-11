@@ -10,6 +10,13 @@
 
 version: 2
 
+registries:
+  dhi:
+    type: docker-registry
+    url: https://dhi.io
+    username: ${{ secrets.DOCKER_USERNAME }}
+    password: ${{ secrets.DOCKER_TOKEN }}
+
 updates:
   # ---------- Backend (Bun / package.json) ----------
   - package-ecosystem: "bun"
