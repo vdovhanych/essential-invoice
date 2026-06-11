@@ -81,6 +81,8 @@ updates:
   # ---------- Backend container base image ----------
   - package-ecosystem: "docker"
     directory: "/backend"
+    registries:
+      - dhi
     schedule:
       interval: "weekly"
       day: "monday"
@@ -98,6 +100,8 @@ updates:
   # ---------- Frontend container base image ----------
   - package-ecosystem: "docker"
     directory: "/frontend"
+    registries:
+      - dhi    
     schedule:
       interval: "weekly"
       day: "monday"
