@@ -44,10 +44,10 @@
     "@types/qrcode": "^1.5.5",
     "@types/supertest": "^7.2.0",
     "@types/uuid": "^9.0.7",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.9",
     "supertest": "^7.1.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9"
   },
   "overrides": {
     "semver": "^7.7.0",
