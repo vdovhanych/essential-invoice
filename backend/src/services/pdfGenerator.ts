@@ -498,15 +498,8 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
 
   const docDefinition = buildDocumentDefinition(invoiceData, qrCodeDataUrl);
 
-  // Generate PDF buffer
-  return new Promise<Buffer>((resolve, reject) => {
-    try {
-      const pdf = pdfmake.createPdf(docDefinition);
-      pdf.getBuffer((buffer: Uint8Array) => {
-        resolve(Buffer.from(buffer));
-      });
-    } catch (err) {
-      reject(err);
-    }
-  });
+  // Generate PDF buffer (pdfmake 0.3+ returns a Promise from getBuffer)
+  const pdf = pdfmake.createPdf(docDefinition);
+  const buffer: Uint8Array = await pdf.getBuffer();
+  return Buffer.from(buffer);
 }

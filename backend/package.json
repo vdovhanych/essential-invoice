@@ -21,11 +21,11 @@
     "express-validator": "^7.3.2",
     "imap": "^0.8.19",
     "jsonwebtoken": "^9.0.2",
-    "mailparser": "^3.6.6",
-    "multer": "^2.0.2",
-    "nodemailer": "^8.0.11",
-    "pdfmake": "^0.2.18",
-    "pg": "^8.11.3",
+    "mailparser": "^3.9.10",
+    "multer": "^2.2.0",
+    "nodemailer": "^9.0.0",
+    "pdfmake": "^0.3.11",
+    "pg": "^8.21.0",
     "qrcode": "^1.5.3",
     "uuid": "^9.0.1"
   },
@@ -44,10 +44,10 @@
     "@types/qrcode": "^1.5.5",
     "@types/supertest": "^7.2.0",
     "@types/uuid": "^9.0.7",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.9",
     "supertest": "^7.1.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9"
   },
   "overrides": {
     "semver": "^7.7.0",
