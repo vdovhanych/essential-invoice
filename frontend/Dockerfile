@@ -11,7 +11,7 @@ COPY . .
 RUN bun run build
 
 # Production
-FROM dhi.io/nginx:1.28
+FROM dhi.io/nginx:1.31
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
