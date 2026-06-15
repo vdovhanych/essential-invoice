@@ -20,7 +20,7 @@ interface AresResponse {
 
 // Lookup company by IČO
 aresRouter.get('/lookup/:ico', async (req: AuthRequest, res: Response) => {
-  const { ico } = req.params;
+  const ico = req.params.ico as string;
 
   // Validate IČO format (8 digits)
   if (!/^\d{8}$/.test(ico)) {
@@ -86,7 +86,7 @@ aresRouter.get('/lookup/:ico', async (req: AuthRequest, res: Response) => {
 
 // Validate IČO checksum
 aresRouter.get('/validate/:ico', async (req: AuthRequest, res: Response) => {
-  const { ico } = req.params;
+  const ico = req.params.ico as string;
 
   // Validate format
   if (!/^\d{8}$/.test(ico)) {

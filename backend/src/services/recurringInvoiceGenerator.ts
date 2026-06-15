@@ -17,7 +17,7 @@ interface RecurringInvoiceRow {
   day_of_month: number;
   start_date: string;
   end_date: string | null;
-  next_generation_date: string;
+  next_generation_date: string | Date;
   payment_terms: number;
   auto_send: boolean;
   active: boolean;

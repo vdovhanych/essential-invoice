@@ -479,7 +479,7 @@ invoiceRouter.delete('/:id', async (req: AuthRequest, res: Response) => {
 // Generate PDF
 invoiceRouter.get('/:id/pdf', async (req: AuthRequest, res: Response) => {
   try {
-    const pdfBuffer = await generateInvoicePDF(req.params.id, req.userId!);
+    const pdfBuffer = await generateInvoicePDF(req.params.id as string, req.userId!);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="invoice-${req.params.id}.pdf"`);
@@ -537,7 +537,7 @@ invoiceRouter.get('/:id/preview', async (req: AuthRequest, res: Response) => {
     const subject = tr.invoiceSubject.replace('{{number}}', invoice.invoice_number);
 
     // Generate PDF as base64
-    const pdfBuffer = await generateInvoicePDF(req.params.id, req.userId!);
+    const pdfBuffer = await generateInvoicePDF(req.params.id as string, req.userId!);
     const pdfBase64 = pdfBuffer.toString('base64');
 
     res.json({
@@ -586,7 +586,7 @@ invoiceRouter.post('/:id/send', async (req: AuthRequest, res: Response) => {
 
     // Send email
     const result = await sendInvoiceEmail(
-      req.params.id,
+      req.params.id as string,
       req.userId!,
       invoice.primary_email,
       effectiveSecondaryEmail,
