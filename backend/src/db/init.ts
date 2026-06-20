@@ -149,7 +149,9 @@ export async function initializeDatabase() {
         bank_notification_email VARCHAR(255),
         email_polling_interval INTEGER DEFAULT 300,
         invoice_number_prefix VARCHAR(20) DEFAULT '',
-        invoice_number_format VARCHAR(50) DEFAULT 'YYYYMM##',
+        invoice_number_format VARCHAR(50) DEFAULT '{YYYY}{MM}{SEQ2}',
+        invoice_number_starting_sequence INTEGER DEFAULT 1,
+        invoice_number_reset_period VARCHAR(10) DEFAULT 'monthly' CHECK (invoice_number_reset_period IN ('monthly', 'yearly')),
         invoice_pdf_template VARCHAR(20) DEFAULT 'classic',
         default_vat_rate DECIMAL(5, 2) DEFAULT 21,
         default_payment_terms INTEGER DEFAULT 14,
@@ -279,6 +281,36 @@ export async function initializeDatabase() {
           WHERE table_name = 'users' AND column_name = 'company_register_info'
         ) THEN
           ALTER TABLE users ADD COLUMN company_register_info TEXT;
+        END IF;
+      END $$;
+
+      -- Add invoice_number_starting_sequence column to settings table
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'settings' AND column_name = 'invoice_number_starting_sequence'
+        ) THEN
+          ALTER TABLE settings ADD COLUMN invoice_number_starting_sequence INTEGER DEFAULT 1;
+        END IF;
+      END $$;
+
+      -- The legacy default was never interpreted by the generator, so migrate it
+      -- to the token-based equivalent now used by invoice numbering.
+      UPDATE settings
+         SET invoice_number_format = '{YYYY}{MM}{SEQ2}'
+       WHERE invoice_number_format = 'YYYYMM##';
+
+      -- Add invoice_number_reset_period column to settings table. Monthly is
+      -- the legacy behavior of the hard-coded YYYYMM sequence.
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'settings' AND column_name = 'invoice_number_reset_period'
+        ) THEN
+          ALTER TABLE settings ADD COLUMN invoice_number_reset_period VARCHAR(10)
+            DEFAULT 'monthly' CHECK (invoice_number_reset_period IN ('monthly', 'yearly'));
         END IF;
       END $$;
 

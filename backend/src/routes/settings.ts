@@ -30,7 +30,9 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
         bankNotificationEmail: null,
         emailPollingInterval: 300,
         invoiceNumberPrefix: '',
-        invoiceNumberFormat: 'YYYYMM##',
+        invoiceNumberFormat: '{YYYY}{MM}{SEQ2}',
+        invoiceNumberStartingSequence: 1,
+        invoiceNumberResetPeriod: 'monthly',
         invoicePdfTemplate: 'classic',
         defaultVatRate: 21,
         defaultPaymentTerms: 14,
@@ -59,6 +61,8 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
       emailPollingInterval: settings.email_polling_interval,
       invoiceNumberPrefix: settings.invoice_number_prefix,
       invoiceNumberFormat: settings.invoice_number_format,
+      invoiceNumberStartingSequence: settings.invoice_number_starting_sequence ?? 1,
+      invoiceNumberResetPeriod: settings.invoice_number_reset_period === 'yearly' ? 'yearly' : 'monthly',
       invoicePdfTemplate: settings.invoice_pdf_template || 'classic',
       defaultVatRate: parseFloat(settings.default_vat_rate),
       defaultPaymentTerms: settings.default_payment_terms,
@@ -79,7 +83,7 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     smtpHost, smtpPort, smtpUser, smtpPassword, smtpSecure, smtpFromEmail, smtpFromName,
     imapHost, imapPort, imapUser, imapPassword, imapTls,
     bankNotificationEmail, emailPollingInterval,
-    invoiceNumberPrefix, invoiceNumberFormat, invoicePdfTemplate,
+    invoiceNumberPrefix, invoiceNumberFormat, invoiceNumberStartingSequence, invoiceNumberResetPeriod, invoicePdfTemplate,
     defaultVatRate, defaultPaymentTerms,
     emailTemplate,
     calculatorEnabled,
@@ -116,6 +120,10 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     addUpdate('email_polling_interval', emailPollingInterval);
     addUpdate('invoice_number_prefix', invoiceNumberPrefix);
     addUpdate('invoice_number_format', invoiceNumberFormat);
+    addUpdate('invoice_number_starting_sequence', invoiceNumberStartingSequence);
+    if (invoiceNumberResetPeriod !== undefined) {
+      addUpdate('invoice_number_reset_period', invoiceNumberResetPeriod === 'yearly' ? 'yearly' : 'monthly');
+    }
     if (invoicePdfTemplate !== undefined) {
       addUpdate('invoice_pdf_template', invoicePdfTemplate === 'minimalistic' ? 'minimalistic' : 'classic');
     }

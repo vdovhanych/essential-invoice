@@ -9,7 +9,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 ## Features
 
 - **AI-Powered Features**: Smart payment matching (only if native parsing fails), invoice insights, Czech tax advisor chatbot (via Perplexity AI)
-- **Invoice Management**: Create, edit, duplicate, and send invoices with automatic numbering
+- **Invoice Management**: Create, edit, duplicate, and send invoices with configurable automatic numbering formats and starting sequence
 - **Recurring Invoices**: Monthly recurring invoice templates with optional auto-send
 - **Expense Tracking**: Track business expenses with PDF attachments and automatic numbering
 - **Client Management**: Store and manage client contacts with ARES API integration for Czech companies

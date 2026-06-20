@@ -94,7 +94,13 @@ Invoice item `unit` values are optional. When all item units are empty, generate
 - `POST /api/settings/test-smtp` - Test SMTP connection
 - `POST /api/settings/test-imap` - Test IMAP connection
 
-Settings include `invoicePdfTemplate`, which accepts `classic` or `minimalistic`. The classic template remains the default.
+Invoice settings include:
+
+- `invoiceNumberPrefix` - optional prefix added before the generated number
+- `invoiceNumberFormat` - token template supporting `{YYYY}`, `{YY}`, `{MM}`, `{SEQ}`, `{SEQ2}`, `{SEQ3}`, and `{SEQ4}`
+- `invoiceNumberStartingSequence` - starting value used only when the user has no invoices yet
+- `invoiceNumberResetPeriod` - `monthly` or `yearly`; controls sequence reset independently of the tokens displayed in the number
+- `invoicePdfTemplate` - `classic` or `minimalistic`; classic remains the default
 
 ## AI (Perplexity)
 
