@@ -55,7 +55,10 @@
     "vatRate": "Výchozí sazba DPH (%)",
     "paymentTerms": "Výchozí splatnost (dny)",
     "invoiceNumberPrefix": "Prefix čísla faktury",
-    "invoiceNumberPrefixPlaceholder": "Např. FV, INV"
+    "invoiceNumberPrefixPlaceholder": "Např. FV, INV",
+    "pdfTemplate": "Šablona PDF faktury",
+    "pdfTemplateClassic": "Klasická",
+    "pdfTemplateMinimalistic": "Minimalistická"
   },
 
   "calculator": {

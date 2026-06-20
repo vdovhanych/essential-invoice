@@ -27,6 +27,7 @@ vi.mock('lucide-react', () => ({
 }));
 
 const getVatSelect = () => document.querySelector('select[name="defaultVatRate"]') as HTMLSelectElement;
+const getPdfTemplateSelect = () => document.querySelector('select[name="invoicePdfTemplate"]') as HTMLSelectElement;
 
 const defaultSettings = {
   smtpHost: null,
@@ -45,6 +46,7 @@ const defaultSettings = {
   emailPollingInterval: 300,
   invoiceNumberPrefix: '',
   invoiceNumberFormat: 'YYYYMM##',
+  invoicePdfTemplate: 'classic',
   defaultVatRate: 21,
   defaultPaymentTerms: 14,
   emailTemplate: null,
@@ -120,5 +122,25 @@ describe('Settings Component', () => {
     // Paušální daň section should NOT be present (moved to Profile)
     expect(screen.queryByText('Paušální daň')).not.toBeInTheDocument();
     expect(screen.queryByText('Používám paušální daň')).not.toBeInTheDocument();
+  });
+
+  it('should load and save the minimalistic PDF template', async () => {
+    mockGet.mockResolvedValueOnce({ ...defaultSettings, invoicePdfTemplate: 'minimalistic' });
+    mockPut.mockResolvedValueOnce({ message: 'Settings updated successfully' });
+    mockGet.mockResolvedValueOnce({ ...defaultSettings, invoicePdfTemplate: 'minimalistic' });
+
+    render(<Settings />);
+
+    await waitFor(() => {
+      expect(getPdfTemplateSelect().value).toBe('minimalistic');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /uložit nastavení/i }));
+
+    await waitFor(() => {
+      expect(mockPut).toHaveBeenCalledWith('/settings', expect.objectContaining({
+        invoicePdfTemplate: 'minimalistic'
+      }));
+    });
   });
 });

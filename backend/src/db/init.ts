@@ -23,6 +23,7 @@ export async function initializeDatabase() {
         company_ico VARCHAR(20),
         company_dic VARCHAR(20),
         company_address TEXT,
+        company_register_info TEXT,
         bank_account VARCHAR(50),
         bank_code VARCHAR(10),
         logo_data TEXT,
@@ -149,6 +150,7 @@ export async function initializeDatabase() {
         email_polling_interval INTEGER DEFAULT 300,
         invoice_number_prefix VARCHAR(20) DEFAULT '',
         invoice_number_format VARCHAR(50) DEFAULT 'YYYYMM##',
+        invoice_pdf_template VARCHAR(20) DEFAULT 'classic',
         default_vat_rate DECIMAL(5, 2) DEFAULT 21,
         default_payment_terms INTEGER DEFAULT 14,
         email_template TEXT,
@@ -266,6 +268,28 @@ export async function initializeDatabase() {
           WHERE table_name = 'users' AND column_name = 'language'
         ) THEN
           ALTER TABLE users ADD COLUMN language VARCHAR(5) DEFAULT 'cs';
+        END IF;
+      END $$;
+
+      -- Add company_register_info column to users table
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'users' AND column_name = 'company_register_info'
+        ) THEN
+          ALTER TABLE users ADD COLUMN company_register_info TEXT;
+        END IF;
+      END $$;
+
+      -- Add invoice_pdf_template column to settings table
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'settings' AND column_name = 'invoice_pdf_template'
+        ) THEN
+          ALTER TABLE settings ADD COLUMN invoice_pdf_template VARCHAR(20) DEFAULT 'classic';
         END IF;
       END $$;
 

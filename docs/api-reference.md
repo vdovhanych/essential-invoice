@@ -16,6 +16,8 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 - `POST /api/auth/me/logo` - Upload user logo (multipart form data)
 - `DELETE /api/auth/me/logo` - Delete user logo
 
+The profile payload includes company invoicing fields such as `companyName`, `companyIco`, `companyDic`, `companyAddress`, and optional `companyRegisterInfo`. `companyRegisterInfo` is shown in the generated invoice PDF footer when provided.
+
 ## Clients
 
 - `GET /api/clients` - List all clients
@@ -40,6 +42,8 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 - `GET /api/invoices/:id/preview` - Preview invoice email before sending
 
 EUR invoices include `exchangeRate` (CNB rate at issue date) and `totalCzk` (converted CZK equivalent) in responses. These are auto-fetched from the Czech National Bank when the invoice is created or updated. Dashboard totals and paušální daň tracking use the CZK equivalent for EUR invoices.
+
+Invoice item `unit` values are optional. When all item units are empty, generated PDFs omit the quantity/unit column and render a simpler description/price layout.
 
 ## Recurring Invoices
 
@@ -89,6 +93,8 @@ EUR invoices include `exchangeRate` (CNB rate at issue date) and `totalCzk` (con
 - `PUT /api/settings` - Update settings
 - `POST /api/settings/test-smtp` - Test SMTP connection
 - `POST /api/settings/test-imap` - Test IMAP connection
+
+Settings include `invoicePdfTemplate`, which accepts `classic` or `minimalistic`. The classic template remains the default.
 
 ## AI (Perplexity)
 
