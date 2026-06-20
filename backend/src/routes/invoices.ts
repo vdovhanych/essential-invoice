@@ -289,7 +289,7 @@ invoiceRouter.post('/',
         await query(
           `INSERT INTO invoice_items (invoice_id, description, quantity, unit, unit_price, total, sort_order)
            VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [invoice.id, item.description, item.quantity, item.unit || 'ks', item.unitPrice, itemTotal, i]
+          [invoice.id, item.description, item.quantity, item.unit || null, item.unitPrice, itemTotal, i]
         );
       }
 
@@ -368,7 +368,7 @@ invoiceRouter.put('/:id',
           await query(
             `INSERT INTO invoice_items (invoice_id, description, quantity, unit, unit_price, total, sort_order)
              VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            [req.params.id, item.description, item.quantity, item.unit || 'ks', item.unitPrice, itemTotal, i]
+            [req.params.id, item.description, item.quantity, item.unit || null, item.unitPrice, itemTotal, i]
           );
         }
       }
@@ -483,6 +483,10 @@ invoiceRouter.get('/:id/pdf', async (req: AuthRequest, res: Response) => {
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="invoice-${req.params.id}.pdf"`);
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
     res.send(pdfBuffer);
   } catch (error) {
     console.error('Generate PDF error:', error);

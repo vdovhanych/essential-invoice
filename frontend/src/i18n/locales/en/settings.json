@@ -55,7 +55,10 @@
     "vatRate": "Default VAT rate (%)",
     "paymentTerms": "Default payment terms (days)",
     "invoiceNumberPrefix": "Invoice number prefix",
-    "invoiceNumberPrefixPlaceholder": "e.g. FV, INV"
+    "invoiceNumberPrefixPlaceholder": "e.g. FV, INV",
+    "pdfTemplate": "Invoice PDF template",
+    "pdfTemplateClassic": "Classic",
+    "pdfTemplateMinimalistic": "Minimalistic"
   },
 
   "calculator": {
