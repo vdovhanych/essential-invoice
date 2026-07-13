@@ -13,11 +13,11 @@
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
-    "i18next": "^26.2.0",
-    "lucide-react": "^1.18.0",
+    "i18next": "^26.3.6",
+    "lucide-react": "^1.24.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-i18next": "^17.0.8",
+    "react-i18next": "^17.0.9",
     "react-router-dom": "^6.21.1",
     "recharts": "^2.15.0",
     "sonner": "^2.0.7"
