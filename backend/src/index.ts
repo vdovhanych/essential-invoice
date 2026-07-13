@@ -20,7 +20,7 @@ import { log } from './utils/logger';
 
 // Prevent IMAP/socket errors from crashing the process in Bun
 process.on('uncaughtException', (err) => {
-  log.error('Uncaught exception (non-fatal):', err.message);
+  log.error('Uncaught exception (non-fatal):', err?.stack || err);
 });
 process.on('unhandledRejection', (err) => {
   log.error('Unhandled rejection (non-fatal):', err);

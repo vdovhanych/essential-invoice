@@ -17,6 +17,7 @@ Copy `.env.example` to `.env` in the project root and configure:
 | `BACKEND_PORT` | `3001` | Backend API port |
 | `FRONTEND_PORT` | `80` | Frontend web port |
 | `EMAIL_POLLING_INTERVAL` | `600` | Email check interval (seconds, default 10 minutes) |
+| `EMAIL_FETCH_TIMEOUT` | `120` | Hard timeout for a single user's IMAP fetch (seconds). Prevents a stuck IMAP connection from blocking future polls |
 | `RECURRING_INVOICE_INTERVAL` | `86400` | Recurring invoice generation check interval (seconds, default 24 hours) |
 | `FRONTEND_URL` | `http://localhost:8080` | Frontend URL for email links (password reset) |
 | `GLOBAL_SMTP_HOST` | - | Global SMTP server host (enables system emails) |
