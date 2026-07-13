@@ -204,22 +204,54 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
   );
 }
 
+// Hard ceiling on a single user's IMAP fetch. node-imap can throw inside its own
+// socket handlers (caught only by the global uncaughtException handler), which
+// leaves the fetch promise pending forever - and with it the polling advisory lock.
+const FETCH_TIMEOUT_MS = parseInt(process.env.EMAIL_FETCH_TIMEOUT || '120') * 1000;
+
 async function fetchEmails(settings: UserSettings): Promise<void> {
   return new Promise((resolve, reject) => {
+    let settled = false;
+
     const imap = new Imap({
       user: settings.imapUser,
       password: settings.imapPassword,
       host: settings.imapHost,
       port: settings.imapPort,
       tls: settings.imapTls,
-      tlsOptions: { rejectUnauthorized: false }
-    });
+      tlsOptions: { rejectUnauthorized: false },
+      connTimeout: 30000,
+      authTimeout: 30000,
+      // node-imap defaults to no socket timeout, so a stalled connection hangs
+      // forever (@types/imap omits this option, hence the cast)
+      socketTimeout: 60000
+    } as Imap.Config);
+
+    const settle = (err?: Error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(watchdog);
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    };
+
+    const watchdog = setTimeout(() => {
+      try {
+        imap.destroy();
+      } catch {
+        // connection may already be gone
+      }
+      settle(new Error(`IMAP fetch timed out after ${FETCH_TIMEOUT_MS / 1000}s`));
+    }, FETCH_TIMEOUT_MS);
 
     imap.once('ready', () => {
       imap.openBox('INBOX', false, (err, box) => {
         if (err) {
           imap.end();
-          return reject(err);
+          return settle(err);
         }
 
         // Search for unseen emails from bank notification sources
@@ -233,13 +265,13 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
         imap.search(searchCriteria, (err, results) => {
           if (err) {
             imap.end();
-            return reject(err);
+            return settle(err);
           }
 
           if (results.length === 0) {
             log.info(`  ✓ No new unseen emails found for user ${settings.userId}`);
             imap.end();
-            return resolve();
+            return settle();
           }
 
           log.info(`  → Found ${results.length} new unseen email(s) for user ${settings.userId}`);
@@ -280,7 +312,7 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
           fetch.once('end', async () => {
             await Promise.all(emailPromises);
             imap.end();
-            resolve();
+            settle();
           });
         });
       });
@@ -288,17 +320,22 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
 
     imap.once('error', (err: Error) => {
       log.error(`IMAP error for user ${settings.userId}:`, err.message);
-      reject(err);
+      settle(err);
     });
 
     imap.once('end', () => {
       log.info(`IMAP connection ended for user ${settings.userId}`);
     });
 
+    // If the connection drops without an 'error' event, don't leave the promise pending
+    imap.once('close', (hadError: boolean) => {
+      settle(hadError ? new Error(`IMAP connection closed unexpectedly for user ${settings.userId}`) : undefined);
+    });
+
     try {
       imap.connect();
     } catch (err) {
-      reject(err);
+      settle(err as Error);
     }
   });
 }
@@ -306,11 +343,12 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
 // Advisory lock ID for email polling (arbitrary fixed number, different from recurring invoice lock)
 const EMAIL_POLLING_LOCK_ID = 1002;
 
-async function pollAllUsers(): Promise<void> {
+export async function pollAllUsers(): Promise<void> {
   const startTime = Date.now();
 
   // Use a dedicated client so lock and unlock happen on the same connection
   const client = await pool.connect();
+  let clientDestroyed = false;
   try {
     // Try to acquire advisory lock - if another instance holds it, skip this run
     const lockResult = await client.query('SELECT pg_try_advisory_lock($1) AS acquired', [EMAIL_POLLING_LOCK_ID]);
@@ -340,14 +378,24 @@ async function pollAllUsers(): Promise<void> {
     } catch (error) {
       log.error('Email polling error:', error);
     } finally {
-      // Release the lock on the same connection that acquired it
-      await client.query('SELECT pg_advisory_unlock($1)', [EMAIL_POLLING_LOCK_ID]);
+      // Release the lock on the same connection that acquired it. If the unlock
+      // itself fails, destroy the connection - Postgres releases session-scoped
+      // advisory locks when the session ends, so the lock can never leak.
+      try {
+        await client.query('SELECT pg_advisory_unlock($1)', [EMAIL_POLLING_LOCK_ID]);
+      } catch (unlockError) {
+        log.error('Failed to release email polling lock, destroying connection:', unlockError);
+        client.release(true);
+        clientDestroyed = true;
+      }
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     log.info(`Email poll complete (${duration}s)`);
   } finally {
-    client.release();
+    if (!clientDestroyed) {
+      client.release();
+    }
   }
 }
 
