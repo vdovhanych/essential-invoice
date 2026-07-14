@@ -11,13 +11,14 @@ Copy `.env.example` to `.env` in the project root and configure:
 | `DB_NAME` | `essential_invoice` | Database name |
 | `DB_USER` | `postgres` | Database user |
 | `DB_PASSWORD` | `postgres` | Database password |
-| `JWT_SECRET` | - | JWT signing secret (required) |
+| `JWT_SECRET` | - | JWT signing secret (required, at least 16 characters — the server refuses to start without it). Generate with `openssl rand -hex 32` |
 | `ENCRYPTION_KEY` | - | AES-256 key for encrypting secrets at rest (required, 64-char hex). Generate with `openssl rand -hex 32` |
 | `CORS_ORIGIN` | `http://localhost:5173` (dev) / `http://localhost:8080` (Docker) | Allowed CORS origins (comma-separated) |
 | `BACKEND_PORT` | `3001` | Backend API port |
 | `FRONTEND_PORT` | `80` | Frontend web port |
 | `EMAIL_POLLING_INTERVAL` | `600` | Email check interval (seconds, default 10 minutes) |
 | `EMAIL_FETCH_TIMEOUT` | `120` | Hard timeout for a single user's IMAP fetch (seconds). Prevents a stuck IMAP connection from blocking future polls |
+| `IMAP_ALLOW_INSECURE_TLS` | `false` | Set to `true` to accept IMAP servers with self-signed/invalid TLS certificates. By default certificates are verified |
 | `RECURRING_INVOICE_INTERVAL` | `86400` | Recurring invoice generation check interval (seconds, default 24 hours) |
 | `FRONTEND_URL` | `http://localhost:8080` | Frontend URL for email links (password reset) |
 | `GLOBAL_SMTP_HOST` | - | Global SMTP server host (enables system emails) |

@@ -67,6 +67,10 @@ backend:
     NODE_ENV: production
     # -- Email polling interval in seconds (default: 10 minutes)
     EMAIL_POLLING_INTERVAL: "600"
+    # -- Hard timeout for a single user's IMAP fetch in seconds (default: 2 minutes)
+    EMAIL_FETCH_TIMEOUT: "120"
+    # -- Allow IMAP servers with self-signed/invalid TLS certificates (default: certificates are verified)
+    IMAP_ALLOW_INSECURE_TLS: "false"
     # -- Recurring invoice generation check interval in seconds (default: 24 hours)
     RECURRING_INVOICE_INTERVAL: "86400"
     # -- CORS allowed origin(s), comma-separated. With ingress (same-origin),

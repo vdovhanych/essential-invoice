@@ -33,7 +33,7 @@ describe('Auth Routes', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.JWT_SECRET = 'test-secret';
+    process.env.JWT_SECRET = 'test-secret-at-least-16-chars';
     // Restore default mock implementations after clearAllMocks
     mockedIsGlobalSmtpConfigured.mockReturnValue(false);
     mockedSendWelcomeEmail.mockResolvedValue(undefined);
@@ -246,7 +246,7 @@ describe('Auth Routes', () => {
 
     it('should return user profile with valid token', async () => {
       const userId = 'test-user-id';
-      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
 
       mockedQuery.mockResolvedValueOnce({
         rows: [{
@@ -277,7 +277,7 @@ describe('Auth Routes', () => {
   describe('GET /auth/me - new fields', () => {
     it('should return onboardingCompleted field', async () => {
       const userId = 'test-user-id';
-      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
 
       mockedQuery.mockResolvedValueOnce({
         rows: [{
@@ -310,7 +310,7 @@ describe('Auth Routes', () => {
 
     it('should return pausalni dan fields', async () => {
       const userId = 'test-user-id';
-      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
 
       mockedQuery.mockResolvedValueOnce({
         rows: [{
@@ -345,7 +345,7 @@ describe('Auth Routes', () => {
 
     it('should return vatPayer defaulting to false for new user', async () => {
       const userId = 'test-user-id';
-      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
 
       mockedQuery.mockResolvedValueOnce({
         rows: [{
@@ -380,7 +380,7 @@ describe('Auth Routes', () => {
   describe('PUT /auth/me', () => {
     it('should update user profile', async () => {
       const userId = 'test-user-id';
-      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
 
       mockedQuery.mockResolvedValueOnce({
         rows: [{
@@ -412,7 +412,7 @@ describe('Auth Routes', () => {
   describe('PUT /auth/me - new fields', () => {
     it('should update onboardingCompleted to true', async () => {
       const userId = 'test-user-id';
-      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
 
       mockedQuery.mockResolvedValueOnce({
         rows: [{
@@ -446,7 +446,7 @@ describe('Auth Routes', () => {
 
     it('should update pausalni dan fields', async () => {
       const userId = 'test-user-id';
-      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
 
       mockedQuery.mockResolvedValueOnce({
         rows: [{
@@ -486,7 +486,7 @@ describe('Auth Routes', () => {
   describe('POST /auth/change-password', () => {
     it('should return 400 if new password is too short', async () => {
       const userId = 'test-user-id';
-      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
 
       const response = await request(app)
         .post('/auth/change-password')
@@ -559,7 +559,7 @@ describe('Auth Routes', () => {
 
     it('should return 400 if password is missing', async () => {
       const userId = 'test-user-id';
-      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
 
       const response = await request(app)
         .delete('/auth/me')
@@ -571,7 +571,7 @@ describe('Auth Routes', () => {
 
     it('should return 401 if password is incorrect', async () => {
       const userId = 'test-user-id';
-      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
 
       const bcrypt = await import('bcryptjs');
       const hash = await bcrypt.hash('correctpassword', 12);
@@ -591,7 +591,7 @@ describe('Auth Routes', () => {
 
     it('should delete account with correct password', async () => {
       const userId = 'test-user-id';
-      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret');
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
 
       const bcrypt = await import('bcryptjs');
       const hash = await bcrypt.hash('correctpassword', 12);

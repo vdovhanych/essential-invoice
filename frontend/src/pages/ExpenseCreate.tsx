@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
 import { ArrowLeft, Upload, X } from 'lucide-react';
+import { formatCurrency } from '../utils/format';
+import { PageLoader } from '../components/Spinner';
 
 interface Client {
   id: string;
@@ -67,6 +69,7 @@ export default function ExpenseCreate() {
       }
     } catch (err) {
       console.error('Failed to load data:', err);
+      toast.error(t('common:errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -158,16 +161,11 @@ export default function ExpenseCreate() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   const formatCurrencyLocal = (amount: number) => {
-    const symbol = formData.currency === 'CZK' ? 'Kč' : 'EUR';
-    return `${amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${symbol}`;
+    return formatCurrency(amount, formData.currency);
   };
 
   return (

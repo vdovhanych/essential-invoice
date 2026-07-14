@@ -55,7 +55,8 @@
     "loadFailed": "Nepodařilo se načíst data.",
     "saveFailed": "Nepodařilo se uložit data.",
     "deleteFailed": "Nepodařilo se smazat.",
-    "unknownError": "Došlo k neočekávané chybě."
+    "unknownError": "Došlo k neočekávané chybě.",
+    "downloadFailed": "Nepodařilo se stáhnout soubor."
   },
   "messages": {
     "RESET_EMAIL_SENT": "Pokud účet s tímto emailem existuje, byl odeslán odkaz pro obnovení hesla.",

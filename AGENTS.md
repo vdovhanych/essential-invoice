@@ -75,6 +75,8 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 - **Utils**: `utils/` - Utility functions:
   - `validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
   - `encryption.ts` - AES-256-GCM encryption/decryption for sensitive data at rest (SMTP/IMAP credentials)
+  - `money.ts` - Monetary rounding helpers (`roundMoney`, `calculateInvoiceTotals`) used by invoice routes and the recurring generator
+  - `jwt.ts` - JWT secret access with startup validation (`JWT_SECRET` required, min 16 chars, no fallback)
   - `logger.ts` - Timestamped logging utility (info, warn, error)
 - **Scripts**: `scripts/delete-user.ts` - Admin CLI script to delete a user by email
 - **Seed**: `db/seed.ts` - Seeds test data (user, clients, invoices, expenses, payments) for development. Run with `bun run seed [email] [password]`

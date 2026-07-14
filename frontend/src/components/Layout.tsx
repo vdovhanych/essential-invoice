@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import AIAssistant from './AIAssistant';
+import { PageLoader } from './Spinner';
 import { api } from '../utils/api';
 import {
   LayoutDashboard,
@@ -214,7 +215,9 @@ export default function Layout() {
 
         {/* Page content */}
         <main className="p-4 lg:p-6">
-          <Outlet />
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
         </main>
 
         {/* AI Assistant */}

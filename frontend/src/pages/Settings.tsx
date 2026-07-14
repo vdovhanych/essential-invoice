@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { Mail, Server, Eye, EyeOff, Calculator, Sparkles } from 'lucide-react';
+import { PageLoader } from '../components/Spinner';
 
 interface Settings {
   smtpHost: string | null;
@@ -94,6 +95,7 @@ export default function Settings() {
       });
     } catch (error) {
       console.error('Failed to load settings:', error);
+      toast.error(t('common:errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -142,11 +144,7 @@ export default function Settings() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (

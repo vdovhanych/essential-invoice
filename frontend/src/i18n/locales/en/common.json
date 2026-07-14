@@ -55,7 +55,8 @@
     "loadFailed": "Failed to load data.",
     "saveFailed": "Failed to save data.",
     "deleteFailed": "Failed to delete.",
-    "unknownError": "An unexpected error occurred."
+    "unknownError": "An unexpected error occurred.",
+    "downloadFailed": "Failed to download file."
   },
   "messages": {
     "RESET_EMAIL_SENT": "If an account with this email exists, a password reset link has been sent.",

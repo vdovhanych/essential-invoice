@@ -78,7 +78,7 @@ async function getAllUserSettings(): Promise<UserSettings[]> {
   }));
 }
 
-async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
+export async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
   const senderEmail = mail.from?.value[0]?.address || '';
   const emailBody = mail.text || '';
   const emailDate = mail.date || new Date();
@@ -117,18 +117,31 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
   let invoiceId: string | null = null;
   let matchMethod: string | null = null;
 
-  // 1. Try exact variable symbol match
+  // 1. Try exact variable symbol match (amount and currency must also match,
+  //    otherwise a partial payment or wrong-currency transfer would flip the
+  //    invoice to paid - leave those unmatched for manual review)
   if (payment.variableSymbol) {
     const invoiceResult = await query(
-      `SELECT id FROM invoices
+      `SELECT id, total, currency FROM invoices
        WHERE user_id = $1 AND variable_symbol = $2 AND status IN ('sent', 'overdue')`,
       [userId, payment.variableSymbol]
     );
 
     if (invoiceResult.rows.length === 1) {
-      invoiceId = invoiceResult.rows[0].id;
-      matchMethod = 'variable_symbol';
-      log.info(`    ✓ Matched to invoice by variable symbol: ${payment.variableSymbol}`);
+      const invoice = invoiceResult.rows[0];
+      const amountMatches = Math.abs(Number(invoice.total) - payment.amount) < 0.005;
+      const currencyMatches = invoice.currency === payment.currency;
+
+      if (amountMatches && currencyMatches) {
+        invoiceId = invoice.id;
+        matchMethod = 'variable_symbol';
+        log.info(`    ✓ Matched to invoice by variable symbol: ${payment.variableSymbol}`);
+      } else {
+        log.warn(
+          `    ! Invoice matches VS ${payment.variableSymbol} but payment is ${payment.amount} ${payment.currency} ` +
+          `vs invoice total ${invoice.total} ${invoice.currency}, manual matching required`
+        );
+      }
     } else if (invoiceResult.rows.length > 1) {
       log.warn(`    ! Multiple invoices match VS ${payment.variableSymbol}, manual matching required`);
     }
@@ -154,54 +167,72 @@ async function processEmail(userId: string, mail: ParsedMail): Promise<void> {
     }
   }
 
-  // Save payment record
-  const paymentResult = await query(
-    `INSERT INTO payments (
-      user_id, invoice_id, amount, currency, variable_symbol,
-      sender_name, sender_account, message, transaction_code,
-      transaction_date, bank_type, raw_email, matched_at, match_method
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-    RETURNING id`,
-    [
-      userId,
-      invoiceId,
-      payment.amount,
-      payment.currency,
-      payment.variableSymbol,
-      payment.senderName,
-      payment.senderAccount,
-      payment.message,
-      payment.transactionCode,
-      payment.transactionDate,
-      bankType,
-      payment.rawEmail,
-      invoiceId ? new Date() : null,
-      matchMethod
-    ]
-  );
+  // Save payment record, invoice status update and email log atomically -
+  // a mid-sequence failure must not leave a payment recorded against an
+  // invoice that was never marked paid (or vice versa)
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  const createdPaymentId = paymentResult.rows[0].id;
-  log.info(`    ✓ Created payment record: ${createdPaymentId}`);
-
-  // If matched, update invoice status
-  if (invoiceId) {
-    await query(
-      `UPDATE invoices
-       SET status = 'paid', paid_at = $1, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $2`,
-      [payment.transactionDate || new Date(), invoiceId]
+    const paymentResult = await client.query(
+      `INSERT INTO payments (
+        user_id, invoice_id, amount, currency, variable_symbol,
+        sender_name, sender_account, message, transaction_code,
+        transaction_date, bank_type, raw_email, matched_at, match_method
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      RETURNING id`,
+      [
+        userId,
+        invoiceId,
+        payment.amount,
+        payment.currency,
+        payment.variableSymbol,
+        payment.senderName,
+        payment.senderAccount,
+        payment.message,
+        payment.transactionCode,
+        payment.transactionDate,
+        bankType,
+        payment.rawEmail,
+        invoiceId ? new Date() : null,
+        matchMethod
+      ]
     );
-    log.info(`    ✓ Marked invoice ${invoiceId} as paid`);
-  } else {
-    log.warn(`    ! No matching invoice found - payment saved as unmatched`);
-  }
 
-  // Log the bank notification
-  await query(
-    `INSERT INTO email_logs (user_id, invoice_id, email_type, recipient_email, subject, status, sent_at)
-     VALUES ($1, $2, 'bank_notification', $3, $4, 'sent', CURRENT_TIMESTAMP)`,
-    [userId, invoiceId, senderEmail, `Payment: ${payment.amount} ${payment.currency}`]
-  );
+    const createdPaymentId = paymentResult.rows[0].id;
+    log.info(`    ✓ Created payment record: ${createdPaymentId}`);
+
+    // If matched, update invoice status
+    if (invoiceId) {
+      await client.query(
+        `UPDATE invoices
+         SET status = 'paid', paid_at = $1, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2`,
+        [payment.transactionDate || new Date(), invoiceId]
+      );
+      log.info(`    ✓ Marked invoice ${invoiceId} as paid`);
+    } else {
+      log.warn(`    ! No matching invoice found - payment saved as unmatched`);
+    }
+
+    // Log the bank notification
+    await client.query(
+      `INSERT INTO email_logs (user_id, invoice_id, email_type, recipient_email, subject, status, sent_at)
+       VALUES ($1, $2, 'bank_notification', $3, $4, 'sent', CURRENT_TIMESTAMP)`,
+      [userId, invoiceId, senderEmail, `Payment: ${payment.amount} ${payment.currency}`]
+    );
+
+    await client.query('COMMIT');
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      log.error('Failed to roll back payment transaction:', rollbackError);
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 // Hard ceiling on a single user's IMAP fetch. node-imap can throw inside its own
@@ -219,7 +250,9 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
       host: settings.imapHost,
       port: settings.imapPort,
       tls: settings.imapTls,
-      tlsOptions: { rejectUnauthorized: false },
+      // Verify server certificates by default - the connection carries bank data
+      // and IMAP credentials. Self-signed servers need IMAP_ALLOW_INSECURE_TLS=true.
+      tlsOptions: { rejectUnauthorized: process.env.IMAP_ALLOW_INSECURE_TLS !== 'true' },
       connTimeout: 30000,
       authTimeout: 30000,
       // node-imap defaults to no socket timeout, so a stalled connection hangs
@@ -276,27 +309,41 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
 
           log.info(`  → Found ${results.length} new unseen email(s) for user ${settings.userId}`);
 
+          // Don't mark messages seen up front - a processing failure (DB down,
+          // parser bug) would silently drop the bank notification with no retry.
+          // Instead flag each message only after it was handled.
           const fetch = imap.fetch(results, {
-            bodies: '',
-            markSeen: true
+            bodies: ''
           });
 
           const emailPromises: Promise<void>[] = [];
+          const processedUids: number[] = [];
 
           fetch.on('message', (msg) => {
+            let uid: number | null = null;
+            msg.once('attributes', (attrs) => {
+              uid = attrs.uid;
+            });
+
             const emailPromise = new Promise<void>((resolveEmail) => {
               msg.on('body', (stream) => {
                 simpleParser(stream as any, async (err, mail) => {
                   if (err) {
+                    // Unparseable emails will never succeed - mark seen so they
+                    // don't get retried on every poll
                     log.error('Parse error:', err);
+                    if (uid !== null) processedUids.push(uid);
                     resolveEmail();
                     return;
                   }
 
                   try {
                     await processEmail(settings.userId, mail);
+                    if (uid !== null) processedUids.push(uid);
                   } catch (processError) {
-                    log.error('Process error:', processError);
+                    // Likely transient (e.g. DB hiccup) - leave unseen so the
+                    // next poll retries this email
+                    log.error('Process error (will retry on next poll):', processError);
                   }
                   resolveEmail();
                 });
@@ -311,6 +358,18 @@ async function fetchEmails(settings: UserSettings): Promise<void> {
 
           fetch.once('end', async () => {
             await Promise.all(emailPromises);
+
+            if (processedUids.length > 0) {
+              await new Promise<void>((resolveFlags) => {
+                imap.addFlags(processedUids, '\\Seen', (err) => {
+                  if (err) {
+                    log.error('Failed to mark emails as seen:', err);
+                  }
+                  resolveFlags();
+                });
+              });
+            }
+
             imap.end();
             settle();
           });
