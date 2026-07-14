@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getStatusLabel, getStatusColor } from '../utils/format';
+import { PageLoader, Spinner } from '../components/Spinner';
 import {
   ArrowLeft,
   Download,
@@ -121,6 +122,7 @@ export default function InvoiceDetail() {
       setInvoice(result);
     } catch (error) {
       console.error('Failed to load invoice:', error);
+      toast.error(t('common:errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -213,11 +215,7 @@ export default function InvoiceDetail() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!invoice) {
@@ -461,7 +459,7 @@ export default function InvoiceDetail() {
             {/* Content */}
             {previewLoading ? (
               <div className="flex-1 flex items-center justify-center p-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                <Spinner />
               </div>
             ) : previewData ? (
               <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">

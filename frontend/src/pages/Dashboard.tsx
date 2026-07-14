@@ -16,6 +16,8 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { PageLoader } from '../components/Spinner';
+import { toast } from 'sonner';
 
 interface DashboardData {
   stats: {
@@ -77,6 +79,7 @@ export default function Dashboard() {
       setData(result);
     } catch (error) {
       console.error('Failed to load dashboard:', error);
+      toast.error(t('common:errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -126,11 +129,7 @@ export default function Dashboard() {
   const yearlyExpensesTotal = useMemo(() => chartData.reduce((sum, m) => sum + m.expenses, 0), [chartData]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!data) {

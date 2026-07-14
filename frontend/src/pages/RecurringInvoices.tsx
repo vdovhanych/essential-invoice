@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
 import { Plus, Repeat, Play, Pause, Trash2 } from 'lucide-react';
+import { PageLoader } from '../components/Spinner';
+import { toast } from 'sonner';
 
 interface RecurringInvoice {
   id: string;
@@ -38,6 +40,7 @@ export default function RecurringInvoices() {
       setTemplates(result);
     } catch (error) {
       console.error('Failed to load recurring invoices:', error);
+      toast.error(t('common:errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -49,6 +52,7 @@ export default function RecurringInvoices() {
       loadTemplates();
     } catch (error) {
       console.error('Failed to toggle recurring invoice:', error);
+      toast.error(t('common:errors.saveFailed'));
     }
   }
 
@@ -59,15 +63,12 @@ export default function RecurringInvoices() {
       loadTemplates();
     } catch (error) {
       console.error('Failed to delete recurring invoice:', error);
+      toast.error(t('common:errors.deleteFailed'));
     }
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (

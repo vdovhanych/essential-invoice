@@ -71,7 +71,15 @@ vi.mock('../utils/logger', () => ({
   }
 }));
 
-import { pollAllUsers, triggerPoll } from './emailPoller';
+const parserMocks = vi.hoisted(() => ({
+  parsePaymentEmail: vi.fn()
+}));
+
+vi.mock('./bankParsers/index', () => ({
+  parsePaymentEmail: parserMocks.parsePaymentEmail
+}));
+
+import { pollAllUsers, triggerPoll, processEmail } from './emailPoller';
 
 const userSettingsRow = {
   user_id: 'user-1',
@@ -123,6 +131,114 @@ describe('triggerPoll', () => {
 
     expect(result.processed).toBe(0);
     expect(result.error).toMatch(/timed out/);
+  });
+});
+
+describe('processEmail invoice matching', () => {
+  const mail = {
+    from: { value: [{ address: 'info@airbank.cz' }] },
+    text: 'payment notification',
+    date: new Date('2026-07-01'),
+    subject: 'Payment received'
+  } as any;
+
+  const basePayment = {
+    amount: 1000,
+    currency: 'CZK',
+    variableSymbol: '2026001',
+    senderName: 'Test Sender',
+    senderAccount: '123/0300',
+    message: null,
+    transactionCode: 'TX-1',
+    transactionDate: new Date('2026-07-01'),
+    rawEmail: 'raw'
+  };
+
+  beforeEach(() => {
+    parserMocks.parsePaymentEmail.mockReturnValue({ payment: basePayment, bankType: 'airbank' });
+    // No existing payment with this transaction code
+    dbMocks.query.mockImplementation(async (sql: string) => {
+      if (String(sql).includes('FROM payments')) return { rows: [] };
+      return { rows: [] };
+    });
+    dbMocks.client.query.mockResolvedValue({ rows: [{ id: 'payment-1' }] });
+  });
+
+  it('marks the invoice paid when VS, amount and currency all match', async () => {
+    dbMocks.query.mockImplementation(async (sql: string) => {
+      if (String(sql).includes('variable_symbol =')) {
+        return { rows: [{ id: 'inv-1', total: '1000.00', currency: 'CZK' }] };
+      }
+      return { rows: [] };
+    });
+
+    await processEmail('user-1', mail);
+
+    const insertCall = dbMocks.client.query.mock.calls.find(([sql]) =>
+      String(sql).includes('INSERT INTO payments')
+    );
+    expect(insertCall![1][1]).toBe('inv-1'); // invoice_id param
+    const updateCall = dbMocks.client.query.mock.calls.find(([sql]) =>
+      String(sql).includes("SET status = 'paid'")
+    );
+    expect(updateCall).toBeTruthy();
+    expect(dbMocks.client.query.mock.calls.map(([sql]) => String(sql))).toContain('COMMIT');
+  });
+
+  it('leaves the payment unmatched when VS matches but the amount differs', async () => {
+    dbMocks.query.mockImplementation(async (sql: string) => {
+      if (String(sql).includes('variable_symbol =')) {
+        return { rows: [{ id: 'inv-1', total: '2000.00', currency: 'CZK' }] };
+      }
+      return { rows: [] };
+    });
+
+    await processEmail('user-1', mail);
+
+    const insertCall = dbMocks.client.query.mock.calls.find(([sql]) =>
+      String(sql).includes('INSERT INTO payments')
+    );
+    expect(insertCall![1][1]).toBeNull();
+    const updateCall = dbMocks.client.query.mock.calls.find(([sql]) =>
+      String(sql).includes("SET status = 'paid'")
+    );
+    expect(updateCall).toBeUndefined();
+  });
+
+  it('leaves the payment unmatched when VS matches but the currency differs', async () => {
+    dbMocks.query.mockImplementation(async (sql: string) => {
+      if (String(sql).includes('variable_symbol =')) {
+        return { rows: [{ id: 'inv-1', total: '1000.00', currency: 'EUR' }] };
+      }
+      return { rows: [] };
+    });
+
+    await processEmail('user-1', mail);
+
+    const insertCall = dbMocks.client.query.mock.calls.find(([sql]) =>
+      String(sql).includes('INSERT INTO payments')
+    );
+    expect(insertCall![1][1]).toBeNull();
+  });
+
+  it('rolls back the transaction when a write fails', async () => {
+    dbMocks.query.mockImplementation(async (sql: string) => {
+      if (String(sql).includes('variable_symbol =')) {
+        return { rows: [{ id: 'inv-1', total: '1000.00', currency: 'CZK' }] };
+      }
+      return { rows: [] };
+    });
+    dbMocks.client.query.mockImplementation(async (sql: string) => {
+      if (String(sql).includes('INSERT INTO payments')) {
+        throw new Error('insert failed');
+      }
+      return { rows: [{ id: 'payment-1' }] };
+    });
+
+    await expect(processEmail('user-1', mail)).rejects.toThrow('insert failed');
+
+    expect(dbMocks.client.query.mock.calls.map(([sql]) => String(sql))).toContain('ROLLBACK');
+    expect(dbMocks.client.release).toHaveBeenCalled();
   });
 });
 

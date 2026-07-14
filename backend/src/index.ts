@@ -16,6 +16,7 @@ import { startEmailPolling } from './services/emailPoller';
 import { startRecurringInvoiceGeneration } from './services/recurringInvoiceGenerator';
 import { initializeDatabase } from './db/init';
 import { validateEncryptionKey } from './utils/encryption';
+import { validateJwtSecret } from './utils/jwt';
 import { log } from './utils/logger';
 
 // Prevent IMAP/socket errors from crashing the process in Bun
@@ -91,6 +92,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 async function start() {
   try {
     validateEncryptionKey();
+    validateJwtSecret();
     await initializeDatabase();
 
     app.listen(PORT, () => {

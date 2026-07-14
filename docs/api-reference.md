@@ -30,8 +30,8 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 - `GET /api/invoices` - List invoices (filters: status, clientId, from, to)
 - `GET /api/invoices/:id` - Get invoice with items
 - `GET /api/invoices/:id/pdf` - Download PDF
-- `POST /api/invoices` - Create invoice
-- `PUT /api/invoices/:id` - Update invoice
+- `POST /api/invoices` - Create invoice (items require positive `quantity`, non-negative `unitPrice`; `vatRate` 0–100; `currency` CZK or EUR)
+- `PUT /api/invoices/:id` - Update invoice (content edits only on drafts; `status` changes must follow legal transitions: draft→sent/cancelled, sent→paid/overdue/cancelled, overdue→paid/cancelled — paid and cancelled are terminal)
 - `DELETE /api/invoices/:id` - Delete draft invoice
 - `POST /api/invoices/:id/send` - Send via email
 - `POST /api/invoices/:id/mark-sent` - Mark as sent manually (without sending email)
@@ -68,7 +68,7 @@ EUR invoices include `exchangeRate` (CNB rate at issue date) and `totalCzk` (con
 - `GET /api/payments` - List payments (filter: matched)
 - `GET /api/payments/unmatched` - List unmatched payments
 - `GET /api/payments/:id/matches` - Get potential invoice matches
-- `POST /api/payments/:id/match` - Match to invoice
+- `POST /api/payments/:id/match` - Match to invoice (payment and invoice currency must match)
 - `POST /api/payments/:id/unmatch` - Remove match
 - `DELETE /api/payments/:id` - Delete unmatched payment
 - `POST /api/payments/check-emails` - Check for new payments from email

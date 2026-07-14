@@ -4,9 +4,17 @@ import express, { Express } from 'express';
 import { paymentRouter } from './payments';
 import * as db from '../db/init';
 
-// Mock the database module
+// Mock the database module (pool is used for transactional match/unmatch)
+const mockClient = vi.hoisted(() => ({
+  query: vi.fn(),
+  release: vi.fn()
+}));
+
 vi.mock('../db/init.js', () => ({
-  query: vi.fn()
+  query: vi.fn(),
+  pool: {
+    connect: vi.fn(async () => mockClient)
+  }
 }));
 
 // Mock the email poller
@@ -108,37 +116,28 @@ describe('Payment Routes', () => {
       const mockInvoiceId = 'invoice-456';
 
       // Mock getting payment with invoice_id
-      vi.mocked(db.query)
-        .mockResolvedValueOnce({
-          rows: [{ invoice_id: mockInvoiceId }],
-          command: 'SELECT',
-          rowCount: 1,
-          oid: 0,
-          fields: []
-        })
-        // Mock unmatch payment
-        .mockResolvedValueOnce({
-          rows: [],
-          command: 'UPDATE',
-          rowCount: 1,
-          oid: 0,
-          fields: []
-        })
-        // Mock update invoice status
-        .mockResolvedValueOnce({
-          rows: [],
-          command: 'UPDATE',
-          rowCount: 1,
-          oid: 0,
-          fields: []
-        });
+      vi.mocked(db.query).mockResolvedValueOnce({
+        rows: [{ invoice_id: mockInvoiceId }],
+        command: 'SELECT',
+        rowCount: 1,
+        oid: 0,
+        fields: []
+      });
+      // Transactional updates run on a dedicated client
+      mockClient.query.mockResolvedValue({ rows: [], command: '', rowCount: 1, oid: 0, fields: [] });
 
       const response = await request(app)
         .post(`/payments/${mockPaymentId}/unmatch`)
         .expect(200);
 
       expect(response.body).toEqual({ message: 'Payment unmatched successfully' });
-      expect(db.query).toHaveBeenCalledTimes(3);
+      expect(db.query).toHaveBeenCalledTimes(1);
+      const clientSql = mockClient.query.mock.calls.map(([sql]) => String(sql));
+      expect(clientSql).toContain('BEGIN');
+      expect(clientSql).toContain('COMMIT');
+      expect(clientSql.some(sql => sql.includes('UPDATE payments'))).toBe(true);
+      expect(clientSql.some(sql => sql.includes('UPDATE invoices'))).toBe(true);
+      expect(mockClient.release).toHaveBeenCalled();
     });
 
     it('should return 404 if payment not found', async () => {

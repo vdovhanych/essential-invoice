@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { Calculator as CalculatorIcon, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
+import { PageLoader } from '../components/Spinner';
+import { toast } from 'sonner';
 
 const STORAGE_KEY = 'calculator_values';
 
@@ -54,6 +56,7 @@ export default function Calculator() {
       setEnabled(true);
     } catch (error) {
       console.error('Failed to load settings:', error);
+      toast.error(t('common:errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -78,11 +81,7 @@ export default function Calculator() {
   }, [hourlyRate, hoursWorked, kpiBonusPercent]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!enabled) {

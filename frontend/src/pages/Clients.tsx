@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency } from '../utils/format';
 import { Plus, Search, Users, Building, Edit, Trash2, X } from 'lucide-react';
+import { PageLoader } from '../components/Spinner';
 
 interface Client {
   id: string;
@@ -52,6 +53,7 @@ export default function Clients() {
       setClients(result);
     } catch (error) {
       console.error('Failed to load clients:', error);
+      toast.error(t('common:errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -155,11 +157,7 @@ export default function Clients() {
   );
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (

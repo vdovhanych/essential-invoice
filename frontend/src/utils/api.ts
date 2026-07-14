@@ -9,6 +9,16 @@ class ApiError extends Error {
   }
 }
 
+// Auth endpoints return 401 for expected reasons (wrong password, invalid
+// reset token) and the initial /auth/me check is handled by AuthContext.
+function handleUnauthorized(status: number, endpoint: string) {
+  if (status !== 401 || endpoint.startsWith('/auth/')) {
+    return;
+  }
+  localStorage.removeItem('token');
+  window.location.href = '/login';
+}
+
 async function request(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
 
@@ -27,6 +37,7 @@ async function request(endpoint: string, options: RequestInit = {}) {
   });
 
   if (!response.ok) {
+    handleUnauthorized(response.status, endpoint);
     const error = await response.json().catch(() => ({ error: 'Request failed' }));
     throw new ApiError(error.error || 'Request failed', response.status);
   }
@@ -64,6 +75,7 @@ export const api = {
     });
 
     if (!response.ok) {
+      handleUnauthorized(response.status, endpoint);
       throw new ApiError('Download failed', response.status);
     }
 
@@ -91,6 +103,7 @@ export const api = {
     });
 
     if (!response.ok) {
+      handleUnauthorized(response.status, endpoint);
       const error = await response.json().catch(() => ({ error: 'Upload failed' }));
       throw new ApiError(error.error || 'Upload failed', response.status);
     }

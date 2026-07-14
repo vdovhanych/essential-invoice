@@ -71,6 +71,10 @@ spec:
               value: {{ .Values.backend.env.NODE_ENV | quote }}
             - name: EMAIL_POLLING_INTERVAL
               value: {{ .Values.backend.env.EMAIL_POLLING_INTERVAL | quote }}
+            - name: EMAIL_FETCH_TIMEOUT
+              value: {{ .Values.backend.env.EMAIL_FETCH_TIMEOUT | quote }}
+            - name: IMAP_ALLOW_INSECURE_TLS
+              value: {{ .Values.backend.env.IMAP_ALLOW_INSECURE_TLS | quote }}
             - name: RECURRING_INVOICE_INTERVAL
               value: {{ .Values.backend.env.RECURRING_INVOICE_INTERVAL | quote }}
             - name: DB_HOST

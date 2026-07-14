@@ -1,6 +1,7 @@
 import { query, pool } from '../db/init';
 import { generateInvoiceNumber } from '../routes/invoices';
 import { generateSpayd } from '../utils/validation';
+import { calculateLineTotal, calculateInvoiceTotals } from '../utils/money';
 import { sendInvoiceEmail } from './emailSender';
 import { convertEurToCzk } from './cnbExchangeRate';
 import { log } from '../utils/logger';
@@ -59,13 +60,12 @@ export async function generateInvoiceFromRecurring(template: RecurringInvoiceRow
     const issueDate = new Date().toISOString().split('T')[0];
     const dueDate = new Date(Date.now() + template.payment_terms * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    // Calculate totals
-    let subtotal = 0;
-    for (const item of itemsResult.rows) {
-      subtotal += parseFloat(item.quantity) * parseFloat(item.unit_price);
-    }
-    const vatAmount = subtotal * (vatRate / 100);
-    const total = subtotal + vatAmount;
+    // Calculate totals (rounded to 2 decimals at every step)
+    const lineItems = itemsResult.rows.map(item => ({
+      quantity: parseFloat(item.quantity),
+      unitPrice: parseFloat(item.unit_price)
+    }));
+    const { subtotal, vatAmount, total } = calculateInvoiceTotals(lineItems, vatRate);
 
     // Get user's bank details for QR code
     const userResult = await query(
@@ -129,7 +129,7 @@ export async function generateInvoiceFromRecurring(template: RecurringInvoiceRow
     // Create invoice items
     for (let i = 0; i < itemsResult.rows.length; i++) {
       const item = itemsResult.rows[i];
-      const itemTotal = parseFloat(item.quantity) * parseFloat(item.unit_price);
+      const itemTotal = calculateLineTotal({ quantity: parseFloat(item.quantity), unitPrice: parseFloat(item.unit_price) });
       await query(
         `INSERT INTO invoice_items (invoice_id, description, quantity, unit, unit_price, total, sort_order)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,

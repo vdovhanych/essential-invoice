@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { query } from '../db/init';
+import { query, pool } from '../db/init';
 import { AuthRequest } from '../middleware/auth';
 import { triggerPoll } from '../services/emailPoller';
 
@@ -159,7 +159,7 @@ paymentRouter.post('/:id/match', async (req: AuthRequest, res: Response) => {
   try {
     // Verify payment belongs to user
     const paymentCheck = await query(
-      'SELECT id FROM payments WHERE id = $1 AND user_id = $2 AND invoice_id IS NULL',
+      'SELECT id, currency FROM payments WHERE id = $1 AND user_id = $2 AND invoice_id IS NULL',
       [req.params.id, req.userId]
     );
 
@@ -169,7 +169,7 @@ paymentRouter.post('/:id/match', async (req: AuthRequest, res: Response) => {
 
     // Verify invoice belongs to user and is unpaid
     const invoiceCheck = await query(
-      'SELECT id FROM invoices WHERE id = $1 AND user_id = $2 AND status IN (\'sent\', \'overdue\')',
+      'SELECT id, currency FROM invoices WHERE id = $1 AND user_id = $2 AND status IN (\'sent\', \'overdue\')',
       [invoiceId, req.userId]
     );
 
@@ -177,19 +177,33 @@ paymentRouter.post('/:id/match', async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid invoice or invoice not awaiting payment' });
     }
 
-    // Match payment to invoice
-    await query(`
-      UPDATE payments
-      SET invoice_id = $1, matched_at = CURRENT_TIMESTAMP, match_method = 'manual'
-      WHERE id = $2
-    `, [invoiceId, req.params.id]);
+    // A payment in a different currency can never settle the invoice - amounts
+    // may legitimately differ slightly (user's deliberate choice), currency can't
+    if (paymentCheck.rows[0].currency !== invoiceCheck.rows[0].currency) {
+      return res.status(400).json({ error: 'Payment currency does not match invoice currency' });
+    }
 
-    // Update invoice status to paid
-    await query(`
-      UPDATE invoices
-      SET status = 'paid', paid_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1
-    `, [invoiceId]);
+    // Match payment and mark invoice paid atomically
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(`
+        UPDATE payments
+        SET invoice_id = $1, matched_at = CURRENT_TIMESTAMP, match_method = 'manual'
+        WHERE id = $2
+      `, [invoiceId, req.params.id]);
+      await client.query(`
+        UPDATE invoices
+        SET status = 'paid', paid_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+      `, [invoiceId]);
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
 
     res.json({ message: 'Payment matched successfully' });
   } catch (error) {
@@ -217,21 +231,29 @@ paymentRouter.post('/:id/unmatch', async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Payment is not matched to any invoice' });
     }
 
-    // Unmatch payment
-    await query(`
-      UPDATE payments
-      SET invoice_id = NULL, matched_at = NULL, match_method = NULL
-      WHERE id = $1
-    `, [req.params.id]);
-
-    // Revert invoice status to sent or overdue
-    await query(`
-      UPDATE invoices
-      SET status = CASE WHEN due_date < CURRENT_DATE THEN 'overdue' ELSE 'sent' END,
-          paid_at = NULL,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1
-    `, [invoiceId]);
+    // Unmatch payment and revert invoice status atomically
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(`
+        UPDATE payments
+        SET invoice_id = NULL, matched_at = NULL, match_method = NULL
+        WHERE id = $1
+      `, [req.params.id]);
+      await client.query(`
+        UPDATE invoices
+        SET status = CASE WHEN due_date < CURRENT_DATE THEN 'overdue' ELSE 'sent' END,
+            paid_at = NULL,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+      `, [invoiceId]);
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
 
     res.json({ message: 'Payment unmatched successfully' });
   } catch (error) {

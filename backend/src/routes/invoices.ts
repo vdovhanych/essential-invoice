@@ -1,14 +1,26 @@
 import { Router, Response } from 'express';
 import { body, validationResult } from 'express-validator';
-import { query } from '../db/init';
+import { query, pool } from '../db/init';
 import { AuthRequest } from '../middleware/auth';
 import { generateInvoicePDF } from '../services/pdfGenerator';
 import { sendInvoiceEmail } from '../services/emailSender';
 import { generateSpayd } from '../utils/validation';
+import { calculateLineTotal, calculateInvoiceTotals } from '../utils/money';
 import { t, formatDateLocale, formatCurrencyLocale } from '../i18n/translations';
 import { convertEurToCzk } from '../services/cnbExchangeRate';
 
 export const invoiceRouter: ReturnType<typeof Router> = Router();
+
+// Legal status transitions for PUT /:id. Status changes normally go through the
+// dedicated mark-sent/mark-paid/cancel endpoints; this guards direct API updates
+// from e.g. reverting a paid invoice back to draft.
+const ALLOWED_STATUS_TRANSITIONS: Record<string, string[]> = {
+  draft: ['sent', 'cancelled'],
+  sent: ['paid', 'overdue', 'cancelled'],
+  overdue: ['paid', 'cancelled'],
+  paid: [],
+  cancelled: []
+};
 
 // Generate invoice number based on issue date
 export async function generateInvoiceNumber(userId: string, issueDate: string, attempt: number = 0): Promise<{ invoiceNumber: string; variableSymbol: string }> {
@@ -196,6 +208,10 @@ invoiceRouter.post('/',
   body('dueDate').isISO8601(),
   body('items').isArray({ min: 1 }),
   body('items.*.description').isLength({ max: 150 }).withMessage('Item description must not exceed 150 characters'),
+  body('items.*.quantity').isFloat({ gt: 0 }).withMessage('Item quantity must be a positive number'),
+  body('items.*.unitPrice').isFloat({ min: 0 }).withMessage('Item unit price must be a non-negative number'),
+  body('vatRate').optional().isFloat({ min: 0, max: 100 }).withMessage('VAT rate must be between 0 and 100'),
+  body('currency').optional().isIn(['CZK', 'EUR']).withMessage('Currency must be CZK or EUR'),
   body('notes').optional().isLength({ max: 300 }).withMessage('Notes must not exceed 300 characters'),
   async (req: AuthRequest, res: Response) => {
     const errors = validationResult(req);
@@ -216,13 +232,8 @@ invoiceRouter.post('/',
         return res.status(400).json({ error: 'Invalid client' });
       }
 
-      // Calculate totals
-      let subtotal = 0;
-      for (const item of items) {
-        subtotal += item.quantity * item.unitPrice;
-      }
-      const vatAmount = subtotal * (vatRate / 100);
-      const total = subtotal + vatAmount;
+      // Calculate totals (rounded to 2 decimals at every step)
+      const { subtotal, vatAmount, total } = calculateInvoiceTotals(items, vatRate);
 
       // Get user's bank details for QR code
       const userResult = await query(
@@ -231,40 +242,44 @@ invoiceRouter.post('/',
       );
       const user = userResult.rows[0];
 
-      // Retry loop to handle race conditions with invoice number generation
+      // Fetch exchange rate for EUR invoices
+      let exchangeRate: number | null = null;
+      let totalCzk: number | null = null;
+      if (currency === 'EUR') {
+        const conversion = await convertEurToCzk(total, issueDate);
+        if (conversion) {
+          exchangeRate = conversion.rate;
+          totalCzk = conversion.czkAmount;
+        }
+      }
+
+      // Retry loop to handle race conditions with invoice number generation.
+      // Invoice and its items are written in one transaction per attempt so a
+      // failure can never leave an invoice without items.
       const MAX_RETRIES = 3;
       let invoice;
       for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        // Generate invoice number based on issue date
+        const { invoiceNumber, variableSymbol } = await generateInvoiceNumber(req.userId!, issueDate, attempt);
+
+        // Generate QR payment data (SPAYD format) for CZK invoices
+        let qrPaymentData = null;
+        if (currency === 'CZK' && user.bank_account && user.bank_code) {
+          qrPaymentData = generateSpayd(
+            user.bank_account,
+            user.bank_code,
+            total,
+            currency,
+            variableSymbol,
+            `${user.language === 'en' ? 'Invoice' : 'Faktura'} ${invoiceNumber}`
+          );
+        }
+
+        const client = await pool.connect();
         try {
-          // Generate invoice number based on issue date
-          const { invoiceNumber, variableSymbol } = await generateInvoiceNumber(req.userId!, issueDate, attempt);
+          await client.query('BEGIN');
 
-          // Generate QR payment data (SPAYD format) for CZK invoices
-          let qrPaymentData = null;
-          if (currency === 'CZK' && user.bank_account && user.bank_code) {
-            qrPaymentData = generateSpayd(
-              user.bank_account,
-              user.bank_code,
-              total,
-              currency,
-              variableSymbol,
-              `${user.language === 'en' ? 'Invoice' : 'Faktura'} ${invoiceNumber}`
-            );
-          }
-
-          // Fetch exchange rate for EUR invoices
-          let exchangeRate: number | null = null;
-          let totalCzk: number | null = null;
-          if (currency === 'EUR') {
-            const conversion = await convertEurToCzk(total, issueDate);
-            if (conversion) {
-              exchangeRate = conversion.rate;
-              totalCzk = conversion.czkAmount;
-            }
-          }
-
-          // Create invoice
-          const invoiceResult = await query(
+          const invoiceResult = await client.query(
             `INSERT INTO invoices (user_id, client_id, invoice_number, variable_symbol, status, currency, issue_date, due_date, delivery_date, subtotal, vat_rate, vat_amount, total, notes, qr_payment_data, exchange_rate, total_czk)
              VALUES ($1, $2, $3, $4, 'draft', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
              RETURNING *`,
@@ -272,25 +287,28 @@ invoiceRouter.post('/',
           );
 
           invoice = invoiceResult.rows[0];
+
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            await client.query(
+              `INSERT INTO invoice_items (invoice_id, description, quantity, unit, unit_price, total, sort_order)
+               VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+              [invoice.id, item.description, item.quantity, item.unit || 'ks', item.unitPrice, calculateLineTotal(item), i]
+            );
+          }
+
+          await client.query('COMMIT');
           break; // Success, exit retry loop
         } catch (err: any) {
+          await client.query('ROLLBACK');
           // Retry on duplicate key violation (race condition between concurrent requests)
           if (err.code === '23505' && err.constraint === 'invoices_user_invoice_number_key' && attempt < MAX_RETRIES) {
             continue;
           }
           throw err;
+        } finally {
+          client.release();
         }
-      }
-
-      // Create invoice items
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const itemTotal = item.quantity * item.unitPrice;
-        await query(
-          `INSERT INTO invoice_items (invoice_id, description, quantity, unit, unit_price, total, sort_order)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [invoice.id, item.description, item.quantity, item.unit || 'ks', item.unitPrice, itemTotal, i]
-        );
       }
 
       res.status(201).json({
@@ -312,6 +330,11 @@ invoiceRouter.post('/',
 invoiceRouter.put('/:id',
   body('items').optional().isArray({ min: 1 }),
   body('items.*.description').optional().isLength({ max: 150 }).withMessage('Item description must not exceed 150 characters'),
+  body('items.*.quantity').optional().isFloat({ gt: 0 }).withMessage('Item quantity must be a positive number'),
+  body('items.*.unitPrice').optional().isFloat({ min: 0 }).withMessage('Item unit price must be a non-negative number'),
+  body('vatRate').optional().isFloat({ min: 0, max: 100 }).withMessage('VAT rate must be between 0 and 100'),
+  body('currency').optional().isIn(['CZK', 'EUR']).withMessage('Currency must be CZK or EUR'),
+  body('status').optional().isIn(['draft', 'sent', 'overdue', 'paid', 'cancelled']).withMessage('Invalid status'),
   body('notes').optional().isLength({ max: 300 }).withMessage('Notes must not exceed 300 characters'),
   async (req: AuthRequest, res: Response) => {
     const errors = validationResult(req);
@@ -332,45 +355,42 @@ invoiceRouter.put('/:id',
         return res.status(404).json({ error: 'Invoice not found' });
       }
 
-      if (invoiceCheck.rows[0].status !== 'draft' && !status) {
+      const currentStatus = invoiceCheck.rows[0].status;
+
+      // Status changes must follow legal transitions (a paid or cancelled
+      // invoice can never be reverted through this endpoint)
+      if (status && status !== currentStatus && !ALLOWED_STATUS_TRANSITIONS[currentStatus]?.includes(status)) {
+        return res.status(400).json({ error: `Cannot change invoice status from '${currentStatus}' to '${status}'` });
+      }
+
+      // Content edits (items, dates, client, ...) are only allowed on drafts
+      if (currentStatus !== 'draft' && !(status && !items)) {
         return res.status(400).json({ error: 'Can only edit draft invoices' });
       }
 
-      // If only updating status
+      // If only updating status, keep sent_at/paid_at consistent with the
+      // dedicated mark-sent/mark-paid endpoints
       if (status && !items) {
         await query(
-          `UPDATE invoices SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3`,
-          [status, req.params.id, req.userId]
+          `UPDATE invoices SET
+            status = $1,
+            sent_at = CASE WHEN $2 THEN COALESCE(sent_at, CURRENT_TIMESTAMP) ELSE sent_at END,
+            paid_at = CASE WHEN $3 THEN COALESCE(paid_at, CURRENT_TIMESTAMP) ELSE paid_at END,
+            updated_at = CURRENT_TIMESTAMP
+           WHERE id = $4 AND user_id = $5`,
+          [status, status === 'sent', status === 'paid', req.params.id, req.userId]
         );
         return res.json({ message: 'Invoice status updated' });
       }
 
-      // Calculate totals if items provided
+      // Calculate totals if items provided (rounded to 2 decimals at every step)
       let subtotal = 0;
       let vatAmount = 0;
       let total = 0;
       const actualVatRate = vatRate ?? 21;
 
       if (items) {
-        for (const item of items) {
-          subtotal += item.quantity * item.unitPrice;
-        }
-        vatAmount = subtotal * (actualVatRate / 100);
-        total = subtotal + vatAmount;
-
-        // Delete existing items
-        await query('DELETE FROM invoice_items WHERE invoice_id = $1', [req.params.id]);
-
-        // Create new items
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-          const itemTotal = item.quantity * item.unitPrice;
-          await query(
-            `INSERT INTO invoice_items (invoice_id, description, quantity, unit, unit_price, total, sort_order)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            [req.params.id, item.description, item.quantity, item.unit || 'ks', item.unitPrice, itemTotal, i]
-          );
-        }
+        ({ subtotal, vatAmount, total } = calculateInvoiceTotals(items, actualVatRate));
       }
 
       // Fetch exchange rate for EUR invoices when items are recalculated
@@ -415,31 +435,57 @@ invoiceRouter.put('/:id',
         }
       }
 
-      // Update invoice
-      const result = await query(
-        `UPDATE invoices SET
-          client_id = COALESCE($1, client_id),
-          issue_date = COALESCE($2, issue_date),
-          due_date = COALESCE($3, due_date),
-          delivery_date = COALESCE($4, delivery_date),
-          currency = COALESCE($5, currency),
-          vat_rate = COALESCE($6, vat_rate),
-          subtotal = COALESCE($7, subtotal),
-          vat_amount = COALESCE($8, vat_amount),
-          total = COALESCE($9, total),
-          notes = $10,
-          status = COALESCE($11, status),
-          exchange_rate = COALESCE($14, exchange_rate),
-          total_czk = COALESCE($15, total_czk),
-          qr_payment_data = CASE WHEN $16::boolean THEN $17 ELSE qr_payment_data END,
-          updated_at = CURRENT_TIMESTAMP
-         WHERE id = $12 AND user_id = $13
-         RETURNING *`,
-        [clientId, issueDate, dueDate, deliveryDate, currency, actualVatRate,
-         items ? subtotal : null, items ? vatAmount : null, items ? total : null,
-         notes, status, req.params.id, req.userId, exchangeRate, totalCzk,
-         qrPaymentData !== undefined, qrPaymentData ?? null]
-      );
+      // Rewrite items and update the invoice atomically - a mid-sequence
+      // failure must not leave the invoice without its items
+      const client = await pool.connect();
+      let result;
+      try {
+        await client.query('BEGIN');
+
+        if (items) {
+          await client.query('DELETE FROM invoice_items WHERE invoice_id = $1', [req.params.id]);
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            await client.query(
+              `INSERT INTO invoice_items (invoice_id, description, quantity, unit, unit_price, total, sort_order)
+               VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+              [req.params.id, item.description, item.quantity, item.unit || 'ks', item.unitPrice, calculateLineTotal(item), i]
+            );
+          }
+        }
+
+        result = await client.query(
+          `UPDATE invoices SET
+            client_id = COALESCE($1, client_id),
+            issue_date = COALESCE($2, issue_date),
+            due_date = COALESCE($3, due_date),
+            delivery_date = COALESCE($4, delivery_date),
+            currency = COALESCE($5, currency),
+            vat_rate = COALESCE($6, vat_rate),
+            subtotal = COALESCE($7, subtotal),
+            vat_amount = COALESCE($8, vat_amount),
+            total = COALESCE($9, total),
+            notes = $10,
+            status = COALESCE($11, status),
+            exchange_rate = COALESCE($14, exchange_rate),
+            total_czk = COALESCE($15, total_czk),
+            qr_payment_data = CASE WHEN $16::boolean THEN $17 ELSE qr_payment_data END,
+            updated_at = CURRENT_TIMESTAMP
+           WHERE id = $12 AND user_id = $13
+           RETURNING *`,
+          [clientId, issueDate, dueDate, deliveryDate, currency, actualVatRate,
+           items ? subtotal : null, items ? vatAmount : null, items ? total : null,
+           notes, status, req.params.id, req.userId, exchangeRate, totalCzk,
+           qrPaymentData !== undefined, qrPaymentData ?? null]
+        );
+
+        await client.query('COMMIT');
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
 
       res.json({
         id: result.rows[0].id,
@@ -466,8 +512,18 @@ invoiceRouter.delete('/:id', async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Invoice not found' });
     }
 
-    await query('DELETE FROM invoice_items WHERE invoice_id = $1', [req.params.id]);
-    await query('DELETE FROM invoices WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('DELETE FROM invoice_items WHERE invoice_id = $1', [req.params.id]);
+      await client.query('DELETE FROM invoices WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
 
     res.json({ message: 'Invoice deleted successfully' });
   } catch (error) {

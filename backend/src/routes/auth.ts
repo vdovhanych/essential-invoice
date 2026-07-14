@@ -7,6 +7,7 @@ import multer from 'multer';
 import rateLimit from 'express-rate-limit';
 import { query } from '../db/init';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { getJwtSecret } from '../utils/jwt';
 import { isGlobalSmtpConfigured, sendWelcomeEmail, sendPasswordResetEmail } from '../services/globalEmailSender';
 
 // Configure multer for logo uploads (memory storage for base64 conversion)
@@ -66,8 +67,7 @@ authRouter.post('/register',
       );
 
       // Generate token
-      const secret = process.env.JWT_SECRET || 'your-secret-key';
-      const token = jwt.sign({ userId: user.id, email: user.email }, secret, { expiresIn: '7d' });
+      const token = jwt.sign({ userId: user.id, email: user.email }, getJwtSecret(), { expiresIn: '7d' });
 
       // Send welcome email (fire-and-forget)
       if (isGlobalSmtpConfigured()) {
@@ -124,8 +124,7 @@ authRouter.post('/login',
         return res.status(401).json({ error: 'Invalid email or password' });
       }
 
-      const secret = process.env.JWT_SECRET || 'your-secret-key';
-      const token = jwt.sign({ userId: user.id, email: user.email }, secret, { expiresIn: '7d' });
+      const token = jwt.sign({ userId: user.id, email: user.email }, getJwtSecret(), { expiresIn: '7d' });
 
       res.json({
         user: { id: user.id, email: user.email, name: user.name },
@@ -396,10 +395,9 @@ authRouter.get('/me/logo', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const secret = process.env.JWT_SECRET || 'your-secret-key';
     let userId: string;
     try {
-      const decoded = jwt.verify(token, secret) as { userId: string };
+      const decoded = jwt.verify(token, getJwtSecret()) as { userId: string };
       userId = decoded.userId;
     } catch {
       return res.status(401).json({ error: 'Invalid token' });
