@@ -126,17 +126,21 @@ helm uninstall essential-invoice -n essential-invoice
 | `encryptionKey` | AES-256 encryption key for secrets at rest (64-char hex, required) | `""` |
 | `existingSecret` | Use existing secret (key: `JWT_SECRET`, `ENCRYPTION_KEY`; also `DB_PASSWORD` for external DB) | `""` |
 
-### PostgreSQL (Bitnami subchart)
+### PostgreSQL (built-in StatefulSet)
 
 | Parameter | Description | Default |
 |---|---|---|
-| `postgresql.enabled` | Deploy PostgreSQL subchart | `true` |
+| `postgresql.enabled` | Deploy PostgreSQL StatefulSet | `true` |
 | `postgresql.auth.database` | Database name | `essential_invoice` |
 | `postgresql.auth.username` | Username | `postgres` |
 | `postgresql.auth.password` | Password (required) | `""` |
 | `postgresql.auth.existingSecret` | Existing secret for DB password | `""` |
-| `postgresql.primary.persistence.enabled` | Enable PVC | `true` |
-| `postgresql.primary.persistence.size` | PVC size | `5Gi` |
+| `postgresql.persistence.enabled` | Enable PVC | `true` |
+| `postgresql.persistence.size` | PVC size | `5Gi` |
+| `postgresql.persistence.storageClass` | Storage class for the PVC | `""` |
+| `postgresql.podSecurityContext` | Pod security context (fsGroup must match the postgres user in the image) | `{fsGroup: 70}` |
+
+The PVC is not a backup — set up periodic `pg_dump` backups as described in [docs/deployment.md](../docs/deployment.md#database-backup-kuberneteshelm).
 
 ### External Database
 

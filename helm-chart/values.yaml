@@ -309,6 +309,11 @@ postgresql:
     # -- Storage class for PostgreSQL PVC (leave empty for default)
     storageClass: ""
 
+  # -- Pod security context for PostgreSQL. fsGroup 70 matches the postgres
+  # user in the dhi.io/postgres image so the mounted PVC is writable by it
+  podSecurityContext:
+    fsGroup: 70
+
   # -- Resource requests and limits for PostgreSQL
   resources:
     requests:
