@@ -1,7 +1,8 @@
 services:
   # PostgreSQL Database
   db:
-    image: postgres:16-alpine
+    # hardened image matching the Helm chart; requires docker login dhi.io
+    image: dhi.io/postgres:18
     container_name: essential-invoice-db
     restart: unless-stopped
     environment:
@@ -9,7 +10,9 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_DB: ${DB_NAME:-essential_invoice}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # postgres 18+ keeps PGDATA under /var/lib/postgresql/<major>/, so the
+      # volume must cover the whole parent dir, not /var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-essential_invoice}"]
       interval: 10s

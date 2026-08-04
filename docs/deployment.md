@@ -36,6 +36,13 @@ Use the production compose file:
 docker compose -f docker-compose.production.yml up -d
 ```
 
+The production compose file uses the same hardened database image as the Helm
+chart (`dhi.io/postgres:18`), which requires registry authentication:
+
+```bash
+docker login dhi.io
+```
+
 ## Kubernetes (Helm)
 
 ```bash
@@ -52,7 +59,7 @@ See [helm-chart/README.md](../helm-chart/README.md) for full configuration refer
 
 ## Backup
 
-### Database Backup
+### Database Backup (Docker Compose)
 
 ```bash
 # Create backup
@@ -62,7 +69,63 @@ docker compose exec db pg_dump -U postgres essential_invoice > backup.sql
 docker compose exec -T db psql -U postgres essential_invoice < backup.sql
 ```
 
-### Volume Backup
+### Database Backup (Kubernetes/Helm)
+
+The PostgreSQL StatefulSet stores data on a PVC, but a PVC is not a backup —
+it shares failure modes with the cluster. Dump the database regularly to a
+machine (or object storage) outside the cluster.
+
+Manual dump and restore, from any machine with `kubectl` access
+(`-Fc` is pg_dump's compressed custom format, restorable with `pg_restore`):
+
+```bash
+# Create backup
+kubectl -n <namespace> exec essential-invoice-postgresql-0 -- \
+  pg_dump -U postgres -Fc essential_invoice > essential_invoice-$(date +%F).dump
+
+# Restore backup
+kubectl -n <namespace> exec -i essential-invoice-postgresql-0 -- \
+  pg_restore -U postgres -d essential_invoice --clean --if-exists < essential_invoice-2026-08-04.dump
+```
+
+#### Periodic backups
+
+Save this as `backup-essential-invoice.sh` on a machine that runs 24/7 and has
+`kubectl` access:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+NAMESPACE="essential-invoice"
+BACKUP_DIR="$HOME/backups/essential-invoice"
+RETENTION_DAYS=14
+
+mkdir -p "$BACKUP_DIR"
+FILE="$BACKUP_DIR/essential_invoice-$(date +%F-%H%M).dump"
+
+kubectl -n "$NAMESPACE" exec essential-invoice-postgresql-0 -- \
+  pg_dump -U postgres -Fc essential_invoice > "$FILE"
+
+# Fail loudly on empty dumps
+[ -s "$FILE" ] || { echo "backup is empty" >&2; rm -f "$FILE"; exit 1; }
+
+# Optional: copy off-site to S3-compatible storage
+# aws s3 cp "$FILE" s3://my-backup-bucket/essential-invoice/
+
+find "$BACKUP_DIR" -name '*.dump' -type f -mtime +"$RETENTION_DAYS" -delete
+```
+
+Schedule it with cron (`crontab -e`), e.g. daily at 02:00:
+
+```cron
+0 2 * * * /path/to/backup-essential-invoice.sh >> $HOME/backups/essential-invoice/backup.log 2>&1
+```
+
+Periodically verify that a dump actually restores (e.g. into a throwaway
+database) — an untested backup is a hope, not a backup.
+
+### Docker Compose volume backup
 
 ```bash
 # Stop containers
