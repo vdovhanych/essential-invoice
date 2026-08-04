@@ -310,9 +310,12 @@ postgresql:
     storageClass: ""
 
   # -- Pod security context for PostgreSQL. fsGroup 70 matches the postgres
-  # user in the dhi.io/postgres image so the mounted PVC is writable by it
+  # user in the dhi.io/postgres image so the mounted PVC is writable by it.
+  # OnRootMismatch is required: postgres needs PGDATA at 0700/0750, and the
+  # default policy re-adds group-write on every pod start, breaking startup
   podSecurityContext:
     fsGroup: 70
+    fsGroupChangePolicy: OnRootMismatch
 
   # -- Resource requests and limits for PostgreSQL
   resources:

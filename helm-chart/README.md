@@ -138,7 +138,7 @@ helm uninstall essential-invoice -n essential-invoice
 | `postgresql.persistence.enabled` | Enable PVC | `true` |
 | `postgresql.persistence.size` | PVC size | `5Gi` |
 | `postgresql.persistence.storageClass` | Storage class for the PVC | `""` |
-| `postgresql.podSecurityContext` | Pod security context (fsGroup must match the postgres user in the image) | `{fsGroup: 70}` |
+| `postgresql.podSecurityContext` | Pod security context (fsGroup must match the postgres user in the image; keep `fsGroupChangePolicy: OnRootMismatch` or postgres fails on restart with "invalid permissions") | `{fsGroup: 70, fsGroupChangePolicy: OnRootMismatch}` |
 
 The PVC is not a backup — set up periodic `pg_dump` backups as described in [docs/deployment.md](../docs/deployment.md#database-backup-kuberneteshelm).
 
