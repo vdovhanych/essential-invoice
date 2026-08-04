@@ -1,6 +1,11 @@
 name: "Publish: chart"
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - "helm-chart/**"
   workflow_dispatch:
 
 jobs:
@@ -20,7 +25,7 @@ jobs:
       - name: Extract version
         id: version
         run: |
-          echo "version=$(cat helm-chart/Chart.yaml | grep 'version:' | awk '{print $2}')" >> $GITHUB_OUTPUT
+          echo "version=$(grep '^version:' helm-chart/Chart.yaml | awk '{print $2}')" >> $GITHUB_OUTPUT
 
       - name: Package and push chart
         run: |
