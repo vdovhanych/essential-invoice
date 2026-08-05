@@ -33,7 +33,7 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 - `POST /api/invoices` - Create invoice (items require positive `quantity`, non-negative `unitPrice`; `vatRate` 0–100; `currency` CZK or EUR)
 - `PUT /api/invoices/:id` - Update invoice (content edits only on drafts; `status` changes must follow legal transitions: draft→sent/cancelled, sent→paid/overdue/cancelled, overdue→paid/cancelled — paid and cancelled are terminal)
 - `DELETE /api/invoices/:id` - Delete draft invoice
-- `POST /api/invoices/:id/send` - Send via email
+- `POST /api/invoices/:id/send` - Send via email (rejected with 400 for `paid` and `cancelled` invoices — a settled invoice must never reach the client again)
 - `POST /api/invoices/:id/mark-sent` - Mark as sent manually (without sending email)
 - `POST /api/invoices/:id/mark-paid` - Mark as paid
 - `POST /api/invoices/:id/cancel` - Cancel invoice
