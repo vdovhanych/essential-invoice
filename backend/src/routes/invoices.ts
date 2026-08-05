@@ -635,6 +635,12 @@ invoiceRouter.post('/:id/send', async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Cannot send cancelled invoice' });
     }
 
+    // A settled invoice must never reach the client again - the UI already hides
+    // the send action for paid invoices, this closes the same gap at the API.
+    if (invoice.status === 'paid') {
+      return res.status(400).json({ error: 'Cannot send an invoice that is already paid' });
+    }
+
     // Use provided secondary email or fall back to client's secondary email
     const effectiveSecondaryEmail = sendToSecondary
       ? (secondaryEmail || invoice.secondary_email)
