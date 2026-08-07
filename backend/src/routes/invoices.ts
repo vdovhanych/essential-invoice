@@ -613,7 +613,7 @@ invoiceRouter.get('/:id/preview', async (req: AuthRequest, res: Response) => {
 
 // Send invoice via email
 invoiceRouter.post('/:id/send', async (req: AuthRequest, res: Response) => {
-  const { sendToSecondary = false, secondaryEmail, customMessage } = req.body;
+  const { sendToSecondary = false, secondaryEmail, customMessage, customSubject } = req.body;
 
   try {
     // Check invoice exists and is not draft
@@ -652,7 +652,8 @@ invoiceRouter.post('/:id/send', async (req: AuthRequest, res: Response) => {
       req.userId!,
       invoice.primary_email,
       effectiveSecondaryEmail,
-      customMessage
+      customMessage,
+      customSubject
     );
 
     if (result.success) {

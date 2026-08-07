@@ -3,6 +3,8 @@ import {
   callAI,
   extractResponseText,
   getCzechTaxAdvice,
+  extractExpenseFromDocument,
+  draftPaymentReminder,
   isAIConfigured,
 } from './aiProvider';
 import * as dbInit from '../db/init';
@@ -226,6 +228,173 @@ describe('AI Provider Service', () => {
       // Tax advisor should request web search (:online on OpenRouter default)
       const body = JSON.parse((global.fetch as any).mock.calls[0][1].body);
       expect(body.model).toBe('openai/gpt-5.6-luna:online');
+    });
+
+    it('should personalize the system prompt with user tax context', async () => {
+      // 1) AI config, 2) user tax fields, 3) revenue aggregates
+      mockQuery
+        .mockResolvedValueOnce({
+          rows: [{ ai_api_key: 'test-key', ai_api_url: null, ai_model: null }],
+          rowCount: 1, command: 'SELECT', oid: 0, fields: [],
+        })
+        .mockResolvedValueOnce({
+          rows: [{ vat_payer: true, pausalni_dan_enabled: true, pausalni_dan_tier: 2, pausalni_dan_limit: 1500000 }],
+          rowCount: 1, command: 'SELECT', oid: 0, fields: [],
+        })
+        .mockResolvedValueOnce({
+          rows: [{ revenue_ytd: '850000.50', outstanding: '120000.00' }],
+          rowCount: 1, command: 'SELECT', oid: 0, fields: [],
+        });
+
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'answer' } }],
+        }),
+      });
+
+      await getCzechTaxAdvice(testUserId, 'Kolik mi zbývá do limitu paušální daně?');
+
+      const body = JSON.parse((global.fetch as any).mock.calls[0][1].body);
+      const systemPrompt = body.messages[0].content;
+      expect(systemPrompt).toContain('VAT payer (plátce DPH): yes');
+      expect(systemPrompt).toContain('tier 2');
+      expect(systemPrompt).toContain('1500000 CZK');
+      expect(systemPrompt).toContain('Paid revenue this calendar year: 850001 CZK');
+      expect(systemPrompt).toContain('Outstanding (sent/overdue) invoices: 120000 CZK');
+    });
+
+    it('should still answer when tax context cannot be loaded', async () => {
+      // Config resolves, user lookup returns no rows
+      mockQuery
+        .mockResolvedValueOnce({
+          rows: [{ ai_api_key: 'test-key', ai_api_url: null, ai_model: null }],
+          rowCount: 1, command: 'SELECT', oid: 0, fields: [],
+        })
+        .mockResolvedValueOnce({
+          rows: [], rowCount: 0, command: 'SELECT', oid: 0, fields: [],
+        });
+
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'answer' } }],
+        }),
+      });
+
+      const result = await getCzechTaxAdvice(testUserId, 'When is VAT filing deadline?');
+      expect(result.answer).toBe('answer');
+    });
+  });
+
+  describe('extractExpenseFromDocument', () => {
+    const extractedJson = {
+      supplierName: 'Alza.cz a.s.',
+      supplierIco: '27082440',
+      supplierInvoiceNumber: 'FV-2026-123',
+      issueDate: '2026-08-01',
+      dueDate: '2026-08-15',
+      currency: 'CZK',
+      amount: 1000,
+      vatRate: 21,
+      total: 1210,
+      description: 'Office supplies',
+    };
+
+    it('should send images as image_url content parts and return parsed data', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: JSON.stringify(extractedJson) } }],
+        }),
+      });
+
+      const result = await extractExpenseFromDocument(testUserId, 'aW1hZ2VkYXRh', 'image/png');
+
+      expect(result).toEqual(extractedJson);
+      const body = JSON.parse((global.fetch as any).mock.calls[0][1].body);
+      const parts = body.messages[1].content;
+      expect(parts[1].type).toBe('image_url');
+      expect(parts[1].image_url.url).toBe('data:image/png;base64,aW1hZ2VkYXRh');
+      // Extraction should not pay for web search
+      expect(body.model).toBe('openai/gpt-5.6-luna');
+    });
+
+    it('should send PDFs as file content parts', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: JSON.stringify(extractedJson) } }],
+        }),
+      });
+
+      await extractExpenseFromDocument(testUserId, 'cGRmZGF0YQ==', 'application/pdf', 'faktura.pdf');
+
+      const body = JSON.parse((global.fetch as any).mock.calls[0][1].body);
+      const parts = body.messages[1].content;
+      expect(parts[1].type).toBe('file');
+      expect(parts[1].file.filename).toBe('faktura.pdf');
+      expect(parts[1].file.file_data).toBe('data:application/pdf;base64,cGRmZGF0YQ==');
+    });
+
+    it('should return null when the response contains no JSON', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'Sorry, I cannot read this document.' } }],
+        }),
+      });
+
+      const result = await extractExpenseFromDocument(testUserId, 'aW1hZ2VkYXRh', 'image/jpeg');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('draftPaymentReminder', () => {
+    const testInvoice = {
+      invoiceNumber: '2026080001',
+      clientName: 'Test Client s.r.o.',
+      total: 25000,
+      currency: 'CZK',
+      dueDate: new Date('2026-07-15'),
+      daysOverdue: 23,
+    };
+
+    it('should return subject and body from the AI draft', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            index: 0,
+            finish_reason: 'stop',
+            message: { role: 'assistant', content: JSON.stringify({ subject: 'Upomínka: faktura 2026080001', body: 'Dobrý den,\n...' }) },
+          }],
+        }),
+      });
+
+      const result = await draftPaymentReminder(testUserId, testInvoice, 'cs', 'Jan Novák');
+
+      expect(result.subject).toBe('Upomínka: faktura 2026080001');
+      expect(result.body).toContain('Dobrý den');
+
+      const body = JSON.parse((global.fetch as any).mock.calls[0][1].body);
+      expect(body.messages[1].content).toContain('2026080001');
+      expect(body.messages[1].content).toContain('Days overdue: 23');
+      expect(body.messages[1].content).toContain('Jan Novák');
+      expect(body.messages[1].content).toContain('Czech');
+    });
+
+    it('should throw when the AI response is not a valid draft', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'here is your email' } }],
+        }),
+      });
+
+      await expect(
+        draftPaymentReminder(testUserId, testInvoice, 'en', null)
+      ).rejects.toThrow('AI did not return a valid reminder draft');
     });
   });
 });

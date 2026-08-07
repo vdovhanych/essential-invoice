@@ -123,6 +123,9 @@
       "secondaryEmailPlaceholder": "sekundarni@email.cz",
       "message": "Zpráva",
       "messagePlaceholder": "Text e-mailu...",
+      "aiReminder": "Navrhnout upomínku (AI)",
+      "aiReminderLoading": "Navrhuji...",
+      "aiReminderFailed": "Nepodařilo se navrhnout upomínku",
       "cancel": "Zrušit",
       "sending": "Odesílám...",
       "send": "Odeslat"
