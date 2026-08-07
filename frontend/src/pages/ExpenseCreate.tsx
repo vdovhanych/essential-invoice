@@ -3,14 +3,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
-import { ArrowLeft, Upload, X } from 'lucide-react';
+import { ArrowLeft, Upload, X, Sparkles } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
 import { PageLoader } from '../components/Spinner';
+import { useAI } from '../context/AIContext';
+import { findSupplierClient } from '../utils/supplierMatch';
 
 interface Client {
   id: string;
   companyName: string;
   primaryEmail: string;
+  ico: string | null;
 }
 
 export default function ExpenseCreate() {
@@ -19,9 +22,11 @@ export default function ExpenseCreate() {
   const { t } = useTranslation('expenses');
   const isEdit = !!id;
 
+  const { aiStatus, extractExpense } = useAI();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [extracting, setExtracting] = useState(false);
 
   const [formData, setFormData] = useState({
     clientId: '',
@@ -109,6 +114,33 @@ export default function ExpenseCreate() {
     setFileData(null);
     setFileName(null);
     setFileMimeType(null);
+  }
+
+  async function handleExtract() {
+    if (!fileData || !fileMimeType) return;
+    setExtracting(true);
+
+    try {
+      const extracted = await extractExpense(fileData, fileMimeType, fileName || undefined);
+      const matchedSupplier = findSupplierClient(clients, extracted.supplierName, extracted.supplierIco);
+      setFormData(prev => ({
+        ...prev,
+        clientId: matchedSupplier?.id ?? prev.clientId,
+        supplierInvoiceNumber: extracted.supplierInvoiceNumber ?? prev.supplierInvoiceNumber,
+        issueDate: extracted.issueDate ?? prev.issueDate,
+        dueDate: extracted.dueDate ?? prev.dueDate,
+        currency: extracted.currency === 'EUR' || extracted.currency === 'CZK' ? extracted.currency : prev.currency,
+        amount: (extracted.amount ?? prev.amount) as number,
+        vatRate: extracted.vatRate ?? prev.vatRate,
+        description: extracted.description ?? extracted.supplierName ?? prev.description,
+      }));
+      toast.success(t('create.attachment.aiExtractSuccess'));
+    } catch (err: unknown) {
+      const error = err as Error;
+      toast.error(error.message || t('create.attachment.aiExtractFailed'));
+    } finally {
+      setExtracting(false);
+    }
   }
 
   function calculateVatAmount(): number {
@@ -318,15 +350,28 @@ export default function ExpenseCreate() {
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.attachment.title')}</h2>
           {fileName ? (
-            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <span className="text-gray-700 dark:text-gray-300">{fileName}</span>
-              <button
-                type="button"
-                onClick={removeFile}
-                className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-gray-700 dark:text-gray-300">{fileName}</span>
+                <button
+                  type="button"
+                  onClick={removeFile}
+                  className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              {aiStatus?.available && (
+                <button
+                  type="button"
+                  onClick={handleExtract}
+                  disabled={extracting}
+                  className="btn btn-secondary flex items-center space-x-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>{extracting ? t('create.attachment.aiExtracting') : t('create.attachment.aiExtract')}</span>
+                </button>
+              )}
             </div>
           ) : (
             <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">

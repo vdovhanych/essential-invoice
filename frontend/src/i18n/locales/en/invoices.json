@@ -123,6 +123,9 @@
       "secondaryEmailPlaceholder": "secondary@email.com",
       "message": "Message",
       "messagePlaceholder": "Email body...",
+      "aiReminder": "Draft payment reminder (AI)",
+      "aiReminderLoading": "Drafting...",
+      "aiReminderFailed": "Failed to draft the reminder",
       "cancel": "Cancel",
       "sending": "Sending...",
       "send": "Send"

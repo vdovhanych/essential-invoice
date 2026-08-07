@@ -46,7 +46,11 @@
       "title": "Příloha",
       "uploadPrompt": "Klikněte pro nahrání souboru (PDF, JPEG, PNG, max 5 MB)",
       "allowedFormats": "Povolené formáty: PDF, JPEG, PNG",
-      "maxFileSize": "Maximální velikost souboru je 5 MB"
+      "maxFileSize": "Maximální velikost souboru je 5 MB",
+      "aiExtract": "Vyplnit formulář z dokladu (AI)",
+      "aiExtracting": "Čtu doklad...",
+      "aiExtractSuccess": "Formulář předvyplněn z dokladu — zkontrolujte prosím hodnoty",
+      "aiExtractFailed": "Nepodařilo se vytěžit data z dokladu"
     },
     "description": {
       "title": "Popis",

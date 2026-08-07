@@ -68,7 +68,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `globalEmailSender.ts` - Global SMTP email sending for system emails (welcome, password reset), configured via env vars
   - `emailPoller.ts` - IMAP polling for bank payment notifications
   - `recurringInvoiceGenerator.ts` - In-process scheduler for auto-generating invoices from recurring templates (monthly), with optional auto-send
-  - `aiProvider.ts` - AI features via OpenRouter (default: openai/gpt-5.6-luna) or any OpenAI-compatible API; Czech tax advisor
+  - `aiProvider.ts` - AI features via OpenRouter (default: openai/gpt-5.6-luna) or any OpenAI-compatible API: personalized Czech tax advisor, expense extraction from documents, payment reminder drafting
   - `cnbExchangeRate.ts` - CNB (Czech National Bank) exchange rate fetching with DB caching and weekend/holiday fallback. Converts EUR invoices to CZK for dashboard totals and paušální daň tracking
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
 - **i18n**: `i18n/translations.ts` - Plain TypeScript translation maps (cs/en) for PDF labels and email templates. Backend services (pdfGenerator, emailSender, globalEmailSender) use the user's `language` preference to select translations
@@ -110,7 +110,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 - **ARES API**: Czech company registry lookup by IČO (`routes/ares.ts`)
 - **SPAYD**: Czech QR payment code standard for bank transfers
 - **Air Bank**: Email notification parsing for automatic payment matching
-- **OpenRouter / OpenAI-compatible AI**: AI-powered Czech tax advisor chat. Defaults to OpenRouter with `openai/gpt-5.6-luna` (web search via `:online` for the tax advisor); users can point it at any OpenAI-compatible API and model (`routes/ai.ts`, `services/aiProvider.ts`)
+- **OpenRouter / OpenAI-compatible AI**: Czech tax advisor chat (personalized with the user's tax situation), expense data extraction from uploaded documents, and payment reminder drafting. Defaults to OpenRouter with `openai/gpt-5.6-luna` (web search via `:online` for the tax advisor); users can point it at any OpenAI-compatible API and model (`routes/ai.ts`, `services/aiProvider.ts`)
 - **CNB Exchange Rates**: Auto-fetches daily EUR/CZK rates from the Czech National Bank. EUR invoices store `exchange_rate` and `total_czk` for accurate dashboard totals and paušální daň tracking (`services/cnbExchangeRate.ts`)
 
 ## Testing

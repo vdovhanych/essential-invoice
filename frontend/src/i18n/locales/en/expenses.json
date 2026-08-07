@@ -46,7 +46,11 @@
       "title": "Attachment",
       "uploadPrompt": "Click to upload a file (PDF, JPEG, PNG, max 5 MB)",
       "allowedFormats": "Allowed formats: PDF, JPEG, PNG",
-      "maxFileSize": "Maximum file size is 5 MB"
+      "maxFileSize": "Maximum file size is 5 MB",
+      "aiExtract": "Fill form from document (AI)",
+      "aiExtracting": "Reading document...",
+      "aiExtractSuccess": "Form pre-filled from the document — please verify the values",
+      "aiExtractFailed": "Failed to extract data from the document"
     },
     "description": {
       "title": "Description",

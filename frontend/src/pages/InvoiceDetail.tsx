@@ -16,7 +16,9 @@ import {
   XCircle,
   ChevronDown,
   Mail,
+  Sparkles,
 } from 'lucide-react';
+import { useAI } from '../context/AIContext';
 
 interface InvoiceItem {
   id: string;
@@ -72,6 +74,9 @@ export default function InvoiceDetail() {
     recipients: { primary: string; secondary: string | null };
   } | null>(null);
   const [customMessage, setCustomMessage] = useState('');
+  const [customSubject, setCustomSubject] = useState<string | null>(null);
+  const [drafting, setDrafting] = useState(false);
+  const { aiStatus, draftReminder } = useAI();
   const [secondaryEmail, setSecondaryEmail] = useState('');
   const [showMarkPaidModal, setShowMarkPaidModal] = useState(false);
   const [paidDate, setPaidDate] = useState('');
@@ -101,6 +106,7 @@ export default function InvoiceDetail() {
   async function loadPreview() {
     setPreviewLoading(true);
     setPreviewData(null);
+    setCustomSubject(null);
     try {
       const result = await api.get(`/invoices/${id}/preview`);
       setPreviewData(result);
@@ -156,13 +162,29 @@ export default function InvoiceDetail() {
     }
   }
 
+  async function handleDraftReminder() {
+    if (!id) return;
+    setDrafting(true);
+    try {
+      const draft = await draftReminder(id);
+      setCustomMessage(draft.body);
+      setCustomSubject(draft.subject);
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast.error(err.message || t('detail.sendModal.aiReminderFailed'));
+    } finally {
+      setDrafting(false);
+    }
+  }
+
   async function handleSendInvoice() {
     setSending(true);
     try {
       await api.post(`/invoices/${id}/send`, {
         sendToSecondary: sendToSecondary && secondaryEmail.trim() !== '',
         secondaryEmail: sendToSecondary && secondaryEmail.trim() !== '' ? secondaryEmail.trim() : undefined,
-        customMessage: customMessage !== previewData?.emailBody ? customMessage : undefined
+        customMessage: customMessage !== previewData?.emailBody ? customMessage : undefined,
+        customSubject: customSubject || undefined
       });
       toast.success(t('detail.sendSuccess'));
       setShowSendModal(false);
@@ -492,7 +514,7 @@ export default function InvoiceDetail() {
                   <div className="mb-4">
                     <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{t('detail.sendModal.subject')}</label>
                     <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">
-                      {previewData.subject}
+                      {customSubject ?? previewData.subject}
                     </div>
                   </div>
 
@@ -528,7 +550,20 @@ export default function InvoiceDetail() {
 
                   {/* Message */}
                   <div className="flex-1 flex flex-col mb-4">
-                    <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">{t('detail.sendModal.message')}</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm text-gray-500 dark:text-gray-400">{t('detail.sendModal.message')}</label>
+                      {aiStatus?.available && ['sent', 'overdue'].includes(invoice.status) && (
+                        <button
+                          type="button"
+                          onClick={handleDraftReminder}
+                          disabled={drafting || sending}
+                          className="flex items-center space-x-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 disabled:opacity-50"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          <span>{drafting ? t('detail.sendModal.aiReminderLoading') : t('detail.sendModal.aiReminder')}</span>
+                        </button>
+                      )}
+                    </div>
                     <textarea
                       value={customMessage}
                       onChange={(e) => setCustomMessage(e.target.value)}

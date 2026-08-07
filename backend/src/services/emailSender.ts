@@ -15,7 +15,8 @@ export async function sendInvoiceEmail(
   userId: string,
   primaryEmail: string,
   secondaryEmail: string | null,
-  customMessage?: string
+  customMessage?: string,
+  customSubject?: string
 ): Promise<SendResult> {
   try {
     // Get user settings
@@ -73,7 +74,7 @@ export async function sendInvoiceEmail(
       .replace(/\{\{clientName\}\}/g, invoice.client_name)
       .replace(/\{\{senderName\}\}/g, settings.smtp_from_name || tr.supplierFallback);
 
-    const subject = tr.invoiceSubject.replace('{{number}}', invoice.invoice_number);
+    const subject = customSubject || tr.invoiceSubject.replace('{{number}}', invoice.invoice_number);
     const sentTo: string[] = [];
 
     // Send to primary email

@@ -72,4 +72,6 @@ Optional fields:
 - **Model** — model identifier at your provider. Leave empty to use `openai/gpt-5.6-luna`. When using OpenRouter, the tax advisor automatically appends the `:online` suffix so answers use live web search; on other providers no web search is added.
 
 Once configured, AI features become available:
-- Tax advisor chatbot accessible from the AI assistant button
+- Tax advisor chatbot accessible from the AI assistant button, personalized with your VAT payer status, paušální daň settings, and current-year revenue
+- "Fill form from document" on the expense form — extracts supplier, dates, amounts, and VAT from an uploaded invoice/receipt (PDF or photo; requires a vision-capable model such as the default `openai/gpt-5.6-luna`)
+- "Draft payment reminder" in the invoice send dialog for sent/overdue invoices — drafts a polite reminder email in your language that you can edit before sending

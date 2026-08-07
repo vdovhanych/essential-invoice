@@ -5,7 +5,22 @@ interface AIFeatures {
   available: boolean;
   features: {
     taxAdvisor: boolean;
+    expenseExtraction: boolean;
+    reminderDrafting: boolean;
   };
+}
+
+export interface ExtractedExpense {
+  supplierName: string | null;
+  supplierIco: string | null;
+  supplierInvoiceNumber: string | null;
+  issueDate: string | null;
+  dueDate: string | null;
+  currency: string | null;
+  amount: number | null;
+  vatRate: number | null;
+  total: number | null;
+  description: string | null;
 }
 
 interface AIContextType {
@@ -14,6 +29,8 @@ interface AIContextType {
   error: string | null;
   checkAIStatus: () => Promise<void>;
   askTaxAdvisor: (question: string) => Promise<any>;
+  extractExpense: (fileData: string, fileMimeType: string, fileName?: string) => Promise<ExtractedExpense>;
+  draftReminder: (invoiceId: string) => Promise<{ subject: string; body: string }>;
 }
 
 const AIContext = createContext<AIContextType | undefined>(undefined);
@@ -77,6 +94,50 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
     [token]
   );
 
+  const extractExpense = useCallback(
+    async (fileData: string, fileMimeType: string, fileName?: string) => {
+      if (!token) throw new Error('Not authenticated');
+
+      const response = await fetch('/api/ai/extract-expense', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ fileData, fileMimeType, fileName }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to extract expense data');
+      }
+      return data.extracted as ExtractedExpense;
+    },
+    [token]
+  );
+
+  const draftReminder = useCallback(
+    async (invoiceId: string) => {
+      if (!token) throw new Error('Not authenticated');
+
+      const response = await fetch('/api/ai/draft-reminder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ invoiceId }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to draft reminder');
+      }
+      return data as { subject: string; body: string };
+    },
+    [token]
+  );
+
   return (
     <AIContext.Provider
       value={{
@@ -85,6 +146,8 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
         error,
         checkAIStatus,
         askTaxAdvisor,
+        extractExpense,
+        draftReminder,
       }}
     >
       {children}
