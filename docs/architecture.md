@@ -13,7 +13,7 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
   - `globalEmailSender.ts` - Global SMTP email sending for system emails (welcome, password reset), configured via env vars
   - `emailPoller.ts` - IMAP polling for bank payment notifications
   - `recurringInvoiceGenerator.ts` - In-process scheduler (setInterval) that auto-generates invoices from recurring templates, with optional auto-send via SMTP
-  - `perplexityAI.ts` - Perplexity AI integration for tax advice and financial guidance
+  - `aiProvider.ts` - AI features via OpenRouter (default: openai/gpt-5.6-luna) or any OpenAI-compatible API; Czech tax advisor
   - `cnbExchangeRate.ts` - CNB (Czech National Bank) exchange rate fetching with DB caching and weekend/holiday fallback. Used to convert EUR invoices to CZK equivalents for dashboard totals and paušální daň tracking
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
 - **i18n**: `i18n/translations.ts` - Plain TypeScript translation maps (cs/en) for PDF labels and email templates. Services look up translations by the user's `language` column. Backend error messages use language-neutral error codes (e.g., `TOO_MANY_LOGIN_ATTEMPTS`) that the frontend maps to localized strings
@@ -67,7 +67,7 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
 - **ARES API**: Czech company registry lookup by IČO (`routes/ares.ts`)
 - **SPAYD**: Czech QR payment code standard for bank transfers
 - **Air Bank**: Email notification parsing for automatic payment matching
-- **Perplexity AI**: AI-powered Czech tax advisor, payment matching, and financial insights (`routes/ai.ts`, `services/perplexityAI.ts`)
+- **OpenRouter / OpenAI-compatible AI**: AI-powered Czech tax advisor chat. Defaults to OpenRouter with `openai/gpt-5.6-luna` (web search via `:online` for the tax advisor); users can point it at any OpenAI-compatible API and model (`routes/ai.ts`, `services/aiProvider.ts`)
 - **CNB Exchange Rates**: Auto-fetches daily EUR/CZK rates from the Czech National Bank for EUR invoice conversion. Rates are cached in the `exchange_rates` table. Falls back up to 5 days for weekends/holidays (`services/cnbExchangeRate.ts`)
 
 ## Security

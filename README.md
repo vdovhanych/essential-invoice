@@ -8,7 +8,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 
 ## Features
 
-- **AI-Powered Features**: Smart payment matching (only if native parsing fails), invoice insights, Czech tax advisor chatbot (via Perplexity AI)
+- **AI Tax Advisor**: Czech tax advisor chatbot with live web search (via OpenRouter or any OpenAI-compatible API)
 - **Invoice Management**: Create, edit, duplicate, and send invoices with automatic numbering
 - **Recurring Invoices**: Monthly recurring invoice templates with optional auto-send
 - **Expense Tracking**: Track business expenses with PDF attachments and automatic numbering

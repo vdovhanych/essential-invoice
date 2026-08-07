@@ -27,7 +27,9 @@ interface Settings {
   emailTemplate: string | null;
   calculatorEnabled: boolean;
   aiEnabled: boolean;
-  perplexityApiKeySet: boolean;
+  aiApiKeySet: boolean;
+  aiApiUrl: string | null;
+  aiModel: string | null;
 }
 
 export default function Settings() {
@@ -36,7 +38,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<'smtp' | 'imap' | null>(null);
-  const [showPasswords, setShowPasswords] = useState({ smtp: false, imap: false, perplexity: false });
+  const [showPasswords, setShowPasswords] = useState({ smtp: false, imap: false, ai: false });
 
   const [formData, setFormData] = useState({
     smtpHost: '',
@@ -59,7 +61,9 @@ export default function Settings() {
     emailTemplate: '',
     calculatorEnabled: false,
     aiEnabled: true,
-    perplexityApiKey: '',
+    aiApiKey: '',
+    aiApiUrl: '',
+    aiModel: '',
   });
 
   useEffect(() => {
@@ -91,7 +95,9 @@ export default function Settings() {
         emailTemplate: result.emailTemplate || '',
         calculatorEnabled: result.calculatorEnabled ?? false,
         aiEnabled: result.aiEnabled ?? true,
-        perplexityApiKey: '',
+        aiApiKey: '',
+        aiApiUrl: result.aiApiUrl || '',
+        aiModel: result.aiModel || '',
       });
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -386,36 +392,68 @@ export default function Settings() {
             <span className="text-sm text-gray-600 dark:text-gray-400">{t('ai.enableAi')}</span>
           </label>
 
-          <div>
-            <label className="label">{t('ai.apiKeyLabel')} {settings?.perplexityApiKeySet && t('ai.apiKeySet')}</label>
-            <div className="relative">
-              <input
-                type={showPasswords.perplexity ? 'text' : 'password'}
-                name="perplexityApiKey"
-                value={formData.perplexityApiKey}
-                onChange={handleChange}
-                className="input pr-10"
-                placeholder={settings?.perplexityApiKeySet ? '••••••••' : t('ai.apiKeyPlaceholder')}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPasswords(p => ({ ...p, perplexity: !p.perplexity }))}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                {showPasswords.perplexity ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+          <div className="space-y-4">
+            <div>
+              <label className="label">{t('ai.apiKeyLabel')} {settings?.aiApiKeySet && t('ai.apiKeySet')}</label>
+              <div className="relative">
+                <input
+                  type={showPasswords.ai ? 'text' : 'password'}
+                  name="aiApiKey"
+                  value={formData.aiApiKey}
+                  onChange={handleChange}
+                  className="input pr-10"
+                  placeholder={settings?.aiApiKeySet ? '••••••••' : t('ai.apiKeyPlaceholder')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords(p => ({ ...p, ai: !p.ai }))}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showPasswords.ai ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {t('ai.apiKeyHelp')}{' '}
+                <a
+                  href="https://openrouter.ai/settings/keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 hover:underline"
+                >
+                  {t('ai.apiKeyLink')}
+                </a>
+              </p>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {t('ai.apiKeyHelp')}{' '}
-              <a
-                href="https://www.perplexity.ai/settings/api"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-indigo-600 hover:underline"
-              >
-                {t('ai.apiKeyLink')}
-              </a>
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="label">{t('ai.apiUrlLabel')}</label>
+                <input
+                  type="text"
+                  name="aiApiUrl"
+                  value={formData.aiApiUrl}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="https://openrouter.ai/api/v1"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {t('ai.apiUrlHelp')}
+                </p>
+              </div>
+              <div>
+                <label className="label">{t('ai.modelLabel')}</label>
+                <input
+                  type="text"
+                  name="aiModel"
+                  value={formData.aiModel}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="openai/gpt-5.6-luna"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {t('ai.modelHelp')}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

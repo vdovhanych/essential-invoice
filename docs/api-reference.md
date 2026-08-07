@@ -90,8 +90,7 @@ EUR invoices include `exchangeRate` (CNB rate at issue date) and `totalCzk` (con
 - `POST /api/settings/test-smtp` - Test SMTP connection
 - `POST /api/settings/test-imap` - Test IMAP connection
 
-## AI (Perplexity)
+## AI
 
 - `GET /api/ai/status` - Check AI feature availability
-- `POST /api/ai/match-payment` - AI-powered payment matching
 - `POST /api/ai/tax-advisor` - Czech tax advisor chat

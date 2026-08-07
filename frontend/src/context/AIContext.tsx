@@ -4,7 +4,6 @@ import { useAuth } from './AuthContext';
 interface AIFeatures {
   available: boolean;
   features: {
-    paymentMatching: boolean;
     taxAdvisor: boolean;
   };
 }
@@ -14,7 +13,6 @@ interface AIContextType {
   loading: boolean;
   error: string | null;
   checkAIStatus: () => Promise<void>;
-  matchPaymentAI: (paymentId: string) => Promise<any>;
   askTaxAdvisor: (question: string) => Promise<any>;
 }
 
@@ -44,40 +42,6 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
       console.error('Failed to check AI status:', err);
     }
   }, [token]);
-
-  const matchPaymentAI = useCallback(
-    async (paymentId: string) => {
-      if (!token) throw new Error('Not authenticated');
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch('/api/ai/match-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ paymentId }),
-        });
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to match payment');
-        }
-
-        const data = await response.json();
-        return data.match;
-      } catch (err: any) {
-        setError(err.message);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [token]
-  );
 
   const askTaxAdvisor = useCallback(
     async (question: string) => {
@@ -120,7 +84,6 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
         loading,
         error,
         checkAIStatus,
-        matchPaymentAI,
         askTaxAdvisor,
       }}
     >
