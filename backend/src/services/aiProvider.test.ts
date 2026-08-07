@@ -1,11 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { 
-  callPerplexity, 
-  extractResponseText, 
-  matchPaymentToInvoice,
+import {
+  callAI,
+  extractResponseText,
   getCzechTaxAdvice,
-  isPerplexityConfigured 
-} from './perplexityAI';
+  isAIConfigured,
+} from './aiProvider';
 import * as dbInit from '../db/init';
 
 // Mock fetch
@@ -24,14 +23,20 @@ vi.mock('../utils/encryption.js', () => ({
 
 const mockQuery = vi.mocked(dbInit.query);
 
-describe('Perplexity AI Service', () => {
+const testConfig = {
+  apiKey: 'test-key',
+  apiUrl: 'https://openrouter.ai/api/v1',
+  model: 'openai/gpt-5.6-luna',
+};
+
+describe('AI Provider Service', () => {
   const testUserId = 'test-user-id';
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock API key query to return test key
+    // Mock config query to return test key with default URL/model
     mockQuery.mockResolvedValue({
-      rows: [{ perplexity_api_key: 'test-key' }],
+      rows: [{ ai_api_key: 'test-key', ai_api_url: null, ai_model: null }],
       rowCount: 1,
       command: 'SELECT',
       oid: 0,
@@ -39,37 +44,37 @@ describe('Perplexity AI Service', () => {
     });
   });
 
-  describe('isPerplexityConfigured', () => {
+  describe('isAIConfigured', () => {
     it('should return true if API key is configured', async () => {
-      const result = await isPerplexityConfigured(testUserId);
+      const result = await isAIConfigured(testUserId);
       expect(result).toBe(true);
       expect(mockQuery).toHaveBeenCalledWith(
-        'SELECT perplexity_api_key FROM settings WHERE user_id = $1',
+        'SELECT ai_api_key, ai_api_url, ai_model FROM settings WHERE user_id = $1',
         [testUserId]
       );
     });
 
     it('should return false if API key is not configured', async () => {
       mockQuery.mockResolvedValueOnce({
-        rows: [{ perplexity_api_key: null }],
+        rows: [{ ai_api_key: null, ai_api_url: null, ai_model: null }],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
         fields: [],
       });
-      const result = await isPerplexityConfigured(testUserId);
+      const result = await isAIConfigured(testUserId);
       expect(result).toBe(false);
     });
   });
 
-  describe('callPerplexity', () => {
+  describe('callAI', () => {
     it('should throw error if API key is not configured', async () => {
-      await expect(callPerplexity('', [{ role: 'user', content: 'test' }])).rejects.toThrow(
-        'PERPLEXITY_API_KEY is not configured'
-      );
+      await expect(
+        callAI({ ...testConfig, apiKey: '' }, [{ role: 'user', content: 'test' }])
+      ).rejects.toThrow('AI API key is not configured');
     });
 
-    it('should call Perplexity API with correct parameters', async () => {
+    it('should call the chat completions API with correct parameters', async () => {
       const mockResponse = {
         id: 'test-id',
         model: 'test-model',
@@ -93,10 +98,10 @@ describe('Perplexity AI Service', () => {
       });
 
       const messages = [{ role: 'user' as const, content: 'Hello' }];
-      const result = await callPerplexity('test-key', messages);
+      const result = await callAI(testConfig, messages);
 
       expect(fetch).toHaveBeenCalledWith(
-        'https://api.perplexity.ai/chat/completions',
+        'https://openrouter.ai/api/v1/chat/completions',
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
@@ -104,7 +109,42 @@ describe('Perplexity AI Service', () => {
           }),
         })
       );
+      const body = JSON.parse((global.fetch as any).mock.calls[0][1].body);
+      expect(body.model).toBe('openai/gpt-5.6-luna');
       expect(result).toEqual(mockResponse);
+    });
+
+    it('should append :online suffix for web search on OpenRouter', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ choices: [] }),
+      });
+
+      await callAI(testConfig, [{ role: 'user', content: 'test' }], { webSearch: true });
+
+      const body = JSON.parse((global.fetch as any).mock.calls[0][1].body);
+      expect(body.model).toBe('openai/gpt-5.6-luna:online');
+    });
+
+    it('should not append :online suffix on non-OpenRouter endpoints', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ choices: [] }),
+      });
+
+      const customConfig = {
+        apiKey: 'test-key',
+        apiUrl: 'https://api.openai.com/v1',
+        model: 'gpt-5.6-luna',
+      };
+      await callAI(customConfig, [{ role: 'user', content: 'test' }], { webSearch: true });
+
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.openai.com/v1/chat/completions',
+        expect.anything()
+      );
+      const body = JSON.parse((global.fetch as any).mock.calls[0][1].body);
+      expect(body.model).toBe('gpt-5.6-luna');
     });
 
     it('should throw error on API failure', async () => {
@@ -115,8 +155,8 @@ describe('Perplexity AI Service', () => {
       });
 
       await expect(
-        callPerplexity('test-key', [{ role: 'user', content: 'test' }])
-      ).rejects.toThrow('Perplexity API error: 500');
+        callAI(testConfig, [{ role: 'user', content: 'test' }])
+      ).rejects.toThrow('AI API error: 500');
     });
   });
 
@@ -151,97 +191,12 @@ describe('Perplexity AI Service', () => {
         choices: [],
       };
 
-      expect(() => extractResponseText(response)).toThrow('No response from Perplexity AI');
-    });
-  });
-
-  describe('matchPaymentToInvoice', () => {
-    it('should return matching invoice', async () => {
-      const mockResponse = {
-        id: 'test',
-        model: 'test',
-        object: 'test',
-        created: 0,
-        choices: [
-          {
-            index: 0,
-            finish_reason: 'stop',
-            message: {
-              role: 'assistant',
-              content: JSON.stringify({
-                invoiceId: 'inv-123',
-                confidence: 0.95,
-                reason: 'Amount matches exactly',
-              }),
-            },
-          },
-        ],
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
-
-      const payment = {
-        amount: 10000,
-        senderName: 'Test Client',
-        message: 'Payment for invoice',
-        variableSymbol: '123456',
-        transactionDate: new Date(),
-      };
-
-      const invoices = [
-        {
-          id: 'inv-123',
-          invoiceNumber: '2024010001',
-          clientName: 'Test Client',
-          total: 10000,
-          dueDate: new Date(),
-          issueDate: new Date(),
-        },
-      ];
-
-      const result = await matchPaymentToInvoice(testUserId, payment, invoices);
-      expect(result).toHaveProperty('invoiceId', 'inv-123');
-      expect(result).toHaveProperty('confidence');
-      expect(result).toHaveProperty('reason');
-    });
-
-    it('should return null if no match', async () => {
-      const mockResponse = {
-        id: 'test',
-        model: 'test',
-        object: 'test',
-        created: 0,
-        choices: [
-          {
-            index: 0,
-            finish_reason: 'stop',
-            message: {
-              role: 'assistant',
-              content: 'null - no good match found',
-            },
-          },
-        ],
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
-
-      const result = await matchPaymentToInvoice(
-        testUserId,
-        { amount: 1000, transactionDate: new Date() },
-        []
-      );
-      expect(result).toBeNull();
+      expect(() => extractResponseText(response)).toThrow('No response from AI provider');
     });
   });
 
   describe('getCzechTaxAdvice', () => {
-    it('should return tax advice', async () => {
+    it('should return tax advice using web search', async () => {
       const mockResponse = {
         id: 'test',
         model: 'test',
@@ -267,6 +222,10 @@ describe('Perplexity AI Service', () => {
       const result = await getCzechTaxAdvice(testUserId, 'When is VAT filing deadline?');
       expect(result).toHaveProperty('answer');
       expect(typeof result.answer).toBe('string');
+
+      // Tax advisor should request web search (:online on OpenRouter default)
+      const body = JSON.parse((global.fetch as any).mock.calls[0][1].body);
+      expect(body.model).toBe('openai/gpt-5.6-luna:online');
     });
   });
 });

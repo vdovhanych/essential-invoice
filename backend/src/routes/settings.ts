@@ -36,7 +36,9 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
         emailTemplate: null,
         calculatorEnabled: false,
         aiEnabled: true,
-        perplexityApiKeySet: false
+        aiApiKeySet: false,
+        aiApiUrl: null,
+        aiModel: null
       });
     }
 
@@ -63,7 +65,9 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
       emailTemplate: settings.email_template,
       calculatorEnabled: settings.calculator_enabled ?? false,
       aiEnabled: settings.ai_enabled ?? true,
-      perplexityApiKeySet: !!settings.perplexity_api_key
+      aiApiKeySet: !!settings.ai_api_key,
+      aiApiUrl: settings.ai_api_url,
+      aiModel: settings.ai_model
     });
   } catch (error) {
     console.error('Get settings error:', error);
@@ -82,7 +86,9 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     emailTemplate,
     calculatorEnabled,
     aiEnabled,
-    perplexityApiKey
+    aiApiKey,
+    aiApiUrl,
+    aiModel
   } = req.body;
 
   try {
@@ -119,7 +125,9 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     addUpdate('email_template', emailTemplate);
     addUpdate('calculator_enabled', calculatorEnabled);
     addUpdate('ai_enabled', aiEnabled);
-    if (perplexityApiKey) addUpdate('perplexity_api_key', encrypt(perplexityApiKey)); // Only update if provided
+    if (aiApiKey) addUpdate('ai_api_key', encrypt(aiApiKey)); // Only update if provided
+    addUpdate('ai_api_url', aiApiUrl);
+    addUpdate('ai_model', aiModel);
 
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No settings to update' });

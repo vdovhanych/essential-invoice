@@ -94,7 +94,7 @@ describe('Settings Routes', () => {
         .send({
           smtpPassword: 'my-smtp-pass',
           imapPassword: 'my-imap-pass',
-          perplexityApiKey: 'pplx-key-123'
+          aiApiKey: 'sk-or-key-123'
         });
 
       expect(response.status).toBe(200);
@@ -103,7 +103,7 @@ describe('Settings Routes', () => {
       // Verify that values contain encrypted versions
       expect(values).toContain('encrypted:my-smtp-pass');
       expect(values).toContain('encrypted:my-imap-pass');
-      expect(values).toContain('encrypted:pplx-key-123');
+      expect(values).toContain('encrypted:sk-or-key-123');
     });
 
     it('should not include paušální daň fields in update', async () => {
@@ -154,7 +154,9 @@ describe('Settings Routes', () => {
           default_payment_terms: 14,
           email_template: null,
           calculator_enabled: false,
-          perplexity_api_key: null
+          ai_api_key: null,
+          ai_api_url: null,
+          ai_model: null
         }]
       });
 
@@ -187,7 +189,9 @@ describe('Settings Routes', () => {
           default_payment_terms: 14,
           email_template: null,
           calculator_enabled: false,
-          perplexity_api_key: null,
+          ai_api_key: null,
+          ai_api_url: null,
+          ai_model: null,
           // These may still exist in DB but should not be returned
           pausalni_dan_enabled: true,
           pausalni_dan_tier: 2,

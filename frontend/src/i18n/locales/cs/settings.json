@@ -40,14 +40,18 @@
   },
 
   "ai": {
-    "heading": "AI funkce (Perplexity)",
-    "description": "Aktivujte AI asistenta pro český daňový poradenství, inteligentní párování plateb a další funkce.",
+    "heading": "AI funkce",
+    "description": "Aktivujte AI asistenta pro české daňové poradenství. Výchozím poskytovatelem je OpenRouter, funguje ale jakékoli OpenAI-kompatibilní API.",
     "enableAi": "Zapnout AI funkce",
-    "apiKeyLabel": "Perplexity API klíč",
+    "apiKeyLabel": "API klíč",
     "apiKeySet": "(nastaveno)",
-    "apiKeyPlaceholder": "pplx-xxxxxxxxxxxxxxxxxxxx",
-    "apiKeyHelp": "Získejte API klíč na",
-    "apiKeyLink": "perplexity.ai/settings/api"
+    "apiKeyPlaceholder": "sk-or-v1-xxxxxxxxxxxxxxxx",
+    "apiKeyHelp": "Získejte OpenRouter API klíč na",
+    "apiKeyLink": "openrouter.ai/settings/keys",
+    "apiUrlLabel": "API base URL",
+    "apiUrlHelp": "Jakýkoli OpenAI-kompatibilní endpoint. Ponechte prázdné pro OpenRouter.",
+    "modelLabel": "Model",
+    "modelHelp": "Ponechte prázdné pro openai/gpt-5.6-luna. Na OpenRouteru daňový poradce automaticky používá vyhledávání na webu."
   },
 
   "invoiceDefaults": {

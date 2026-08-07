@@ -1,7 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, X, Send } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { useAI } from '../context/AIContext';
+
+const markdownComponents = {
+  p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
+    <p className="text-sm mb-2 last:mb-0" {...props} />
+  ),
+  ul: (props: React.HTMLAttributes<HTMLUListElement>) => (
+    <ul className="text-sm list-disc pl-5 mb-2 last:mb-0 space-y-1" {...props} />
+  ),
+  ol: (props: React.HTMLAttributes<HTMLOListElement>) => (
+    <ol className="text-sm list-decimal pl-5 mb-2 last:mb-0 space-y-1" {...props} />
+  ),
+  h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h3 className="text-sm font-semibold mb-1" {...props} />
+  ),
+  h2: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h3 className="text-sm font-semibold mb-1" {...props} />
+  ),
+  h3: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h3 className="text-sm font-semibold mb-1" {...props} />
+  ),
+  a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a
+      className="text-indigo-600 dark:text-indigo-400 underline break-words"
+      target="_blank"
+      rel="noopener noreferrer"
+      {...props}
+    />
+  ),
+  code: (props: React.HTMLAttributes<HTMLElement>) => (
+    <code className="text-xs font-mono bg-gray-200 dark:bg-gray-600 rounded px-1 py-0.5" {...props} />
+  ),
+  pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
+    <pre className="text-xs bg-gray-200 dark:bg-gray-600 rounded p-2 mb-2 overflow-x-auto" {...props} />
+  ),
+  blockquote: (props: React.BlockquoteHTMLAttributes<HTMLQuoteElement>) => (
+    <blockquote className="border-l-2 border-gray-300 dark:border-gray-500 pl-3 mb-2 last:mb-0" {...props} />
+  ),
+};
 
 export default function AIAssistant() {
   const { t } = useTranslation('common');
@@ -47,7 +86,7 @@ export default function AIAssistant() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-full p-4 shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all z-50"
-        title={`${t('ai.title')} (${t('ai.poweredBy')})`}
+        title={t('ai.title')}
       >
         <Sparkles className="w-6 h-6" />
       </button>
@@ -59,14 +98,10 @@ export default function AIAssistant() {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-t-2xl">
               <div className="flex items-center space-x-2">
-                {/* Perplexity Logo */}
                 <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-lg p-2">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('ai.title')}</h2>
-                <span className="px-2 py-1 text-xs bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 text-indigo-800 dark:text-indigo-300 rounded-full font-medium">
-                  {t('ai.poweredBy')}
-                </span>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
@@ -115,7 +150,11 @@ export default function AIAssistant() {
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                      {msg.type === 'assistant' ? (
+                        <ReactMarkdown components={markdownComponents}>{msg.text}</ReactMarkdown>
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                      )}
                     </div>
                   </div>
                 ))

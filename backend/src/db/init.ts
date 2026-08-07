@@ -154,7 +154,9 @@ export async function initializeDatabase() {
         email_template TEXT,
         calculator_enabled BOOLEAN DEFAULT false,
         ai_enabled BOOLEAN DEFAULT true,
-        perplexity_api_key TEXT,
+        ai_api_key TEXT,
+        ai_api_url TEXT,
+        ai_model TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -283,6 +285,35 @@ export async function initializeDatabase() {
           WHERE table_name = 'invoices' AND column_name = 'total_czk'
         ) THEN
           ALTER TABLE invoices ADD COLUMN total_czk DECIMAL(12, 2);
+        END IF;
+      END $$;
+
+      -- Replace Perplexity-specific API key with generic OpenAI-compatible AI settings
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'settings' AND column_name = 'ai_api_key'
+        ) THEN
+          ALTER TABLE settings ADD COLUMN ai_api_key TEXT;
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'settings' AND column_name = 'ai_api_url'
+        ) THEN
+          ALTER TABLE settings ADD COLUMN ai_api_url TEXT;
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'settings' AND column_name = 'ai_model'
+        ) THEN
+          ALTER TABLE settings ADD COLUMN ai_model TEXT;
+        END IF;
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'settings' AND column_name = 'perplexity_api_key'
+        ) THEN
+          ALTER TABLE settings DROP COLUMN perplexity_api_key;
         END IF;
       END $$;
 

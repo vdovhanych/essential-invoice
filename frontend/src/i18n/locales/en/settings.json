@@ -40,14 +40,18 @@
   },
 
   "ai": {
-    "heading": "AI Features (Perplexity)",
-    "description": "Enable AI assistant for Czech tax advisory, intelligent payment matching, and other features.",
+    "heading": "AI Features",
+    "description": "Enable the AI assistant for Czech tax advisory. Works with OpenRouter by default, or any OpenAI-compatible API.",
     "enableAi": "Enable AI features",
-    "apiKeyLabel": "Perplexity API key",
+    "apiKeyLabel": "API key",
     "apiKeySet": "(set)",
-    "apiKeyPlaceholder": "pplx-xxxxxxxxxxxxxxxxxxxx",
-    "apiKeyHelp": "Get your API key at",
-    "apiKeyLink": "perplexity.ai/settings/api"
+    "apiKeyPlaceholder": "sk-or-v1-xxxxxxxxxxxxxxxx",
+    "apiKeyHelp": "Get your OpenRouter API key at",
+    "apiKeyLink": "openrouter.ai/settings/keys",
+    "apiUrlLabel": "API base URL",
+    "apiUrlHelp": "Any OpenAI-compatible endpoint. Leave empty to use OpenRouter.",
+    "modelLabel": "Model",
+    "modelHelp": "Leave empty to use openai/gpt-5.6-luna. On OpenRouter, the tax advisor automatically adds web search."
   },
 
   "invoiceDefaults": {

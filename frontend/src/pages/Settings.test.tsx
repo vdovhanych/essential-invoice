@@ -49,7 +49,9 @@ const defaultSettings = {
   defaultPaymentTerms: 14,
   emailTemplate: null,
   calculatorEnabled: false,
-  perplexityApiKeySet: false
+  aiApiKeySet: false,
+  aiApiUrl: null,
+  aiModel: null
 };
 
 describe('Settings Component', () => {

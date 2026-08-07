@@ -101,7 +101,7 @@ essential-invoice/
 │   │   │   ├── emailSender.ts       # Per-user SMTP for invoices
 │   │   │   ├── globalEmailSender.ts  # Global SMTP for system emails
 │   │   │   ├── pdfGenerator.ts       # Uses pdfmake library
-│   │   │   └── perplexityAI.ts
+│   │   │   └── aiProvider.ts        # OpenRouter / OpenAI-compatible AI client
 │   │   ├── scripts/          # Admin CLI scripts (delete-user.ts)
 │   │   ├── utils/           # Validation utilities (IČO, IBAN, SPAYD)
 │   │   └── index.ts         # Express app entry point

@@ -59,15 +59,17 @@ Configure bank notification receiving in Settings > Email (IMAP):
 
 ## AI Features (Optional)
 
-To enable AI-powered features, each user needs to configure their own Perplexity API key:
+AI features work with [OpenRouter](https://openrouter.ai) by default, but any OpenAI-compatible chat completions API can be used. Each user configures their own API key:
 
-1. Get an API key from [https://www.perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
+1. Get an API key from [https://openrouter.ai/settings/keys](https://openrouter.ai/settings/keys)
 2. Log in to Essential Invoice
 3. Go to Settings (Nastavení)
-4. Find the "AI funkce (Perplexity)" section
+4. Find the "AI Features" section
 5. Enter your API key and save
 
+Optional fields:
+- **API base URL** — any OpenAI-compatible endpoint (e.g. `https://api.openai.com/v1`). Leave empty to use OpenRouter (`https://openrouter.ai/api/v1`).
+- **Model** — model identifier at your provider. Leave empty to use `openai/gpt-5.6-luna`. When using OpenRouter, the tax advisor automatically appends the `:online` suffix so answers use live web search; on other providers no web search is added.
+
 Once configured, AI features become available:
-- Payment matching suggestions in the Payments page
-- Tax advisor chatbot accessible from the AI assistant
-- Financial insights on the Dashboard
+- Tax advisor chatbot accessible from the AI assistant button
