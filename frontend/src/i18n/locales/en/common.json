@@ -6,7 +6,9 @@
     "clients": "Clients",
     "payments": "Payments",
     "calculator": "Calculator",
-    "settings": "Settings"
+    "settings": "Settings",
+    "more": "More",
+    "newInvoice": "New invoice"
   },
   "userMenu": {
     "profile": "Profile",

@@ -6,7 +6,9 @@
     "clients": "Kontakty",
     "payments": "Platby",
     "calculator": "Kalkulačka",
-    "settings": "Nastavení"
+    "settings": "Nastavení",
+    "more": "Více",
+    "newInvoice": "Nová faktura"
   },
   "userMenu": {
     "profile": "Profil",

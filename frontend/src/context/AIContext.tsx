@@ -27,6 +27,9 @@ interface AIContextType {
   aiStatus: AIFeatures | null;
   loading: boolean;
   error: string | null;
+  assistantOpen: boolean;
+  openAssistant: () => void;
+  closeAssistant: () => void;
   checkAIStatus: () => Promise<void>;
   askTaxAdvisor: (question: string) => Promise<any>;
   extractExpense: (fileData: string, fileMimeType: string, fileName?: string) => Promise<ExtractedExpense>;
@@ -40,6 +43,10 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
   const [aiStatus, setAIStatus] = useState<AIFeatures | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+
+  const openAssistant = useCallback(() => setAssistantOpen(true), []);
+  const closeAssistant = useCallback(() => setAssistantOpen(false), []);
 
   const checkAIStatus = useCallback(async () => {
     if (!token) return;
@@ -144,6 +151,9 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
         aiStatus,
         loading,
         error,
+        assistantOpen,
+        openAssistant,
+        closeAssistant,
         checkAIStatus,
         askTaxAdvisor,
         extractExpense,
