@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import AIAssistant from './AIAssistant';
+import MobileBottomNav from './MobileBottomNav';
 import { PageLoader } from './Spinner';
 import { api } from '../utils/api';
 import {
@@ -13,8 +14,6 @@ import {
   CreditCard,
   Settings,
   LogOut,
-  Menu,
-  X,
   User,
   ChevronDown,
   Calculator,
@@ -29,7 +28,6 @@ export default function Layout() {
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation('common');
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [calculatorEnabled, setCalculatorEnabled] = useState(false);
 
@@ -72,31 +70,13 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Mobile sidebar backdrop */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
+      {/* Sidebar (desktop only; mobile uses the bottom tab bar) */}
+      <aside className="hidden lg:block fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+        <div className="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
           <Link to="/" className="flex items-center space-x-2">
             <img src="/favicon.svg" alt="essentialInvoice" className="h-8 w-8" />
             <span className="text-xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</span>
           </Link>
-          <button
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
         <nav className="p-4 space-y-1">
@@ -108,7 +88,6 @@ export default function Layout() {
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => setSidebarOpen(false)}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
                   isActive
                     ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
@@ -125,16 +104,9 @@ export default function Layout() {
 
       {/* Main content */}
       <div className="lg:pl-64 overflow-x-hidden">
-        {/* Header */}
-        <header className="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        {/* Header (desktop only; mobile navigation lives in the bottom tab bar) */}
+        <header className="hidden lg:block sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between h-16 px-4">
-            <button
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-
             <div className="flex-1" />
 
             {/* User menu */}
@@ -214,7 +186,7 @@ export default function Layout() {
         </header>
 
         {/* Page content */}
-        <main className="p-4 lg:p-6">
+        <main className="p-4 lg:p-6 pb-24 lg:pb-6">
           <Suspense fallback={<PageLoader />}>
             <Outlet />
           </Suspense>
@@ -223,6 +195,9 @@ export default function Layout() {
         {/* AI Assistant */}
         <AIAssistant />
       </div>
+
+      {/* Mobile bottom navigation */}
+      <MobileBottomNav calculatorEnabled={calculatorEnabled} />
     </div>
   );
 }

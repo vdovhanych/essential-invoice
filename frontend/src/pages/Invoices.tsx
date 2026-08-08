@@ -83,7 +83,9 @@ export default function Invoices() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
         <Link
           to={activeTab === 'recurring' ? '/recurring/new' : '/invoices/new'}
-          className="btn btn-primary flex items-center space-x-2"
+          className={`btn btn-primary items-center space-x-2 ${
+            activeTab === 'recurring' ? 'flex' : 'hidden lg:flex'
+          }`}
         >
           <Plus className="h-4 w-4" />
           <span>{activeTab === 'recurring' ? t('newRecurring') : t('newInvoice')}</span>

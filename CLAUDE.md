@@ -91,7 +91,8 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `context/AIContext.tsx` - AI assistant state management
   - `context/ThemeContext.tsx` - Dark/light theme state management
 - **Components**: `components/` - Reusable UI:
-  - `Layout.tsx` - Main layout wrapper with navigation
+  - `Layout.tsx` - Main layout wrapper with navigation (desktop sidebar; mobile uses bottom tab bar)
+  - `MobileBottomNav.tsx` - Mobile bottom tab bar (Dashboard, Invoices, new-invoice action, Clients, More sheet with secondary navigation, AI assistant, appearance toggle, and logout)
   - `ThemeToggle.tsx` - Theme switcher + language picker dropdown (used on auth pages)
   - `AIAssistant.tsx` - AI assistant chat component
 - **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, RecurringInvoices, RecurringInvoiceCreate, RecurringInvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword

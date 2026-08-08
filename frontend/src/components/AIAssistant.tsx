@@ -44,8 +44,7 @@ const markdownComponents = {
 
 export default function AIAssistant() {
   const { t } = useTranslation('common');
-  const { aiStatus, checkAIStatus, askTaxAdvisor, loading } = useAI();
-  const [isOpen, setIsOpen] = useState(false);
+  const { aiStatus, checkAIStatus, askTaxAdvisor, loading, assistantOpen, openAssistant, closeAssistant } = useAI();
   const [question, setQuestion] = useState('');
   const [conversation, setConversation] = useState<Array<{ type: 'user' | 'assistant'; text: string }>>([]);
 
@@ -82,17 +81,17 @@ export default function AIAssistant() {
 
   return (
     <>
-      {/* Floating button */}
+      {/* Floating button (desktop only; mobile opens the assistant from the More menu) */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-full p-4 shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all z-50"
+        onClick={() => (assistantOpen ? closeAssistant() : openAssistant())}
+        className="hidden lg:block fixed bottom-6 right-6 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-full p-4 shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all z-50"
         title={t('ai.title')}
       >
         <Sparkles className="w-6 h-6" />
       </button>
 
       {/* Modal */}
-      {isOpen && (
+      {assistantOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-2xl sm:mx-4 max-h-[80vh] flex flex-col">
             {/* Header */}
@@ -104,7 +103,7 @@ export default function AIAssistant() {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('ai.title')}</h2>
               </div>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={closeAssistant}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <X className="w-6 h-6" />
