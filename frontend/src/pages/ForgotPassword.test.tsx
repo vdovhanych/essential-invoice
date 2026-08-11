@@ -47,7 +47,7 @@ describe('ForgotPassword Component', () => {
   it('renders the forgot password form', () => {
     renderForgotPassword();
 
-    expect(screen.getByRole('heading', { name: /essentialInvoice/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Obnovení hesla' })).toBeInTheDocument();
     expect(screen.getByText(/Obnovení hesla/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Email/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Odeslat odkaz pro obnovení/ })).toBeInTheDocument();

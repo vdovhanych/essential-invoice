@@ -28,19 +28,16 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 relative">
+    <div className="min-h-screen flex flex-col bg-canvas px-5 relative">
       <ThemeToggle />
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <img src="/favicon.svg" alt="essentialInvoice" className="h-12 w-12" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">{t('login.subtitle')}</p>
-        </div>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-[420px]">
+          <img src="/favicon.svg" alt="essentialInvoice" className="h-11 w-11 rounded-[12px] mb-6" />
+          <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em] text-text">
+            {t('login.subtitle')}
+          </h1>
 
-        <div className="card">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="mt-7 space-y-3.5">
             <div>
               <label htmlFor="email" className="label">{t('login.emailLabel')}</label>
               <input
@@ -48,7 +45,7 @@ export default function Login() {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input"
+                className="input-auth"
                 required
               />
             </div>
@@ -60,13 +57,13 @@ export default function Login() {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input"
+                className="input-auth"
                 required
               />
             </div>
 
             <div className="text-right">
-              <Link to="/forgot-password" className="text-sm text-indigo-600 hover:underline">
+              <Link to="/forgot-password" className="text-[13px] text-accent-link hover:underline">
                 {t('login.forgotPasswordLink')}
               </Link>
             </div>
@@ -74,20 +71,20 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="btn btn-primary w-full"
+              className="btn btn-primary w-full py-3.5 rounded-[12px]"
             >
               {loading ? t('login.submittingButton') : t('login.submitButton')}
             </button>
           </form>
-
-          <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
-            {t('login.noAccountText')}{' '}
-            <Link to="/register" className="text-indigo-600 hover:underline">
-              {t('login.registerLink')}
-            </Link>
-          </p>
         </div>
       </div>
+
+      <p className="text-center text-sm text-text-muted pb-8">
+        {t('login.noAccountText')}{' '}
+        <Link to="/register" className="font-medium text-accent-link hover:underline">
+          {t('login.registerLink')}
+        </Link>
+      </p>
     </div>
   );
 }

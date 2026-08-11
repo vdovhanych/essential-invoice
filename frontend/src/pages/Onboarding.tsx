@@ -119,47 +119,41 @@ export default function Onboarding() {
   const logoUrl = token ? `/api/auth/me/logo?token=${encodeURIComponent(token)}&v=${Date.now()}` : '';
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center py-8 px-4">
+    <div className="min-h-screen bg-canvas flex flex-col items-center py-8 px-4">
       <div className="max-w-2xl w-full">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <img src="/favicon.svg" alt="essentialInvoice" className="h-12 w-12" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('onboarding.welcomeTitle', { name: user?.name })}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">{t('onboarding.subtitle')}</p>
-        </div>
-
-        {/* Progress indicator */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="flex items-center space-x-4">
-            <div className={`flex items-center space-x-2 ${step === 1 ? 'text-indigo-600 font-semibold' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${step === 1 ? 'bg-indigo-600 text-white' : step > 1 ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
-                {step > 1 ? '✓' : '1'}
-              </div>
-              <span className="hidden sm:inline">{t('onboarding.step1Label')}</span>
-            </div>
-            <div className="w-8 h-px bg-gray-300 dark:bg-gray-600" />
-            <div className={`flex items-center space-x-2 ${step === 2 ? 'text-indigo-600 font-semibold' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${step === 2 ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
-                2
-              </div>
-              <span className="hidden sm:inline">{t('onboarding.step2Label')}</span>
+        {/* Header — progress as bars, one decision per screen */}
+        <div className="mb-7">
+          <div className="flex items-center gap-3 mb-5">
+            <img src="/favicon.svg" alt="essentialInvoice" className="h-11 w-11 rounded-[12px]" />
+            <div className="flex items-center gap-2">
+              {[1, 2].map((n) => (
+                <span
+                  key={n}
+                  className={`w-[22px] h-[3px] rounded-full ${step >= n ? 'bg-accent' : 'bg-border-strong'}`}
+                />
+              ))}
+              <span className="ml-1 text-xs text-text-faint tabular-nums">
+                {t('onboarding.stepOf', { current: step, total: 2 })}
+              </span>
             </div>
           </div>
+          <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em] text-text">
+            {t('onboarding.welcomeTitle', { name: user?.name })}
+          </h1>
+          <p className="text-sm text-text-muted mt-2">{t('onboarding.subtitle')}</p>
         </div>
 
         {/* Step 1: Company & Tax Info */}
         {step === 1 && (
           <div className="card space-y-6">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <Building className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="p-2 bg-success-bg rounded-lg">
+                <Building className="h-5 w-5 text-success" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('onboarding.companySection.title')}</h2>
+              <h2 className="text-lg font-semibold text-text">{t('onboarding.companySection.title')}</h2>
             </div>
 
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-text-muted">
               {t('onboarding.companySection.description')}
             </p>
 
@@ -197,7 +191,7 @@ export default function Onboarding() {
                   disabled={!formData.vatPayer}
                 />
                 {!formData.vatPayer && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('onboarding.companySection.dicDisabledHint')}</p>
+                  <p className="text-xs text-text-muted mt-1">{t('onboarding.companySection.dicDisabledHint')}</p>
                 )}
               </div>
             </div>
@@ -213,36 +207,36 @@ export default function Onboarding() {
               />
             </div>
 
-            <div className="flex items-start space-x-3 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
+            <div className="flex items-start space-x-3 p-4 bg-accent-tint rounded-lg border border-accent-soft">
               <input
                 type="checkbox"
                 id="vatPayer"
                 name="vatPayer"
                 checked={formData.vatPayer}
                 onChange={handleChange}
-                className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                className="mt-1 h-4 w-4 text-accent border-border-strong rounded focus:border-accent"
               />
               <div className="flex-1">
-                <label htmlFor="vatPayer" className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">
+                <label htmlFor="vatPayer" className="text-sm font-medium text-text cursor-pointer">
                   {t('onboarding.companySection.vatPayerLabel')}
                 </label>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-xs text-text-muted mt-1">
                   {t('onboarding.companySection.vatPayerDescription')}
                 </p>
               </div>
             </div>
 
             {/* Paušální daň section */}
-            <hr className="dark:border-gray-700" />
+            <hr className="" />
 
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
                 <Landmark className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('onboarding.pausalniDan.title')}</h2>
+              <h2 className="text-lg font-semibold text-text">{t('onboarding.pausalniDan.title')}</h2>
             </div>
 
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-text-muted">
               {t('onboarding.pausalniDan.description')}
             </p>
 
@@ -252,9 +246,9 @@ export default function Onboarding() {
                 name="pausalniDanEnabled"
                 checked={formData.pausalniDanEnabled}
                 onChange={handleChange}
-                className="rounded border-gray-300 text-indigo-600"
+                className="rounded border-border-strong text-accent"
               />
-              <span className="text-sm text-gray-600 dark:text-gray-400">{t('onboarding.pausalniDan.enabledLabel')}</span>
+              <span className="text-sm text-text-muted">{t('onboarding.pausalniDan.enabledLabel')}</span>
             </label>
 
             {formData.pausalniDanEnabled && (
@@ -319,13 +313,13 @@ export default function Onboarding() {
         {step === 2 && (
           <div className="card space-y-6">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                <CreditCard className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              <div className="p-2 bg-accent-soft rounded-lg">
+                <CreditCard className="h-5 w-5 text-accent" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('onboarding.bankSection.title')}</h2>
+              <h2 className="text-lg font-semibold text-text">{t('onboarding.bankSection.title')}</h2>
             </div>
 
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-text-muted">
               {t('onboarding.bankSection.description')}
             </p>
 
@@ -355,10 +349,10 @@ export default function Onboarding() {
               </div>
             </div>
 
-            <hr className="dark:border-gray-700" />
+            <hr className="" />
 
-            <h3 className="text-md font-semibold text-gray-900 dark:text-gray-100">{t('onboarding.logoSection.title')}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <h3 className="text-md font-semibold text-text">{t('onboarding.logoSection.title')}</h3>
+            <p className="text-sm text-text-muted">
               {t('onboarding.logoSection.description')}
             </p>
 
@@ -368,11 +362,11 @@ export default function Onboarding() {
                   <img
                     src={logoUrl}
                     alt={t('onboarding.logoSection.logoAlt')}
-                    className="w-48 h-24 object-contain border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-700 p-2"
+                    className="w-48 h-24 object-contain border border-border rounded-lg bg-surface p-2"
                   />
                 ) : (
-                  <div className="w-48 h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
-                    <span className="text-gray-400 text-sm">{t('onboarding.logoSection.noLogo')}</span>
+                  <div className="w-48 h-24 border-2 border-dashed border-border-strong rounded-lg flex items-center justify-center bg-surface-sunken">
+                    <span className="text-text-faint text-sm">{t('onboarding.logoSection.noLogo')}</span>
                   </div>
                 )}
               </div>
