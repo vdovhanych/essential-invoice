@@ -148,9 +148,9 @@ describe('MobileBottomNav', () => {
     renderNav({}, '/invoices');
 
     const invoicesLink = screen.getByText('Faktury').closest('a');
-    expect(invoicesLink?.className).toContain('text-indigo-600');
+    expect(invoicesLink?.className).toContain('text-accent');
 
     const dashboardLink = screen.getByText('Přehled').closest('a');
-    expect(dashboardLink?.className).not.toContain('text-indigo-600');
+    expect(dashboardLink?.className).not.toContain('text-accent');
   });
 });

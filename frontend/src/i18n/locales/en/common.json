@@ -8,7 +8,8 @@
     "calculator": "Calculator",
     "settings": "Settings",
     "more": "More",
-    "newInvoice": "New invoice"
+    "newInvoice": "New invoice",
+    "search": "Search"
   },
   "userMenu": {
     "profile": "Profile",
@@ -86,5 +87,24 @@
     "updateAvailable": "A new version is available",
     "reload": "Reload",
     "offline": "You are offline"
+  },
+  "palette": {
+    "placeholder": "Search invoices, contacts, or type a command…",
+    "groupInvoices": "Invoices",
+    "groupContacts": "Contacts",
+    "groupActions": "Actions",
+    "newInvoice": "New invoice",
+    "newExpense": "New expense",
+    "newInvoiceFor": "New invoice for",
+    "goContacts": "Go to contacts",
+    "goDashboard": "Go to dashboard",
+    "goSettings": "Open settings",
+    "navigate": "navigate",
+    "open": "open",
+    "commandsHint": "Type > for commands only",
+    "noResults": "Nothing found"
+  },
+  "offline": {
+    "message": "You're offline. You can read everything — changes will sync when you're back."
   }
 }
