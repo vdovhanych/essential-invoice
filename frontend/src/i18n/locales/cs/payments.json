@@ -37,7 +37,9 @@
       "unmatch": "Opravdu chcete zrušit spárování této platby?",
       "delete": "Opravdu chcete smazat tuto platbu? Tuto akci nelze vrátit zpět."
     },
-    "subline": "{{unmatched}} k vyřízení · {{matched}} spárováno"
+    "subline": "{{unmatched}} k vyřízení · {{matched}} spárováno",
+    "noMatch": "Žádné platby neodpovídají filtrům",
+    "clearFilters": "Zrušit filtry"
   },
   "matchModal": {
     "title": "Spárovat platbu",

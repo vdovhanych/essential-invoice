@@ -28,7 +28,9 @@
     "icoLabel": "IČO {{ico}}",
     "newInvoiceFor": "Nová faktura pro tento kontakt",
     "editContact": "Upravit kontakt",
-    "deleteContact": "Smazat kontakt"
+    "deleteContact": "Smazat kontakt",
+    "noMatch": "Žádné kontakty neodpovídají \"{{query}}\"",
+    "clearSearch": "Zrušit hledání"
   },
   "modal": {
     "titleNew": "Nový kontakt",

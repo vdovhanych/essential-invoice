@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Clients from './Clients';
 
@@ -103,6 +103,22 @@ describe('Clients', () => {
     await screen.findAllByText('Ateliér Vlna');
     const links = screen.getAllByTitle('Nová faktura pro tento kontakt');
     expect(links[0]).toHaveAttribute('href', expect.stringContaining('/invoices/new?client='));
+  });
+
+  it('distinguishes a filtered miss from having no contacts', async () => {
+    renderPage();
+    await screen.findAllByText('Ateliér Vlna');
+
+    fireEvent.change(screen.getAllByPlaceholderText('Hledat kontakty...')[0], {
+      target: { value: 'neexistuje' },
+    });
+
+    expect(screen.getByText(/Žádné kontakty neodpovídají/)).toBeInTheDocument();
+    // Not the first-run copy
+    expect(screen.queryByText('Přidat první kontakt')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Zrušit hledání'));
+    expect(screen.getAllByText('Ateliér Vlna').length).toBeGreaterThan(0);
   });
 
   it('renders initials avatars', async () => {

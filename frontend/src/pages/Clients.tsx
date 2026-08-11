@@ -354,12 +354,27 @@ export default function Clients() {
         </>
       ) : (
         <div className="card text-center py-12">
-          <Users className="h-12 w-12 text-border-strong mx-auto mb-4" />
-          <p className="text-sm text-text-muted">{t('list.empty')}</p>
-          <button onClick={openCreateModal} className="btn btn-primary mt-4 inline-flex items-center space-x-2">
-            <Plus className="h-4 w-4" />
-            <span>{t('list.addFirst')}</span>
-          </button>
+          {search ? (
+            /* A filtered miss is not a first run — keep the toolbar and offer a way back */
+            <>
+              <p className="text-sm text-text-muted">{t('list.noMatch', { query: search })}</p>
+              <button
+                onClick={() => setSearch('')}
+                className="mt-2 text-sm font-medium text-accent-link hover:underline"
+              >
+                {t('list.clearSearch')}
+              </button>
+            </>
+          ) : (
+            <>
+              <Users className="h-12 w-12 text-border-strong mx-auto mb-4" />
+              <p className="text-sm text-text-muted">{t('list.empty')}</p>
+              <button onClick={openCreateModal} className="btn btn-primary mt-4 inline-flex items-center space-x-2">
+                <Plus className="h-4 w-4" />
+                <span>{t('list.addFirst')}</span>
+              </button>
+            </>
+          )}
         </div>
       )}
 
