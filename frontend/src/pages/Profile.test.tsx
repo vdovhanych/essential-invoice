@@ -34,6 +34,8 @@ vi.mock('lucide-react', () => ({
   Image: () => <span data-testid="image-icon" />,
   Landmark: () => <span data-testid="landmark-icon" />,
   ShieldAlert: () => <span data-testid="shield-alert-icon" />,
+  Lock: () => <span data-testid="lock-icon" />,
+  AlertTriangle: () => <span data-testid="alert-triangle-icon" />,
 }));
 
 describe('Profile Component', () => {
@@ -41,15 +43,21 @@ describe('Profile Component', () => {
     vi.clearAllMocks();
   });
 
-  it('renders paušální daň section with "Používám paušální daň" checkbox', () => {
+  /** Company and tax fields live under the "business" section of the page nav */
+  function renderBusinessSection() {
     render(<Profile />);
+    fireEvent.click(screen.getAllByRole('button', { name: /Firemní údaje/ })[0]);
+  }
+
+  it('renders paušální daň section with "Používám paušální daň" checkbox', () => {
+    renderBusinessSection();
 
     expect(screen.getByText('Paušální daň')).toBeInTheDocument();
     expect(screen.getByLabelText('Používám paušální daň')).toBeInTheDocument();
   });
 
   it('vatPayer defaults to false for user with undefined vatPayer', () => {
-    render(<Profile />);
+    renderBusinessSection();
 
     const vatPayerCheckbox = screen.getByLabelText('Jsem plátce DPH') as HTMLInputElement;
     expect(vatPayerCheckbox.checked).toBe(false);
@@ -60,7 +68,7 @@ describe('Profile Component', () => {
   });
 
   it('paušální daň fields appear when checkbox is checked', () => {
-    render(<Profile />);
+    renderBusinessSection();
 
     // Initially no tier/limit selects
     expect(document.querySelector('select[name="pausalniDanTier"]')).toBeNull();

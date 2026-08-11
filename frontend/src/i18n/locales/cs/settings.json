@@ -1,6 +1,5 @@
 {
   "title": "Nastavení",
-
   "smtp": {
     "heading": "Odesílání emailů (SMTP)",
     "server": "SMTP server",
@@ -17,9 +16,9 @@
     "testConnection": "Otestovat připojení",
     "testSuccess": "SMTP připojení je funkční",
     "testFailed": "Test SMTP selhal",
-    "serverPlaceholder": "smtp.example.com"
+    "serverPlaceholder": "smtp.example.com",
+    "description": "Používá se k odesílání faktur z vaší e-mailové adresy."
   },
-
   "imap": {
     "heading": "Přijímání emailů (IMAP)",
     "description": "Nastavte IMAP pro automatické načítání bankovních notifikací o platbách.",
@@ -38,7 +37,6 @@
     "testFailed": "Test IMAP selhal",
     "serverPlaceholder": "imap.example.com"
   },
-
   "ai": {
     "heading": "AI funkce",
     "description": "Aktivujte AI asistenta pro české daňové poradenství. Výchozím poskytovatelem je OpenRouter, funguje ale jakékoli OpenAI-kompatibilní API.",
@@ -53,32 +51,30 @@
     "modelLabel": "Model",
     "modelHelp": "Ponechte prázdné pro openai/gpt-5.6-luna. Na OpenRouteru daňový poradce automaticky používá vyhledávání na webu."
   },
-
   "invoiceDefaults": {
     "heading": "Výchozí hodnoty faktur",
     "vatRate": "Výchozí sazba DPH (%)",
     "paymentTerms": "Výchozí splatnost (dny)",
     "invoiceNumberPrefix": "Prefix čísla faktury",
-    "invoiceNumberPrefixPlaceholder": "Např. FV, INV"
+    "invoiceNumberPrefixPlaceholder": "Např. FV, INV",
+    "description": "Použije se na každou novou fakturu. U konkrétní faktury lze vše změnit.",
+    "vatRateHelp": "Předvyplní se u nových faktur — u faktury lze změnit",
+    "paymentTermsHelp": "Datum splatnosti se počítá od data vystavení"
   },
-
   "calculator": {
     "heading": "Kalkulačka",
     "description": "Povolit kalkulačku pro výpočet fakturované částky na základě hodinové sazby a KPI bonusu.",
     "enable": "Zapnout kalkulačku"
   },
-
   "emailTemplate": {
     "heading": "Šablona emailu",
     "variablesHelp": "Použijte proměnné: {{invoiceNumber}}, {{total}}, {{dueDate}}, {{clientName}}, {{senderName}}",
     "placeholder": "Dobrý den,\n\nv příloze Vám zasílám fakturu č. {{invoiceNumber}} na částku {{total}}.\n\nDatum splatnosti: {{dueDate}}\n\nDěkuji za spolupráci.\n\nS pozdravem,\n{{senderName}}"
   },
-
   "toast": {
     "saveSuccess": "Nastavení bylo uloženo",
     "saveFailed": "Nepodařilo se uložit nastavení"
   },
-
   "actions": {
     "saving": "Ukládám...",
     "save": "Uložit nastavení"
