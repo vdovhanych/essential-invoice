@@ -23,7 +23,21 @@
     "columnActions": "Actions",
     "downloadPdf": "Download PDF",
     "emptyState": "No invoices found",
-    "createFirst": "Create your first invoice"
+    "createFirst": "Create your first invoice",
+    "countSummary_one": "{{count}} invoice · {{amount}} outstanding",
+    "countSummary_other": "{{count}} invoices · {{amount}} outstanding",
+    "statusAll": "All",
+    "selected": "{{n}} selected",
+    "selectAll": "Select all",
+    "bulkDownload": "Download PDFs",
+    "bulkMarkPaid": "Mark paid",
+    "bulkMarkPaidSuccess_one": "{{count}} invoice marked as paid",
+    "bulkMarkPaidSuccess_other": "{{count}} invoices marked as paid",
+    "shownOf": "{{shown}} of {{total}} shown",
+    "footerTotal": "Total",
+    "due": "due",
+    "noMatch": "No invoices match your filters",
+    "clearFilters": "Clear filters"
   },
   "create": {
     "title": "New invoice",
@@ -57,7 +71,15 @@
     "createInvoice": "Create invoice",
     "validationSelectContact": "Select a contact",
     "validationFillItems": "Fill in all items",
-    "saveError": "Failed to save invoice"
+    "saveError": "Failed to save invoice",
+    "itemTotal": "Total",
+    "removeItem": "Remove item",
+    "addItemHint": "Tab from the last field adds a row",
+    "qrAlwaysIncluded": "A QR payment code is always included on the PDF.",
+    "vatDefaultBadge": "Default",
+    "tierImpact": "Puts you at {{amount}} this year — {{pct}}% of the flat-rate tier.",
+    "tierImpactCrosses": "This invoice would put you at {{amount}} — over the flat-rate tier limit.",
+    "previewSection": "Preview"
   },
   "detail": {
     "title": "Invoice {{number}}",
@@ -128,14 +150,30 @@
       "aiReminderFailed": "Failed to draft the reminder",
       "cancel": "Cancel",
       "sending": "Sending...",
-      "send": "Send"
+      "send": "Send",
+      "marksAsSent": "Marks the invoice as sent."
     },
     "markPaidModal": {
       "title": "Mark invoice as paid",
       "paidDate": "Payment date",
       "paidDateHint": "Default date is the invoice due date",
       "cancel": "Cancel",
-      "confirm": "Confirm"
+      "confirm": "Confirm",
+      "today": "Today",
+      "onDueDate": "Due date"
+    },
+    "back": "Invoices",
+    "remind": "Remind",
+    "overdueDays_one": "Overdue {{count}} day",
+    "overdueDays_other": "Overdue {{count}} days",
+    "timeline": {
+      "title": "Timeline",
+      "created": "Created",
+      "sent": "Sent",
+      "duePassed": "Due date passed",
+      "paid": "Paid",
+      "awaitingPayment": "Awaiting payment",
+      "cancelled": "Cancelled"
     }
   },
   "recurring": {
@@ -156,7 +194,14 @@
       "delete": "Delete",
       "emptyState": "No recurring invoices",
       "createFirst": "Create recurring invoice",
-      "confirmDelete": "Are you sure you want to delete this recurring invoice?"
+      "confirmDelete": "Are you sure you want to delete this recurring invoice?",
+      "nextOn": "Next",
+      "today": "today",
+      "inDays_one": "in {{count}} day",
+      "inDays_other": "in {{count}} days",
+      "monthlyOn": "Monthly on the {{day}}.",
+      "sendsItself": "sends itself",
+      "savedAsDraft": "saved as draft for review"
     },
     "create": {
       "title": "New recurring invoice",
@@ -192,7 +237,17 @@
       "createRecurring": "Create recurring invoice",
       "validationSelectContact": "Select a contact",
       "validationFillItems": "Fill in all items",
-      "saveError": "Failed to save recurring invoice"
+      "saveError": "Failed to save recurring invoice",
+      "itemTotal": "Total",
+      "removeItem": "Remove item",
+      "addItemHint": "Tab from the last field adds a row",
+      "sentencePart1": "Issue an invoice for",
+      "sentencePart2": "every month on the",
+      "sentencePart3": "starting",
+      "nextThree": "Next three: {{dates}}",
+      "whenDueHeading": "When it comes due",
+      "autoSendOption": "Send it to the client automatically",
+      "draftOption": "Save it as a draft and tell me"
     },
     "detail": {
       "title": "Recurring invoice — {{clientName}}",
@@ -238,5 +293,25 @@
       "generateError": "Failed to generate invoice",
       "deleteError": "Failed to delete recurring invoice"
     }
+  },
+  "reminder": {
+    "title": "Reminder for {{number}}",
+    "close": "Close",
+    "draftedForYou": "Drafted for you",
+    "tone": {
+      "friendly": "Friendly",
+      "neutral": "Neutral",
+      "firm": "Firm"
+    },
+    "subject": "Subject",
+    "message": "Message",
+    "editableNote": "This is a starting point — edit anything before sending.",
+    "draftAnother": "Draft another",
+    "drafting": "Drafting…",
+    "draftFailed": "Could not draft the reminder",
+    "neverAutoSends": "Nothing is sent until you press send.",
+    "cancel": "Cancel",
+    "send": "Send reminder",
+    "sending": "Sending…"
   }
 }

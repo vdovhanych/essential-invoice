@@ -23,7 +23,23 @@
     "columnActions": "Akce",
     "downloadPdf": "Stáhnout PDF",
     "emptyState": "Žádné faktury nenalezeny",
-    "createFirst": "Vytvořit první fakturu"
+    "createFirst": "Vytvořit první fakturu",
+    "countSummary_one": "{{count}} faktura · {{amount}} nezaplaceno",
+    "countSummary_few": "{{count}} faktury · {{amount}} nezaplaceno",
+    "countSummary_other": "{{count}} faktur · {{amount}} nezaplaceno",
+    "statusAll": "Vše",
+    "selected": "Vybráno: {{n}}",
+    "selectAll": "Vybrat vše",
+    "bulkDownload": "Stáhnout PDF",
+    "bulkMarkPaid": "Označit jako zaplacené",
+    "bulkMarkPaidSuccess_one": "{{count}} faktura označena jako zaplacená",
+    "bulkMarkPaidSuccess_few": "{{count}} faktury označeny jako zaplacené",
+    "bulkMarkPaidSuccess_other": "{{count}} faktur označeno jako zaplacené",
+    "shownOf": "Zobrazeno {{shown}} z {{total}}",
+    "footerTotal": "Celkem",
+    "due": "splatnost",
+    "noMatch": "Žádné faktury neodpovídají filtrům",
+    "clearFilters": "Zrušit filtry"
   },
   "create": {
     "title": "Nová faktura",
@@ -57,7 +73,15 @@
     "createInvoice": "Vytvořit fakturu",
     "validationSelectContact": "Vyberte kontakt",
     "validationFillItems": "Vyplňte všechny položky",
-    "saveError": "Nepodařilo se uložit fakturu"
+    "saveError": "Nepodařilo se uložit fakturu",
+    "itemTotal": "Celkem",
+    "removeItem": "Odebrat položku",
+    "addItemHint": "Tab z posledního pole přidá řádek",
+    "qrAlwaysIncluded": "QR platební kód je vždy součástí PDF.",
+    "vatDefaultBadge": "Výchozí",
+    "tierImpact": "Letos se dostanete na {{amount}} — {{pct}} % limitu paušální daně.",
+    "tierImpactCrosses": "Tato faktura vás dostane na {{amount}} — nad limit paušální daně.",
+    "previewSection": "Náhled"
   },
   "detail": {
     "title": "Faktura {{number}}",
@@ -128,14 +152,31 @@
       "aiReminderFailed": "Nepodařilo se navrhnout upomínku",
       "cancel": "Zrušit",
       "sending": "Odesílám...",
-      "send": "Odeslat"
+      "send": "Odeslat",
+      "marksAsSent": "Faktura se označí jako odeslaná."
     },
     "markPaidModal": {
       "title": "Označit fakturu jako zaplacenou",
       "paidDate": "Datum zaplacení",
       "paidDateHint": "Výchozí datum je datum splatnosti faktury",
       "cancel": "Zrušit",
-      "confirm": "Potvrdit"
+      "confirm": "Potvrdit",
+      "today": "Dnes",
+      "onDueDate": "Datum splatnosti"
+    },
+    "back": "Faktury",
+    "remind": "Připomenout",
+    "overdueDays_one": "{{count}} den po splatnosti",
+    "overdueDays_few": "{{count}} dny po splatnosti",
+    "overdueDays_other": "{{count}} dní po splatnosti",
+    "timeline": {
+      "title": "Průběh",
+      "created": "Vytvořeno",
+      "sent": "Odesláno",
+      "duePassed": "Uplynula splatnost",
+      "paid": "Zaplaceno",
+      "awaitingPayment": "Čeká na zaplacení",
+      "cancelled": "Zrušeno"
     }
   },
   "recurring": {
@@ -156,7 +197,15 @@
       "delete": "Smazat",
       "emptyState": "Žádné opakované faktury",
       "createFirst": "Vytvořit opakovanou fakturu",
-      "confirmDelete": "Opravdu chcete smazat tuto opakovanou fakturu?"
+      "confirmDelete": "Opravdu chcete smazat tuto opakovanou fakturu?",
+      "nextOn": "Další",
+      "today": "dnes",
+      "inDays_one": "za {{count}} den",
+      "inDays_few": "za {{count}} dny",
+      "inDays_other": "za {{count}} dní",
+      "monthlyOn": "Měsíčně {{day}}.",
+      "sendsItself": "odešle se sama",
+      "savedAsDraft": "uloží se jako koncept"
     },
     "create": {
       "title": "Nová opakovaná faktura",
@@ -192,7 +241,17 @@
       "createRecurring": "Vytvořit opakovanou fakturu",
       "validationSelectContact": "Vyberte kontakt",
       "validationFillItems": "Vyplňte všechny položky",
-      "saveError": "Nepodařilo se uložit opakovanou fakturu"
+      "saveError": "Nepodařilo se uložit opakovanou fakturu",
+      "itemTotal": "Celkem",
+      "removeItem": "Odebrat položku",
+      "addItemHint": "Tab z posledního pole přidá řádek",
+      "sentencePart1": "Vystavit fakturu pro",
+      "sentencePart2": "každý měsíc",
+      "sentencePart3": "počínaje",
+      "nextThree": "Další tři: {{dates}}",
+      "whenDueHeading": "Až vyjde termín",
+      "autoSendOption": "Odeslat klientovi automaticky",
+      "draftOption": "Uložit jako koncept a dát mi vědět"
     },
     "detail": {
       "title": "Opakovaná faktura — {{clientName}}",
@@ -238,5 +297,25 @@
       "generateError": "Nepodařilo se vygenerovat fakturu",
       "deleteError": "Nepodařilo se smazat opakovanou fakturu"
     }
+  },
+  "reminder": {
+    "title": "Připomínka k faktuře {{number}}",
+    "close": "Zavřít",
+    "draftedForYou": "Návrh pro vás",
+    "tone": {
+      "friendly": "Přátelský",
+      "neutral": "Neutrální",
+      "firm": "Důrazný"
+    },
+    "subject": "Předmět",
+    "message": "Zpráva",
+    "editableNote": "Toto je jen návrh — před odesláním můžete cokoli upravit.",
+    "draftAnother": "Vytvořit jiný návrh",
+    "drafting": "Vytvářím návrh…",
+    "draftFailed": "Návrh připomínky se nepodařilo vytvořit",
+    "neverAutoSends": "Nic se neodešle, dokud nestisknete odeslat.",
+    "cancel": "Zrušit",
+    "send": "Odeslat připomínku",
+    "sending": "Odesílám…"
   }
 }
