@@ -44,13 +44,13 @@ export default function ThemeToggle() {
         <button
           type="button"
           onClick={() => setLangOpen(!langOpen)}
-          className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 shadow border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          className="flex items-center gap-1 bg-surface rounded-lg px-3 py-2 shadow border border-border text-xs font-medium text-text-secondary hover:bg-nav-hover transition-colors"
         >
           {currentLang.flag} {currentLang.label}
           <ChevronDown className={`h-3 w-3 transition-transform ${langOpen ? 'rotate-180' : ''}`} />
         </button>
         {langOpen && (
-          <div className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50 min-w-[140px]">
+          <div className="absolute top-full right-0 mt-1 bg-surface rounded-lg shadow-lg border border-border overflow-hidden z-50 min-w-[140px]">
             {languages.map(lang => (
               <button
                 key={lang.code}
@@ -58,8 +58,8 @@ export default function ThemeToggle() {
                 onClick={() => selectLanguage(lang.code)}
                 className={`flex items-center gap-2 w-full px-3 py-2 text-xs text-left transition-colors ${
                   lang.code === currentLang.code
-                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    ? 'bg-surface-sunken text-text font-medium'
+                    : 'text-text-muted hover:bg-nav-hover'
                 }`}
               >
                 {lang.flag} {lang.label}
@@ -68,7 +68,7 @@ export default function ThemeToggle() {
           </div>
         )}
       </div>
-      <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg p-1 shadow border border-gray-200 dark:border-gray-700">
+      <div className="flex items-center bg-surface rounded-lg p-1 shadow border border-border">
         {themeOptions.map(({ value, icon: Icon, label }) => (
           <button
             key={value}
@@ -76,8 +76,8 @@ export default function ThemeToggle() {
             onClick={() => setTheme(value)}
             className={`p-2 rounded-md text-xs flex items-center gap-1 transition-colors ${
               theme === value
-                ? 'bg-gray-100 dark:bg-gray-600 shadow-sm text-gray-900 dark:text-gray-100'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                ? 'bg-surface shadow-sm text-text'
+                : 'text-text-muted hover:text-text-secondary'
             }`}
             title={label}
           >

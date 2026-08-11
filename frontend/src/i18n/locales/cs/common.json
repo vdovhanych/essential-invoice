@@ -8,7 +8,8 @@
     "calculator": "Kalkulačka",
     "settings": "Nastavení",
     "more": "Více",
-    "newInvoice": "Nová faktura"
+    "newInvoice": "Nová faktura",
+    "search": "Hledat"
   },
   "userMenu": {
     "profile": "Profil",
@@ -86,5 +87,24 @@
     "updateAvailable": "Je dostupná nová verze",
     "reload": "Obnovit",
     "offline": "Jste offline"
+  },
+  "palette": {
+    "placeholder": "Hledat faktury, kontakty, nebo napište příkaz…",
+    "groupInvoices": "Faktury",
+    "groupContacts": "Kontakty",
+    "groupActions": "Akce",
+    "newInvoice": "Nová faktura",
+    "newExpense": "Nový náklad",
+    "newInvoiceFor": "Nová faktura pro",
+    "goContacts": "Přejít na kontakty",
+    "goDashboard": "Přejít na přehled",
+    "goSettings": "Otevřít nastavení",
+    "navigate": "pohyb",
+    "open": "otevřít",
+    "commandsHint": "Napište > pro samotné příkazy",
+    "noResults": "Nic nenalezeno"
+  },
+  "offline": {
+    "message": "Jste offline. Vše si můžete prohlížet — změny se synchronizují po připojení."
   }
 }

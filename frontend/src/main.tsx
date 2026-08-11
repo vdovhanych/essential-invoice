@@ -5,15 +5,43 @@ import { Toaster } from 'sonner'
 import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import PWAUpdatePrompt from './components/PWAUpdatePrompt'
-import { ThemeProvider, useTheme } from './context/ThemeContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
 import { AIProvider } from './context/AIContext'
 import './i18n/i18n'
 import './index.css'
 
 function ToasterWithTheme() {
-  const { resolvedTheme } = useTheme();
-  return <Toaster theme={resolvedTheme} richColors position="top-right" closeButton />;
+  // Toasts are dark in both skins by design (§17); position follows viewport
+  const [isMobile, setIsMobile] = React.useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches
+  );
+
+  React.useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  return (
+    <Toaster
+      theme="dark"
+      position={isMobile ? 'bottom-center' : 'bottom-right'}
+      closeButton
+      toastOptions={{
+        style: {
+          background: '#16181f',
+          border: 'none',
+          borderRadius: '12px',
+          padding: '13px 16px',
+          color: '#f4f5f9',
+          fontSize: '14px',
+          boxShadow: '0 16px 32px -16px rgba(20,22,40,.6)',
+        },
+      }}
+    />
+  );
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
