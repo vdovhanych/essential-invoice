@@ -37,7 +37,9 @@
       "unmatch": "Are you sure you want to unmatch this payment?",
       "delete": "Are you sure you want to delete this payment? This action cannot be undone."
     },
-    "subline": "{{unmatched}} need review · {{matched}} matched"
+    "subline": "{{unmatched}} need review · {{matched}} matched",
+    "noMatch": "No payments match your filters",
+    "clearFilters": "Clear filters"
   },
   "matchModal": {
     "title": "Match payment",

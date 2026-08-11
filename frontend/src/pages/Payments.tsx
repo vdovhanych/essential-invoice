@@ -146,6 +146,11 @@ export default function Payments() {
     }
   }
 
+  function clearFilters() {
+    setFilter('all');
+    setSearch('');
+  }
+
   const counts = useMemo(
     () => ({
       all: payments.length,
@@ -284,7 +289,7 @@ export default function Payments() {
             ))}
           </div>
         ) : (
-          <EmptyState t={t} />
+          <EmptyState t={t} filtered={filter !== 'all' || search !== ''} onClearFilters={clearFilters} />
         )}
       </div>
 
@@ -382,7 +387,7 @@ export default function Payments() {
             ))}
           </>
         ) : (
-          <EmptyState t={t} />
+          <EmptyState t={t} filtered={filter !== 'all' || search !== ''} onClearFilters={clearFilters} />
         )}
       </div>
 
@@ -464,7 +469,29 @@ export default function Payments() {
   );
 }
 
-function EmptyState({ t }: { t: (key: string) => string }) {
+function EmptyState({
+  t,
+  filtered,
+  onClearFilters,
+}: {
+  t: (key: string, opts?: Record<string, unknown>) => string;
+  filtered: boolean;
+  onClearFilters: () => void;
+}) {
+  // A filtered miss is a different message from having no payments at all
+  if (filtered) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-sm text-text-muted">{t('list.noMatch')}</p>
+        <button
+          onClick={onClearFilters}
+          className="mt-2 text-sm font-medium text-accent-link hover:underline"
+        >
+          {t('list.clearFilters')}
+        </button>
+      </div>
+    );
+  }
   return (
     <div className="text-center py-12">
       <CreditCard className="h-12 w-12 text-border-strong mx-auto mb-4" />

@@ -27,7 +27,9 @@
     "icoLabel": "IČO {{ico}}",
     "newInvoiceFor": "New invoice for this contact",
     "editContact": "Edit contact",
-    "deleteContact": "Delete contact"
+    "deleteContact": "Delete contact",
+    "noMatch": "No contacts match \"{{query}}\"",
+    "clearSearch": "Clear search"
   },
   "modal": {
     "titleNew": "New contact",

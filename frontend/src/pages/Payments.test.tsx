@@ -266,6 +266,26 @@ describe('Payments Component', () => {
     expect(screen.queryAllByText('Another Client')).toHaveLength(0);
   });
 
+  it('distinguishes a filtered miss from having no payments', async () => {
+    mockGet.mockResolvedValueOnce(mockPayments);
+
+    renderWithRouter(<Payments />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
+    });
+
+    const searchInput = screen.getAllByPlaceholderText('Hledat platby...')[0];
+    fireEvent.change(searchInput, { target: { value: 'neexistuje' } });
+
+    expect(screen.getAllByText('Žádné platby neodpovídají filtrům').length).toBeGreaterThan(0);
+    // Not the first-run copy
+    expect(screen.queryByText('Platby se automaticky načítají z vašeho emailu')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByText('Zrušit filtry')[0]);
+    expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
+  });
+
   it('should check for new payments via email', async () => {
     mockGet.mockResolvedValueOnce(mockPayments).mockResolvedValueOnce(mockPayments);
     mockPost.mockResolvedValueOnce({ message: 'Email check completed', processed: 2 });
