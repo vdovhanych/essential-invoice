@@ -36,7 +36,8 @@
     "confirm": {
       "unmatch": "Are you sure you want to unmatch this payment?",
       "delete": "Are you sure you want to delete this payment? This action cannot be undone."
-    }
+    },
+    "subline": "{{unmatched}} need review · {{matched}} matched"
   },
   "matchModal": {
     "title": "Match payment",
@@ -49,6 +50,10 @@
     "potentialMatches": "Potential matches",
     "matchScore": "{{score}}% match",
     "matchButton": "Match",
-    "noMatches": "No matching invoices found"
+    "noMatches": "No matching invoices found",
+    "reasonVariableSymbol": "Variable symbol matches",
+    "reasonExactAmount": "Amount matches exactly",
+    "reasonApproximateAmount": "Amount is close",
+    "reasonOther": "Possible match"
   }
 }

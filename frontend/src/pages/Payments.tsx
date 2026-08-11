@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -35,6 +35,16 @@ interface PotentialMatch {
   matchReason: string;
 }
 
+const REASON_CHIPS: Record<string, { key: string; className: string }> = {
+  variable_symbol: { key: 'matchModal.reasonVariableSymbol', className: 'bg-success-bg text-success' },
+  exact_amount: { key: 'matchModal.reasonExactAmount', className: 'bg-success-bg text-success' },
+  approximate_amount: {
+    key: 'matchModal.reasonApproximateAmount',
+    className: 'bg-[#fdf2dd] text-[#8a5a00] dark:bg-[rgba(253,242,221,.14)] dark:text-[#e0b467]',
+  },
+  other: { key: 'matchModal.reasonOther', className: 'bg-neutral-chip-bg text-neutral-chip-fg' },
+};
+
 export default function Payments() {
   const { t } = useTranslation('payments');
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -50,15 +60,11 @@ export default function Payments() {
 
   useEffect(() => {
     loadPayments();
-  }, [filter]);
+  }, []);
 
   async function loadPayments() {
     try {
-      let url = '/payments';
-      if (filter === 'matched') url += '?matched=true';
-      else if (filter === 'unmatched') url += '?matched=false';
-
-      const result = await api.get(url);
+      const result = await api.get('/payments');
       setPayments(result);
     } catch (error) {
       console.error('Failed to load payments:', error);
@@ -140,237 +146,330 @@ export default function Payments() {
     }
   }
 
-  const filteredPayments = payments.filter(payment =>
-    (payment.variableSymbol?.includes(search) ||
-     payment.senderName?.toLowerCase().includes(search.toLowerCase()) ||
-     payment.invoiceNumber?.includes(search))
+  const counts = useMemo(
+    () => ({
+      all: payments.length,
+      unmatched: payments.filter((p) => !p.invoiceId).length,
+      matched: payments.filter((p) => p.invoiceId).length,
+    }),
+    [payments]
+  );
+
+  const filteredPayments = useMemo(
+    () =>
+      payments.filter(
+        (payment) =>
+          (filter === 'all' ||
+            (filter === 'matched' ? !!payment.invoiceId : !payment.invoiceId)) &&
+          (payment.variableSymbol?.includes(search) ||
+            payment.senderName?.toLowerCase().includes(search.toLowerCase()) ||
+            payment.invoiceNumber?.includes(search))
+      ),
+    [payments, filter, search]
   );
 
   if (loading) {
     return <PageLoader />;
   }
 
+  const columnHeader = 'text-[11px] uppercase font-semibold tracking-[.04em] text-text-faint';
+
+  const filterControl = (
+    <div className="flex bg-surface border border-border rounded-[10px] p-[3px]">
+      {(['all', 'unmatched', 'matched'] as const).map((value) => (
+        <button
+          key={value}
+          onClick={() => setFilter(value)}
+          className={`px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${
+            filter === value ? 'bg-surface-sunken text-text' : 'text-text-muted hover:text-text'
+          }`}
+        >
+          {t(`list.filters.${value}`)} {counts[value]}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('list.title')}</h1>
+    <div className="space-y-5">
+      {/* Header row */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-[-0.02em] text-text">{t('list.title')}</h1>
+          <p className="mt-1 text-[13px] text-text-muted">
+            {t('list.subline', { unmatched: counts.unmatched, matched: counts.matched })}
+          </p>
+        </div>
         <button
           onClick={checkForNewPayments}
           disabled={checkingEmails}
-          className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="btn btn-secondary flex items-center space-x-2"
           title={t('list.checkEmailsTooltip')}
         >
-          <RefreshCw className={`w-5 h-5 ${checkingEmails ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${checkingEmails ? 'animate-spin' : ''}`} />
           <span>{checkingEmails ? t('list.checkingEmails') : t('list.checkEmails')}</span>
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
+      {/* Mobile: search + filter */}
+      <div className="lg:hidden space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-faint" />
           <input
             type="text"
             placeholder={t('list.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input pl-10"
+            className="w-full bg-surface-sunken rounded-[9px] pl-9 pr-3 py-2 text-sm text-text placeholder-text-faint focus:outline-none focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)]"
           />
         </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setFilter('all')}
-            className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
-          >
-            {t('list.filters.all')}
-          </button>
-          <button
-            onClick={() => setFilter('unmatched')}
-            className={`btn ${filter === 'unmatched' ? 'btn-primary' : 'btn-secondary'}`}
-          >
-            {t('list.filters.unmatched')}
-          </button>
-          <button
-            onClick={() => setFilter('matched')}
-            className={`btn ${filter === 'matched' ? 'btn-primary' : 'btn-secondary'}`}
-          >
-            {t('list.filters.matched')}
-          </button>
-        </div>
-      </div>
+        {filterControl}
 
-      {/* Payments list */}
-      <div className="card overflow-hidden">
         {filteredPayments.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.date')}</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.sender')}</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.variableSymbol')}</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.amount')}</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.invoice')}</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('list.table.actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPayments.map((payment) => (
-                  <tr key={payment.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+          <div className="space-y-2.5">
+            {filteredPayments.map((payment) => (
+              <div
+                key={payment.id}
+                className="bg-surface border border-border rounded-[16px] px-4 py-3.5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[15px] font-medium text-text truncate">
+                      {payment.senderName || '—'}
+                    </p>
+                    <p className="text-[11px] font-mono text-text-faint tabular-nums">
                       {formatDate(payment.transactionDate)}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{payment.senderName || '-'}</p>
-                        {payment.message && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">{payment.message}</p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 font-mono text-gray-600 dark:text-gray-300">
-                      {payment.variableSymbol || '-'}
-                    </td>
-                    <td className="py-3 px-4 text-right font-medium text-green-600">
-                      +{formatCurrency(payment.amount, payment.currency)}
-                    </td>
-                    <td className="py-3 px-4">
-                      {payment.invoiceId ? (
-                        <Link
-                          to={`/invoices/${payment.invoiceId}`}
-                          className="text-indigo-600 hover:underline flex items-center space-x-1"
-                        >
-                          <Link2 className="h-4 w-4" />
-                          <span>{payment.invoiceNumber}</span>
-                        </Link>
-                      ) : (
-                        <span className="text-gray-400 dark:text-gray-500">-</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      {payment.invoiceId ? (
-                        <button
-                          onClick={() => handleUnmatch(payment)}
-                          className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
-                          title={t('list.unmatchTooltip')}
-                        >
-                          <Unlink className="h-4 w-4" />
-                        </button>
-                      ) : (
-                        <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => openMatchModal(payment)}
-                            className="btn btn-secondary text-sm py-1 px-3"
-                          >
-                            {t('list.matchButton')}
-                          </button>
-                          <button
-                            onClick={() => handleDelete(payment)}
-                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
-                            title={t('list.deleteTooltip')}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      {payment.variableSymbol && <> · VS {payment.variableSymbol}</>}
+                    </p>
+                  </div>
+                  <p className="text-[15px] font-semibold text-success tabular-nums shrink-0">
+                    +{formatCurrency(payment.amount, payment.currency)}
+                  </p>
+                </div>
+                <div className="mt-2.5 flex items-center justify-between gap-3">
+                  {payment.invoiceId ? (
+                    <>
+                      <Link
+                        to={`/invoices/${payment.invoiceId}`}
+                        className="flex items-center gap-1 text-[13px] text-accent-link hover:underline tabular-nums"
+                      >
+                        <Link2 className="h-3.5 w-3.5" />
+                        {payment.invoiceNumber}
+                      </Link>
+                      <button
+                        onClick={() => handleUnmatch(payment)}
+                        className="text-[13px] text-text-muted"
+                      >
+                        {t('list.unmatchTooltip')}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => openMatchModal(payment)}
+                        className="btn btn-secondary py-1.5 px-3 text-[13px]"
+                      >
+                        {t('list.matchButton')}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(payment)}
+                        className="text-[13px] text-danger"
+                      >
+                        {t('list.deleteTooltip')}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <CreditCard className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">{t('list.empty')}</p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-              {t('list.emptyHint')}
-            </p>
+          <EmptyState t={t} />
+        )}
+      </div>
+
+      {/* Desktop: table card */}
+      <div className="hidden lg:block bg-surface border border-border rounded-[20px] overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-hairline">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-faint" />
+            <input
+              type="text"
+              placeholder={t('list.searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-surface-sunken rounded-[9px] pl-9 pr-3 py-2 text-sm text-text placeholder-text-faint focus:outline-none focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)]"
+            />
           </div>
+          <div className="ml-auto">{filterControl}</div>
+        </div>
+
+        {filteredPayments.length > 0 ? (
+          <>
+            <div className="grid grid-cols-[0.9fr_1.7fr_0.9fr_1fr_1fr_90px] gap-x-4 items-center px-5 py-2.5 border-b border-hairline">
+              <span className={columnHeader}>{t('list.table.date')}</span>
+              <span className={columnHeader}>{t('list.table.sender')}</span>
+              <span className={columnHeader}>{t('list.table.variableSymbol')}</span>
+              <span className={`${columnHeader} text-right`}>{t('list.table.amount')}</span>
+              <span className={columnHeader}>{t('list.table.invoice')}</span>
+              <span />
+            </div>
+            {filteredPayments.map((payment) => (
+              <div
+                key={payment.id}
+                className="grid grid-cols-[0.9fr_1.7fr_0.9fr_1fr_1fr_90px] gap-x-4 items-center px-5 py-3 border-b border-hairline-soft last:border-b-0 hover:bg-row-hover transition-colors"
+              >
+                <span className="text-sm text-text-secondary tabular-nums">
+                  {formatDate(payment.transactionDate)}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-text truncate">
+                    {payment.senderName || '—'}
+                  </span>
+                  {payment.message && (
+                    <span className="block text-[11px] font-mono text-text-faint truncate">
+                      {payment.message}
+                    </span>
+                  )}
+                </span>
+                <span className="text-[13px] font-mono text-text-secondary tabular-nums">
+                  {payment.variableSymbol || '—'}
+                </span>
+                <span className="text-sm font-semibold text-success text-right tabular-nums">
+                  +{formatCurrency(payment.amount, payment.currency)}
+                </span>
+                <span>
+                  {payment.invoiceId ? (
+                    <Link
+                      to={`/invoices/${payment.invoiceId}`}
+                      className="flex items-center gap-1 text-[13px] text-accent-link hover:underline tabular-nums"
+                    >
+                      <Link2 className="h-3.5 w-3.5" />
+                      {payment.invoiceNumber}
+                    </Link>
+                  ) : (
+                    <span className="text-text-faint">—</span>
+                  )}
+                </span>
+                <span className="flex items-center justify-end gap-1">
+                  {payment.invoiceId ? (
+                    <button
+                      onClick={() => handleUnmatch(payment)}
+                      className="p-1.5 rounded-lg text-text-faint hover:text-danger hover:bg-nav-hover transition-colors"
+                      title={t('list.unmatchTooltip')}
+                    >
+                      <Unlink className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => openMatchModal(payment)}
+                        className="btn btn-secondary py-1 px-3 text-[13px]"
+                      >
+                        {t('list.matchButton')}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(payment)}
+                        className="p-1.5 rounded-lg text-text-faint hover:text-danger hover:bg-nav-hover transition-colors"
+                        title={t('list.deleteTooltip')}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
+                </span>
+              </div>
+            ))}
+          </>
+        ) : (
+          <EmptyState t={t} />
         )}
       </div>
 
       {/* Match modal */}
       {showMatchModal && selectedPayment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-surface rounded-[18px] p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('matchModal.title')}</h2>
-              <button onClick={() => setShowMatchModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+              <h2 className="text-lg font-semibold text-text">{t('matchModal.title')}</h2>
+              <button
+                onClick={() => setShowMatchModal(false)}
+                className="p-2 hover:bg-nav-hover rounded-lg text-text-muted"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Payment details */}
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">{t('matchModal.paymentDetails.amount')}</span>
-                  <span className="ml-2 font-medium text-green-600">
-                    {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">{t('matchModal.paymentDetails.variableSymbol')}</span>
-                  <span className="ml-2 font-mono">{selectedPayment.variableSymbol || '-'}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">{t('matchModal.paymentDetails.sender')}</span>
-                  <span className="ml-2">{selectedPayment.senderName || '-'}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">{t('matchModal.paymentDetails.date')}</span>
-                  <span className="ml-2">{formatDate(selectedPayment.transactionDate)}</span>
-                </div>
+            {/* The transaction — raw bank data in mono */}
+            <div className="bg-canvas rounded-[12px] p-4 mb-6">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-[22px] font-bold tracking-[-0.02em] text-success tabular-nums">
+                  +{formatCurrency(selectedPayment.amount, selectedPayment.currency)}
+                </span>
+                <span className="text-[13px] text-text-secondary tabular-nums">
+                  {selectedPayment.senderName || '—'} · {formatDate(selectedPayment.transactionDate)}
+                </span>
               </div>
+              <p className="mt-2 text-[11px] font-mono text-text-faint">
+                {selectedPayment.variableSymbol && <>VS {selectedPayment.variableSymbol} · </>}
+                {selectedPayment.senderAccount && <>{selectedPayment.senderAccount} · </>}
+                {selectedPayment.message}
+              </p>
             </div>
 
             {/* Potential matches */}
-            <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">{t('matchModal.potentialMatches')}</h3>
+            <h3 className="text-[15px] font-semibold text-text mb-3">{t('matchModal.potentialMatches')}</h3>
             {matchLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Spinner className="h-8 w-8" />
               </div>
             ) : potentialMatches.length > 0 ? (
               <div className="space-y-2">
-                {potentialMatches.map(match => (
-                  <div
-                    key={match.id}
-                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">{match.invoiceNumber}</span>
-                        <span className={`badge ${
-                          match.matchScore >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                          match.matchScore >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                        }`}>
-                          {t('matchModal.matchScore', { score: match.matchScore })}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{match.clientName}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {t('list.table.variableSymbol')}: {match.variableSymbol} | {formatDate(match.issueDate)} | {formatCurrency(match.total, match.currency)}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleMatch(match.id)}
-                      className="btn btn-primary"
+                {potentialMatches.map((match) => {
+                  const reason = REASON_CHIPS[match.matchReason] || REASON_CHIPS.other;
+                  return (
+                    <div
+                      key={match.id}
+                      className="flex items-center justify-between gap-4 p-4 border border-border rounded-[12px] hover:border-accent hover:bg-row-hover transition-colors"
                     >
-                      {t('matchModal.matchButton')}
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[15px] font-semibold text-text tabular-nums">
+                            {match.invoiceNumber}
+                          </span>
+                          <span className={`badge ${reason.className}`}>{t(reason.key)}</span>
+                        </div>
+                        <p className="text-sm text-text-secondary truncate">{match.clientName}</p>
+                        <p className="text-[13px] text-text-muted tabular-nums">
+                          VS {match.variableSymbol} · {formatDate(match.issueDate)} ·{' '}
+                          {formatCurrency(match.total, match.currency)}
+                        </p>
+                      </div>
+                      <button onClick={() => handleMatch(match.id)} className="btn btn-primary shrink-0">
+                        {t('matchModal.matchButton')}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8 text-sm text-text-muted">
                 {t('matchModal.noMatches')}
               </div>
             )}
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function EmptyState({ t }: { t: (key: string) => string }) {
+  return (
+    <div className="text-center py-12">
+      <CreditCard className="h-12 w-12 text-border-strong mx-auto mb-4" />
+      <p className="text-sm text-text-muted">{t('list.empty')}</p>
+      <p className="text-[13px] text-text-faint mt-2">{t('list.emptyHint')}</p>
     </div>
   );
 }

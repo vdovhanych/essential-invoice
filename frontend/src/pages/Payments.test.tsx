@@ -78,6 +78,11 @@ const renderWithRouter = (component: React.ReactElement) => {
 describe('Payments Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Fully reset once-queues too — the page now fetches once, so leftover
+    // mockResolvedValueOnce values would leak across tests
+    mockGet.mockReset();
+    mockPost.mockReset();
+    mockDelete.mockReset();
     // Mock window.confirm
     vi.stubGlobal('confirm', vi.fn(() => true));
   });
@@ -88,8 +93,8 @@ describe('Payments Component', () => {
     renderWithRouter(<Payments />);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Client')).toBeInTheDocument();
-      expect(screen.getByText('Another Client')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Another Client').length).toBeGreaterThan(0);
     });
   });
 
@@ -125,7 +130,7 @@ describe('Payments Component', () => {
     renderWithRouter(<Payments />);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Client')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
     });
 
     // Click delete button
@@ -152,7 +157,7 @@ describe('Payments Component', () => {
     renderWithRouter(<Payments />);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Client')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
     });
 
     const deleteButton = screen.getByTitle('Smazat platbu');
@@ -171,7 +176,7 @@ describe('Payments Component', () => {
     renderWithRouter(<Payments />);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Client')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
     });
 
     const deleteButton = screen.getByTitle('Smazat platbu');
@@ -191,7 +196,7 @@ describe('Payments Component', () => {
     renderWithRouter(<Payments />);
 
     await waitFor(() => {
-      expect(screen.getByText('Another Client')).toBeInTheDocument();
+      expect(screen.getAllByText('Another Client').length).toBeGreaterThan(0);
     });
 
     const unmatchButton = screen.getByTitle('Zrušit spárování');
@@ -211,15 +216,16 @@ describe('Payments Component', () => {
     renderWithRouter(<Payments />);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Client')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
     });
 
-    const unmatchedFilterButton = screen.getByRole('button', { name: 'Nespárované' });
+    const unmatchedFilterButton = screen.getAllByRole('button', { name: /Nespárované/ })[0];
     fireEvent.click(unmatchedFilterButton);
 
-    await waitFor(() => {
-      expect(mockGet).toHaveBeenCalledWith('/payments?matched=false');
-    });
+    // Client-side filter: no refetch, matched payment hidden
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(screen.queryAllByText('Another Client')).toHaveLength(0);
+    expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
   });
 
   it('should filter matched payments', async () => {
@@ -230,15 +236,16 @@ describe('Payments Component', () => {
     renderWithRouter(<Payments />);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Client')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
     });
 
-    const matchedFilterButton = screen.getByRole('button', { name: 'Spárované' });
+    const matchedFilterButton = screen.getAllByRole('button', { name: /^Spárované/ })[0];
     fireEvent.click(matchedFilterButton);
 
-    await waitFor(() => {
-      expect(mockGet).toHaveBeenCalledWith('/payments?matched=true');
-    });
+    // Client-side filter: no refetch, unmatched payment hidden
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(screen.queryAllByText('Test Client')).toHaveLength(0);
+    expect(screen.getAllByText('Another Client').length).toBeGreaterThan(0);
   });
 
   it('should search payments by sender name', async () => {
@@ -247,16 +254,16 @@ describe('Payments Component', () => {
     renderWithRouter(<Payments />);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Client')).toBeInTheDocument();
-      expect(screen.getByText('Another Client')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Another Client').length).toBeGreaterThan(0);
     });
 
-    const searchInput = screen.getByPlaceholderText('Hledat platby...');
+    const searchInput = screen.getAllByPlaceholderText('Hledat platby...')[0];
     fireEvent.change(searchInput, { target: { value: 'Test Client' } });
 
     // Only first payment should be visible (sender name is "Test Client")
-    expect(screen.getByText('Test Client')).toBeInTheDocument();
-    expect(screen.queryByText('Another Client')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
+    expect(screen.queryAllByText('Another Client')).toHaveLength(0);
   });
 
   it('should check for new payments via email', async () => {
@@ -266,7 +273,7 @@ describe('Payments Component', () => {
     renderWithRouter(<Payments />);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Client')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Client').length).toBeGreaterThan(0);
     });
 
     const checkEmailButton = screen.getByRole('button', { name: /zkontrolovat emaily/i });

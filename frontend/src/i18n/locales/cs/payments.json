@@ -36,7 +36,8 @@
     "confirm": {
       "unmatch": "Opravdu chcete zrušit spárování této platby?",
       "delete": "Opravdu chcete smazat tuto platbu? Tuto akci nelze vrátit zpět."
-    }
+    },
+    "subline": "{{unmatched}} k vyřízení · {{matched}} spárováno"
   },
   "matchModal": {
     "title": "Spárovat platbu",
@@ -49,6 +50,10 @@
     "potentialMatches": "Možné shody",
     "matchScore": "{{score}}% shoda",
     "matchButton": "Spárovat",
-    "noMatches": "Nebyly nalezeny žádné odpovídající faktury"
+    "noMatches": "Nebyly nalezeny žádné odpovídající faktury",
+    "reasonVariableSymbol": "Souhlasí variabilní symbol",
+    "reasonExactAmount": "Souhlasí částka",
+    "reasonApproximateAmount": "Částka přibližně odpovídá",
+    "reasonOther": "Možná shoda"
   }
 }
