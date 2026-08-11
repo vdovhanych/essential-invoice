@@ -3,11 +3,12 @@ import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
-import { formatCurrency as formatCurrencyLocale } from '../utils/format';
+import { ArrowLeft, QrCode, Info } from 'lucide-react';
+import { formatCurrency as formatCurrencyLocale, formatDate, getInitials } from '../utils/format';
 import { useLineItems, LineItem } from '../hooks/useLineItems';
 import InvoiceItemsEditor from '../components/InvoiceItemsEditor';
 import { PageLoader } from '../components/Spinner';
+import { useAuth } from '../context/AuthContext';
 
 interface Client {
   id: string;
@@ -23,13 +24,17 @@ export default function InvoiceCreate() {
   const { t } = useTranslation('invoices');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const isEdit = !!id;
   const duplicateId = searchParams.get('duplicate');
+  const preselectedClientId = searchParams.get('client');
 
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [defaultVatRate, setDefaultVatRate] = useState<number>(21);
+  const [tierInfo, setTierInfo] = useState<{ limit: number; invoiced: number } | null>(null);
 
   const [formData, setFormData] = useState({
     clientId: '',
@@ -51,12 +56,20 @@ export default function InvoiceCreate() {
 
   async function loadData() {
     try {
-      // Load clients and settings in parallel
-      const [clientsData, settings] = await Promise.all([
+      // Load clients, settings and (best-effort) tier data in parallel
+      const [clientsData, settings, dashboard] = await Promise.all([
         api.get('/clients'),
-        api.get('/settings')
+        api.get('/settings'),
+        api.get('/dashboard').catch(() => null),
       ]);
       setClients(clientsData);
+      setDefaultVatRate(settings.defaultVatRate ?? 21);
+      if (dashboard?.pausalniDan?.enabled) {
+        setTierInfo({
+          limit: dashboard.pausalniDan.limit,
+          invoiced: dashboard.pausalniDan.invoicedThisYear,
+        });
+      }
 
       if (isEdit) {
         const invoice = await api.get(`/invoices/${id}`);
@@ -102,6 +115,10 @@ export default function InvoiceCreate() {
           ...prev,
           vatRate: settings.defaultVatRate ?? 21,
           dueDate,
+          // Preselect the client when arriving from the contact list's new-invoice action
+          clientId: preselectedClientId && clientsData.some((c: Client) => c.id === preselectedClientId)
+            ? preselectedClientId
+            : prev.clientId,
         }));
       }
     } catch (err) {
@@ -167,144 +184,332 @@ export default function InvoiceCreate() {
     return formatCurrencyLocale(amount, formData.currency);
   };
 
+  const selectedClient = clients.find(c => c.id === formData.clientId) || null;
+  const isDefaultVat = Number(formData.vatRate) === defaultVatRate;
+
+  // Tier impact (CZK invoices only — EUR needs a CNB rate we don't have client-side)
+  const tierImpact =
+    tierInfo && formData.currency === 'CZK' && total > 0
+      ? {
+          projected: tierInfo.invoiced + total,
+          pct: Math.round(((tierInfo.invoiced + total) / tierInfo.limit) * 100),
+          crosses: tierInfo.invoiced + total > tierInfo.limit,
+        }
+      : null;
+
+  const title = isEdit ? t('create.titleEdit') : t('create.title');
+  const submitLabel = saving
+    ? t('create.saving')
+    : isEdit
+      ? t('create.saveChanges')
+      : t('create.createInvoice');
+
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center space-x-4 mb-6">
+    <div className="pb-20 lg:pb-0">
+      {/* Desktop header bar */}
+      <div className="hidden lg:flex items-center gap-4 -mx-7 -mt-7 mb-6 h-[60px] px-7 bg-surface border-b border-border">
         <button
           onClick={() => navigate('/invoices')}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 w-4" />
+          {t('detail.back')}
         </button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {isEdit ? t('create.titleEdit') : t('create.title')}
-        </h1>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Client selection */}
-        <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.contactSection')}</h2>
-          <div>
-            <label htmlFor="clientId" className="label">{t('create.selectContact')}</label>
-            <select
-              id="clientId"
-              name="clientId"
-              value={formData.clientId}
-              onChange={handleChange}
-              className="input"
-              required
-            >
-              <option value="">{t('create.selectContactPlaceholder')}</option>
-              {clients.map(client => (
-                <option key={client.id} value={client.id}>
-                  {client.companyName} ({client.primaryEmail})
-                </option>
-              ))}
-            </select>
-            {clients.length === 0 && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                {t('create.noContacts')}{' '}
-                <Link to="/clients" className="text-indigo-600 hover:underline">{t('create.addContact')}</Link>
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Invoice details */}
-        <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.detailsSection')}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label htmlFor="issueDate" className="label">{t('create.issueDate')}</label>
-              <input
-                type="date"
-                id="issueDate"
-                name="issueDate"
-                value={formData.issueDate}
-                onChange={handleChange}
-                className="input"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="dueDate" className="label">{t('create.dueDate')}</label>
-              <input
-                type="date"
-                id="dueDate"
-                name="dueDate"
-                value={formData.dueDate}
-                onChange={handleChange}
-                className="input"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="currency" className="label">{t('create.currency')}</label>
-              <select
-                id="currency"
-                name="currency"
-                value={formData.currency}
-                onChange={handleChange}
-                className="input"
-              >
-                <option value="CZK">CZK</option>
-                <option value="EUR">EUR</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Items */}
-        <InvoiceItemsEditor
-          items={items}
-          onItemChange={handleItemChange}
-          onAddItem={addItem}
-          onRemoveItem={removeItem}
-          vatRate={formData.vatRate}
-          onVatRateChange={handleChange}
-          subtotal={subtotal}
-          vatAmount={vatAmount}
-          total={total}
-          formatCurrency={formatCurrency}
-          keyPrefix="create"
-        />
-
-        {/* Notes */}
-        <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('create.notesSection')}</h2>
-          <textarea
-            name="notes"
-            value={formData.notes}
-            onChange={handleChange}
-            className="input"
-            rows={3}
-            maxLength={300}
-            placeholder={t('create.notesPlaceholder')}
-          />
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {t('create.notesCharCount', { count: formData.notes.length })}
-          </p>
-        </div>
-
-        {/* Submit */}
-        <div className="flex justify-end space-x-4">
-          <button
-            type="button"
-            onClick={() => navigate('/invoices')}
-            className="btn btn-secondary"
-          >
+        <div className="h-4 w-px bg-border-strong" />
+        <h1 className="text-base font-semibold text-text">{title}</h1>
+        <div className="ml-auto flex items-center gap-2">
+          <button type="button" onClick={() => navigate('/invoices')} className="btn btn-secondary">
             {t('create.cancel')}
           </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="btn btn-primary"
-          >
-            {saving ? t('create.saving') : (isEdit ? t('create.saveChanges') : t('create.createInvoice'))}
+          <button type="submit" form="invoice-form" disabled={saving} className="btn btn-primary">
+            {submitLabel}
           </button>
         </div>
+      </div>
+
+      {/* Mobile header */}
+      <div className="lg:hidden flex items-center gap-3 mb-4">
+        <button
+          onClick={() => navigate('/invoices')}
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('detail.back')}
+        </button>
+        <h1 className="text-lg font-bold tracking-[-0.02em] text-text">{title}</h1>
+      </div>
+
+      <form id="invoice-form" onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.25fr_1fr] gap-4 lg:gap-5">
+          {/* Left column */}
+          <div className="space-y-4">
+            {/* Client */}
+            <div className="card">
+              <h2 className="text-[15px] font-semibold text-text mb-4">{t('create.contactSection')}</h2>
+              <div>
+                <label htmlFor="clientId" className="label">{t('create.selectContact')}</label>
+                <select
+                  id="clientId"
+                  name="clientId"
+                  value={formData.clientId}
+                  onChange={handleChange}
+                  className="input"
+                  required
+                >
+                  <option value="">{t('create.selectContactPlaceholder')}</option>
+                  {clients.map(client => (
+                    <option key={client.id} value={client.id}>
+                      {client.companyName} ({client.primaryEmail})
+                    </option>
+                  ))}
+                </select>
+                {selectedClient && (
+                  <div className="mt-2.5 flex items-center gap-2.5">
+                    <span className="flex items-center justify-center h-[30px] w-[30px] rounded-[9px] bg-accent-soft text-accent text-[11px] font-semibold shrink-0">
+                      {getInitials(selectedClient.companyName)}
+                    </span>
+                    <span className="text-xs text-text-faint tabular-nums">
+                      {selectedClient.ico && <>IČO {selectedClient.ico} · </>}
+                      {selectedClient.primaryEmail}
+                    </span>
+                  </div>
+                )}
+                {clients.length === 0 && (
+                  <p className="text-sm text-text-muted mt-2">
+                    {t('create.noContacts')}{' '}
+                    <Link to="/clients" className="text-accent-link hover:underline">{t('create.addContact')}</Link>
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+                <div>
+                  <label htmlFor="issueDate" className="label">{t('create.issueDate')}</label>
+                  <input
+                    type="date"
+                    id="issueDate"
+                    name="issueDate"
+                    value={formData.issueDate}
+                    onChange={handleChange}
+                    className="input tabular-nums"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="dueDate" className="label">{t('create.dueDate')}</label>
+                  <input
+                    type="date"
+                    id="dueDate"
+                    name="dueDate"
+                    value={formData.dueDate}
+                    onChange={handleChange}
+                    className="input tabular-nums"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="currency" className="label">{t('create.currency')}</label>
+                  <select
+                    id="currency"
+                    name="currency"
+                    value={formData.currency}
+                    onChange={handleChange}
+                    className="input"
+                  >
+                    <option value="CZK">CZK</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Items */}
+            <InvoiceItemsEditor
+              items={items}
+              onItemChange={handleItemChange}
+              onAddItem={addItem}
+              onRemoveItem={removeItem}
+              vatRate={formData.vatRate}
+              onVatRateChange={handleChange}
+              subtotal={subtotal}
+              vatAmount={vatAmount}
+              total={total}
+              formatCurrency={formatCurrency}
+              keyPrefix="create"
+              showTotals={false}
+            />
+
+            {/* Notes */}
+            <div className="card">
+              <h2 className="text-[15px] font-semibold text-text mb-3">{t('create.notesSection')}</h2>
+              <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                className="input"
+                rows={3}
+                maxLength={300}
+                placeholder={t('create.notesPlaceholder')}
+              />
+              <p className="text-xs text-text-faint mt-1">
+                {t('create.notesCharCount', { count: formData.notes.length })}
+              </p>
+              {/* A statement, not a control — QR is always on the PDF */}
+              <div className="mt-3 pt-3 border-t border-hairline flex items-center gap-2 text-xs text-text-faint">
+                <QrCode className="h-3.5 w-3.5 shrink-0" />
+                <span>{t('create.qrAlwaysIncluded')}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right column */}
+          <div className="space-y-4">
+            {/* Totals */}
+            <div className="card">
+              <div className="space-y-3">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[13px] text-text-muted">{t('create.subtotal')}</span>
+                  <span className="text-sm text-text tabular-nums">{formatCurrency(subtotal)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    <span className="text-[13px] text-text-muted">{t('create.vat')}</span>
+                    {isDefaultVat && (
+                      <span className="text-[11px] bg-surface-sunken text-text-muted rounded-full px-2 py-0.5">
+                        {t('create.vatDefaultBadge')}
+                      </span>
+                    )}
+                  </span>
+                  <span className="flex items-center gap-2.5">
+                    <select
+                      name="vatRate"
+                      value={formData.vatRate}
+                      onChange={handleChange}
+                      className="bg-surface text-text border border-border rounded-[9px] px-2.5 py-1.5 text-[13px] focus:outline-none focus:border-accent"
+                    >
+                      <option value="0">0 %</option>
+                      <option value="12">12 %</option>
+                      <option value="21">21 %</option>
+                    </select>
+                    <span className="text-sm text-text-muted tabular-nums">{formatCurrency(vatAmount)}</span>
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline pt-3 border-t border-hairline">
+                  <span className="text-sm font-semibold text-text">{t('create.total')}</span>
+                  <span className="text-[28px] leading-tight font-bold tracking-[-0.02em] text-accent tabular-nums">
+                    {formatCurrency(total)}
+                  </span>
+                </div>
+              </div>
+
+              {tierImpact && (
+                <div
+                  className={`mt-4 flex items-start gap-2 bg-canvas rounded-[12px] px-3.5 py-3 text-xs ${
+                    tierImpact.crosses ? 'text-danger' : 'text-text-muted'
+                  }`}
+                >
+                  <Info className="h-4 w-4 shrink-0" />
+                  <span className="tabular-nums">
+                    {tierImpact.crosses
+                      ? t('create.tierImpactCrosses', { amount: formatCurrencyLocale(tierImpact.projected, 'CZK') })
+                      : t('create.tierImpact', {
+                          amount: formatCurrencyLocale(tierImpact.projected, 'CZK'),
+                          pct: tierImpact.pct,
+                        })}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Preview — a document simulation, deliberately light in both themes */}
+            <div className="card hidden lg:block">
+              <h2 className="text-[15px] font-semibold text-text mb-4">{t('create.previewSection')}</h2>
+              <div className="bg-[#fdfdff] border border-hairline rounded-[12px] p-[22px] text-[#1b1d29]">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-[15px] font-bold">Faktura</p>
+                    <p className="text-[11px] text-[#7a7f99] tabular-nums">
+                      {formatDate(formData.issueDate)} · {formatDate(formData.dueDate)}
+                    </p>
+                  </div>
+                  <img src="/favicon.svg" alt="" className="h-6 w-6 rounded-[6px]" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4 text-[11px] leading-[1.55]">
+                  <div>
+                    <p className="font-semibold text-[#7a7f99] uppercase text-[10px]">Dodavatel</p>
+                    <p className="font-medium">{user?.name || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-[#7a7f99] uppercase text-[10px]">Odběratel</p>
+                    <p className="font-medium">{selectedClient?.companyName || '—'}</p>
+                    {selectedClient?.address && (
+                      <p className="text-[#5c6079] whitespace-pre-line">{selectedClient.address}</p>
+                    )}
+                    {selectedClient?.ico && <p className="text-[#5c6079]">IČO {selectedClient.ico}</p>}
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-[#eef0f6] pt-2">
+                  {items.filter(item => item.description).map((item, i) => (
+                    <div key={i} className="grid grid-cols-[2.4fr_0.6fr_1fr] gap-2 py-1 text-[11px]">
+                      <span className="truncate">{item.description}</span>
+                      <span className="text-right tabular-nums text-[#5c6079]">
+                        {item.quantity} {item.unit}
+                      </span>
+                      <span className="text-right tabular-nums">
+                        {formatCurrency((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}
+                      </span>
+                    </div>
+                  ))}
+                  {Number(formData.vatRate) > 0 && (
+                    <div className="grid grid-cols-[1fr_auto] gap-2 py-1 text-[11px] border-t border-[#eef0f6] mt-1 pt-1.5">
+                      <span className="text-[#5c6079]">DPH {formData.vatRate} %</span>
+                      <span className="text-right tabular-nums">{formatCurrency(vatAmount)}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-end justify-between mt-5">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center justify-center h-[42px] w-[42px] rounded-[6px] bg-white border border-[#eef0f6]">
+                      <QrCode className="h-7 w-7 text-[#1b1d29]" />
+                    </span>
+                    <span className="text-[10px] text-[#8b90a8] leading-tight">
+                      QR platba
+                      <br />
+                      SPAYD
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-[#7a7f99]">K úhradě</p>
+                    <p className="text-[17px] font-bold tabular-nums">{formatCurrency(total)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop-only duplicate of submit for the column bottom is unnecessary;
+                mobile uses the sticky bar below */}
+          </div>
+        </div>
       </form>
+
+      {/* Mobile sticky total bar */}
+      <div className="lg:hidden fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 px-[18px] py-2.5 bg-surface/95 backdrop-blur border-t border-border flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] text-text-muted">{t('create.total')}</p>
+          <p className="text-xl font-bold text-text tabular-nums leading-tight">{formatCurrency(total)}</p>
+        </div>
+        <button
+          type="submit"
+          form="invoice-form"
+          disabled={saving}
+          className="btn btn-primary rounded-[12px] py-3 px-6"
+        >
+          {submitLabel}
+        </button>
+      </div>
     </div>
   );
 }
