@@ -7,6 +7,7 @@ import AIAssistant from './AIAssistant';
 import CommandPalette from './CommandPalette';
 import MobileBottomNav from './MobileBottomNav';
 import OfflineBanner from './OfflineBanner';
+import ErrorBoundary from './ErrorBoundary';
 import { PageLoader } from './Spinner';
 import { api } from '../utils/api';
 import { getInitials } from '../utils/format';
@@ -231,9 +232,12 @@ export default function Layout() {
 
         {/* Page content */}
         <main className="p-[18px] lg:p-7 pb-24 lg:pb-7">
-          <Suspense fallback={<PageLoader />}>
-            <Outlet />
-          </Suspense>
+          {/* Keyed on the route so navigating away clears a page-level failure */}
+          <ErrorBoundary resetKey={location.pathname}>
+            <Suspense fallback={<PageLoader />}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
         </main>
 
         {/* AI Assistant */}

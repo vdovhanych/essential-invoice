@@ -106,5 +106,11 @@
   },
   "offline": {
     "message": "Jste offline. Vše si můžete prohlížet — změny se synchronizují po připojení."
+  },
+  "error": {
+    "title": "Stránku se nepodařilo načíst",
+    "description": "Chyba je na naší straně, ne na vaší. Nic z toho, co jste zadali, se neztratilo.",
+    "tryAgain": "Zkusit znovu",
+    "backToDashboard": "Zpět na přehled"
   }
 }

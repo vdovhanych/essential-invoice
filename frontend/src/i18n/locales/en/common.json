@@ -106,5 +106,11 @@
   },
   "offline": {
     "message": "You're offline. You can read everything — changes will sync when you're back."
+  },
+  "error": {
+    "title": "This page didn't load",
+    "description": "Something broke on our side, not yours. Nothing you've entered was lost.",
+    "tryAgain": "Try again",
+    "backToDashboard": "Back to dashboard"
   }
 }

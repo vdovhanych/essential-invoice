@@ -98,6 +98,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `AIAssistant.tsx` - AI assistant chat component
   - `CommandPalette.tsx` - Global ⌘K/Ctrl+K palette mounted in `Layout.tsx`. Fetches `/invoices` and `/clients` on open and filters client-side (no server search endpoint); groups results into Invoices/Contacts/Actions, supports arrow-key navigation and `>` for commands only
   - `OfflineBanner.tsx` - Amber banner shown while `navigator.onLine` is false
+  - `ErrorBoundary.tsx` - Catches render errors so a broken page shows the app's error state (with a quotable reference code) rather than a blank screen. Mounted around the routed `<Outlet />` in `Layout.tsx` keyed on the pathname, so navigating away recovers, and once around all routes in `App.tsx`
   - `ReminderComposer.tsx` - Reviewable payment-reminder modal used by `InvoiceDetail.tsx`. Drafts via `POST /ai/draft-reminder` with a Friendly/Neutral/Firm tone control; the draft is fully editable and **nothing is ever sent without the user pressing send**
 - **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, RecurringInvoices, RecurringInvoiceCreate, RecurringInvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
 - **Utils**:
