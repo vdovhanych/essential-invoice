@@ -2,22 +2,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
-import { formatCurrency, getStatusLabel, getStatusColor } from '../utils/format';
-import { useTheme } from '../context/ThemeContext';
-import {
-  FileText,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  TrendingUp,
-  Plus,
-  CreditCard,
-  Landmark,
-  ChevronDown
-} from 'lucide-react';
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatCurrency, formatDate, getStatusLabel, getStatusColor, getInitials } from '../utils/format';
+import { Plus, FilePlus, CheckCircle } from 'lucide-react';
 import { PageLoader } from '../components/Spinner';
 import { toast } from 'sonner';
+import { useAuth } from '../context/AuthContext';
 
 interface DashboardData {
   stats: {
@@ -27,6 +16,7 @@ interface DashboardData {
     overdueCount: number;
     cancelledCount: number;
     outstandingAmount: number;
+    overdueAmount: number;
     paidAmount: number;
     paidThisMonth: number;
   };
@@ -62,8 +52,8 @@ interface DashboardData {
 }
 
 export default function Dashboard() {
-  const { resolvedTheme } = useTheme();
   const { t, i18n } = useTranslation('dashboard');
+  const { user } = useAuth();
   const locale = i18n.language === 'en' ? 'en-US' : 'cs-CZ';
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -127,280 +117,315 @@ export default function Dashboard() {
 
   const yearlyIncome = useMemo(() => chartData.reduce((sum, m) => sum + m.income, 0), [chartData]);
   const yearlyExpensesTotal = useMemo(() => chartData.reduce((sum, m) => sum + m.expenses, 0), [chartData]);
+  const maxMonth = useMemo(
+    () => Math.max(...chartData.map(m => Math.max(m.income, m.expenses)), 0),
+    [chartData]
+  );
+
+  // Pace projection: invoiced-to-date ÷ elapsed months × 12 (current year run rate)
+  const projection = useMemo(() => {
+    if (!data?.pausalniDan?.enabled) return null;
+    const elapsedMonths = new Date().getMonth() + 1;
+    const projected = (data.pausalniDan.invoicedThisYear / elapsedMonths) * 12;
+    return {
+      projected,
+      crosses: projected > data.pausalniDan.limit,
+      fillPct: Math.min(100, (data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) * 100),
+      pacePct: Math.min(100, (projected / data.pausalniDan.limit) * 100),
+      headroom: Math.max(0, data.pausalniDan.remaining),
+    };
+  }, [data]);
 
   if (loading) {
     return <PageLoader />;
   }
 
   if (!data) {
-    return <div className="text-center text-gray-500 dark:text-gray-400">{t('loadError')}</div>;
+    return <div className="text-center text-text-muted">{t('loadError')}</div>;
   }
 
-  return (
-    <div className="space-y-6">
+  const awaitingCount = data.stats.sentCount + data.stats.overdueCount;
+
+  // First run: no invoices at all — describe the reward, don't just say the list is empty
+  const isFirstRun =
+    data.recentInvoices.length === 0 &&
+    data.stats.draftCount + data.stats.sentCount + data.stats.paidCount +
+      data.stats.overdueCount + data.stats.cancelledCount === 0;
+
+  if (isFirstRun) {
+    // Completed items get a check and a struck-through label; open ones carry the action
+    const checklist = [
+      { key: 'business', done: !!user?.companyIco, to: '/profile' },
+      { key: 'bank', done: !!user?.bankAccount, to: '/profile' },
+      { key: 'logo', done: !!user?.hasLogo, to: '/profile' },
+    ];
+    const doneCount = checklist.filter(item => item.done).length;
+
+    return (
+      <div className="flex flex-col items-center justify-center text-center py-16 px-4">
+        <span className="flex items-center justify-center h-[46px] w-[46px] rounded-[14px] bg-accent-tint mb-5">
+          <FilePlus className="h-5 w-5 text-accent" />
+        </span>
+        <h2 className="text-2xl font-bold tracking-[-0.02em] text-text">{t('empty.title')}</h2>
+        <p className="mt-2 max-w-[380px] text-sm leading-relaxed text-text-muted">
+          {t('empty.description')}
+        </p>
+        <Link to="/invoices/new" className="btn btn-primary mt-6 flex items-center space-x-2">
+          <Plus className="h-4 w-4" />
+          <span>{t('empty.createFirst')}</span>
+        </Link>
+
+        {doneCount < checklist.length && (
+          <div className="w-full max-w-[380px] mt-10 pt-6 border-t border-border text-left">
+            <p className="text-[11px] uppercase font-semibold tracking-[.04em] text-text-faint mb-3">
+              {t('empty.checklistTitle', { done: doneCount, total: checklist.length })}
+            </p>
+            <ul className="space-y-2.5">
+              {checklist.map(item => (
+                <li key={item.key} className="flex items-center gap-2.5">
+                  {item.done ? (
+                    <CheckCircle className="h-[17px] w-[17px] text-success shrink-0" />
+                  ) : (
+                    <span className="h-[17px] w-[17px] rounded-full border-[1.5px] border-border-strong shrink-0" />
+                  )}
+                  <span
+                    className={`flex-1 text-sm ${
+                      item.done ? 'text-text-faint line-through' : 'text-text'
+                    }`}
+                  >
+                    {t(`empty.checklist.${item.key}`)}
+                  </span>
+                  {!item.done && (
+                    <Link to={item.to} className="text-[13px] font-medium text-accent-link hover:underline shrink-0">
+                      {t('empty.checklistAction')}
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const tierFootnote = data.pausalniDan?.enabled && projection && (
+    <div className="mt-4 pt-3.5 border-t border-hairline">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+        <span className="text-xs text-text-muted">
+          {t('pausalniDan.label', { tier: data.pausalniDan.tier })}
+        </span>
+        <span className="text-xs text-text-faint tabular-nums">
+          {t('pausalniDan.ofLimit', {
+            invoiced: formatCurrency(data.pausalniDan.invoicedThisYear),
+            limit: formatCurrency(data.pausalniDan.limit),
+          })}
+        </span>
+      </div>
+      <div className="relative mt-2">
+        <div className="h-[6px] rounded-[3px] bg-hairline overflow-hidden">
+          <div
+            className="h-full rounded-[3px] bg-accent-quiet"
+            style={{ width: `${projection.fillPct}%` }}
+          />
+        </div>
+        {/* Pace marker: projected year-end at the current run rate */}
+        <div
+          className={`absolute -top-[3px] w-[1.5px] h-3 ${projection.crosses ? 'bg-danger' : 'bg-text-faint'}`}
+          style={{ left: `${projection.pacePct}%` }}
+          data-testid="pace-marker"
+        />
+      </div>
+      <div
+        className={`flex items-center justify-between mt-2 text-[11px] ${
+          projection.crosses ? 'text-danger' : 'text-text-faint'
+        }`}
+      >
+        <span className="tabular-nums">
+          {t('pausalniDan.pace', { amount: formatCurrency(projection.projected) })}{' '}
+          {projection.crosses
+            ? t('pausalniDan.crosses', { tier: data.pausalniDan.tier })
+            : t('pausalniDan.inside', { tier: data.pausalniDan.tier })}
+        </span>
+        <span className="tabular-nums">
+          {t('pausalniDan.headroom', { amount: formatCurrency(projection.headroom) })}
+        </span>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      {/* Title row */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-[-0.02em] text-text">{t('title')}</h1>
         <Link to="/invoices/new" className="btn btn-primary hidden lg:flex items-center space-x-2">
           <Plus className="h-4 w-4" />
           <span>{t('newInvoice')}</span>
         </Link>
       </div>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className="card-interactive min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('stats.outstanding')}</p>
-              <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
-                {formatCurrency(data.stats.outstandingAmount)}
-              </p>
-            </div>
-            <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-full shrink-0">
-              <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-            </div>
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            {t('stats.outstandingDescription', { count: data.stats.sentCount + data.stats.overdueCount })}
+      {/* Hero row */}
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+        <div className="card lg:bg-transparent lg:border-0 lg:p-0 lg:rounded-none">
+          <p className="text-[13px] text-text-muted">{t('stats.outstanding')}</p>
+          <p className="mt-1 text-[34px] lg:text-[40px] leading-[1.05] font-bold tracking-[-0.03em] text-text tabular-nums">
+            {formatCurrency(data.stats.outstandingAmount)}
+          </p>
+          <p className="mt-1.5 text-[13px] text-text-muted">
+            {t('stats.awaiting', { count: awaitingCount })}
+            {data.stats.overdueCount > 0 && (
+              <> · {t('stats.overdueCount', { count: data.stats.overdueCount })}</>
+            )}
           </p>
         </div>
-
-        <div className="card-interactive min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('stats.paidThisMonth')}</p>
-              <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
-                {formatCurrency(data.stats.paidThisMonth)}
-              </p>
-            </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full shrink-0">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:w-[560px]">
+          <div className="bg-surface border border-border rounded-[16px] px-4 py-3.5 min-w-0">
+            <p className="text-xs text-text-muted">{t('stats.paidThisMonth')}</p>
+            <p className="mt-1 text-[19px] font-semibold tracking-[-0.02em] text-text tabular-nums truncate">
+              {formatCurrency(data.stats.paidThisMonth)}
+            </p>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            {t('stats.paidThisMonthDescription', { count: data.stats.paidCount })}
-          </p>
-        </div>
-
-        <div className="card-interactive min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('stats.overdue')}</p>
-              <p className="text-2xl font-bold tabular-nums text-red-600">
-                {data.stats.overdueCount}
-              </p>
-            </div>
-            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full shrink-0">
-              <AlertTriangle className="h-6 w-6 text-red-600" />
-            </div>
+          <div className="bg-surface border border-border rounded-[16px] px-4 py-3.5 min-w-0">
+            <p className="text-xs text-text-muted">{t('stats.overdue')}</p>
+            <p className="mt-1 text-[19px] font-semibold tracking-[-0.02em] text-danger tabular-nums truncate">
+              {formatCurrency(data.stats.overdueAmount)}
+            </p>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            {t('stats.overdueDescription')}
-          </p>
-        </div>
-
-        <div className="card-interactive min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('stats.totalPaid')}</p>
-              <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100">
-                {formatCurrency(data.stats.paidAmount)}
-              </p>
-            </div>
-            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full shrink-0">
-              <TrendingUp className="h-6 w-6 text-indigo-600" />
-            </div>
+          <div className="bg-surface border border-border rounded-[16px] px-4 py-3.5 min-w-0 col-span-2 lg:col-span-1">
+            <p className="text-xs text-text-muted">{t('stats.unmatched')}</p>
+            <p className="mt-1 flex items-baseline gap-2">
+              <span className="text-[19px] font-semibold tracking-[-0.02em] text-text tabular-nums">
+                {data.unmatchedPayments}
+              </span>
+              {data.unmatchedPayments > 0 && (
+                <Link to="/payments" className="text-xs font-semibold text-accent hover:text-accent-hover">
+                  {t('stats.matchLink')}
+                </Link>
+              )}
+            </p>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            {t('stats.totalPaidDescription')}
-          </p>
         </div>
       </div>
 
-      {/* Unmatched payments alert */}
-      {data.unmatchedPayments > 0 && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <CreditCard className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-            <span className="text-yellow-800 dark:text-yellow-300">
-              {t('unmatchedPayments.message', { count: data.unmatchedPayments })}
-            </span>
-          </div>
-          <Link to="/payments" className="text-yellow-600 dark:text-yellow-400 hover:underline font-medium">
-            {t('unmatchedPayments.link')}
-          </Link>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly revenue & expenses chart */}
+      {/* Main row */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-4 lg:gap-5">
+        {/* Revenue card */}
         <div className="card">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('chart.totalRevenue')}</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-[13px] text-text-muted">{t('chart.net', { year: selectedYear })}</p>
+              <p className="text-2xl font-bold tracking-[-0.02em] text-text tabular-nums">
                 {formatCurrency(yearlyIncome - yearlyExpensesTotal)}
               </p>
             </div>
-            <div className="relative">
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="appearance-none bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg px-3 py-1.5 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {availableYears.map(year => (
-                  <option key={year} value={year}>{year}</option>
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-3">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-[2px] bg-accent" />
+                  <span className="text-xs text-text-muted">{t('chart.income')}</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-[2px] bg-chart-secondary" />
+                  <span className="text-xs text-text-muted">{t('chart.expenses')}</span>
+                </span>
+              </div>
+              {availableYears.length > 1 && (
+                <div className="flex bg-surface border border-border rounded-[10px] p-[3px]">
+                  {availableYears.map(year => (
+                    <button
+                      key={year}
+                      onClick={() => setSelectedYear(year)}
+                      className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors tabular-nums ${
+                        selectedYear === year
+                          ? 'bg-surface-sunken text-text'
+                          : 'text-text-muted hover:text-text'
+                      }`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {maxMonth > 0 ? (
+            <>
+              <div className="mt-5 flex items-end h-[190px]">
+                {chartData.map(month => (
+                  <div key={month.key} className="flex-1 flex items-end justify-center gap-[3px] h-full">
+                    <div
+                      className="w-[10px] rounded-[4px] bg-accent"
+                      style={{ height: `${maxMonth > 0 ? (month.income / maxMonth) * 100 : 0}%` }}
+                      title={`${month.name}: ${formatCurrency(month.income)}`}
+                    />
+                    <div
+                      className="w-[10px] rounded-[4px] bg-chart-secondary"
+                      style={{ height: `${maxMonth > 0 ? (month.expenses / maxMonth) * 100 : 0}%` }}
+                      title={`${month.name}: ${formatCurrency(month.expenses)}`}
+                    />
+                  </div>
                 ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{t('chart.income')}</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{t('chart.expenses')}</span>
-            </div>
-          </div>
-          {chartData.some(d => d.income > 0 || d.expenses > 0) ? (
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} barGap={2} barCategoryGap="20%">
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280', fontSize: 12 }}
-                  />
-                  <Tooltip
-                    cursor={{ fill: resolvedTheme === 'dark' ? 'rgba(55, 65, 81, 0.3)' : 'rgba(229, 231, 235, 0.5)' }}
-                    content={({ active, payload, label }) => {
-                      if (!active || !payload?.length) return null;
-                      return (
-                        <div className={`rounded-lg px-3 py-2 shadow-lg text-sm ${resolvedTheme === 'dark' ? 'bg-gray-800 border border-gray-700 text-gray-100' : 'bg-white border border-gray-200 text-gray-900'}`}>
-                          <p className="font-medium mb-1">{label}</p>
-                          {payload.map((entry) => (
-                            <p key={entry.dataKey} className="flex items-center space-x-2">
-                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
-                              <span className="text-gray-500 dark:text-gray-400">{entry.dataKey === 'income' ? t('chart.income') : t('chart.expenses')}:</span>
-                              <span className="font-medium">{formatCurrency(entry.value as number)}</span>
-                            </p>
-                          ))}
-                        </div>
-                      );
-                    }}
-                  />
-                  <Bar dataKey="income" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expenses" fill={resolvedTheme === 'dark' ? '#475569' : '#cbd5e1'} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+              </div>
+              <div className="mt-2 flex">
+                {chartData.map(month => (
+                  <span key={month.key} className="flex-1 text-center text-[11px] text-text-faint">
+                    {month.name}
+                  </span>
+                ))}
+              </div>
+            </>
           ) : (
-            <div className="h-80 flex items-center justify-center text-gray-500 dark:text-gray-400">
+            <div className="h-[190px] mt-5 flex items-center justify-center text-sm text-text-muted">
               {t('chart.noData')}
             </div>
           )}
 
-          {/* Paušální daň compact strip */}
-          {data.pausalniDan?.enabled && (
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center space-x-2 min-w-0">
-                  <Landmark className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  <span className="text-xs font-medium text-gray-600 dark:text-gray-300 truncate">
-                    {t('pausalniDan.label', { tier: data.pausalniDan.tier })}
-                  </span>
-                </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400 text-right whitespace-nowrap ml-2">
-                  {formatCurrency(data.pausalniDan.invoicedThisYear)} / {formatCurrency(data.pausalniDan.limit)}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all ${
-                    (data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) >= 0.9
-                      ? 'bg-red-500'
-                      : (data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) >= 0.75
-                      ? 'bg-yellow-500'
-                      : 'bg-emerald-500'
-                  }`}
-                  style={{
-                    width: `${Math.min(100, (data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) * 100)}%`
-                  }}
-                />
-              </div>
-              <div className="flex justify-between text-xs mt-1">
-                <span className="text-gray-400 dark:text-gray-500">
-                  {((data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) * 100).toFixed(0)}%
-                </span>
-                <span className={`font-medium text-right whitespace-nowrap ml-2 ${
-                  data.pausalniDan.remaining <= 0
-                    ? 'text-red-600'
-                    : (data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) >= 0.9
-                    ? 'text-red-600'
-                    : 'text-emerald-600'
-                }`}>
-                  {t('pausalniDan.remaining', { amount: formatCurrency(data.pausalniDan.remaining) })}
-                </span>
-              </div>
-              {(data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) >= 0.9 && (
-                <div className={`flex items-center space-x-1.5 mt-2 text-xs ${
-                  data.pausalniDan.remaining <= 0 ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'
-                }`}>
-                  <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
-                  <span>
-                    {data.pausalniDan.remaining <= 0
-                      ? t('pausalniDan.limitExceeded')
-                      : t('pausalniDan.approachingLimit')}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
+          {tierFootnote}
         </div>
 
         {/* Recent invoices */}
         <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('recentInvoices.title')}</h2>
-            <Link to="/invoices" className="text-indigo-600 hover:underline text-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[15px] font-semibold text-text">{t('recentInvoices.title')}</h2>
+            <Link to="/invoices" className="text-[13px] text-accent-link hover:underline">
               {t('recentInvoices.viewAll')}
             </Link>
           </div>
-          <div className="space-y-3">
-            {data.recentInvoices.length > 0 ? (
-              data.recentInvoices.slice(0, 5).map((invoice) => (
+          {data.recentInvoices.length > 0 ? (
+            <div>
+              {data.recentInvoices.slice(0, 5).map((invoice) => (
                 <Link
                   key={invoice.id}
                   to={`/invoices/${invoice.id}`}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  className="flex items-center gap-3 py-2.5 border-b border-hairline-soft last:border-b-0 hover:bg-row-hover -mx-2 px-2 rounded-lg transition-colors"
                 >
-                  <div className="flex items-center space-x-3 min-w-0 flex-1">
-                    <FileText className="h-5 w-5 text-gray-400 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{invoice.invoiceNumber}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{invoice.clientName}</p>
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <span className="flex items-center justify-center h-[34px] w-[34px] rounded-[11px] bg-surface-sunken text-text-secondary text-xs font-semibold shrink-0">
+                    {getInitials(invoice.clientName)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium text-text truncate">{invoice.clientName}</span>
+                    <span className="block text-xs text-text-faint tabular-nums">
+                      {invoice.invoiceNumber} · {t('recentInvoices.due')} {formatDate(invoice.dueDate)}
+                    </span>
+                  </span>
+                  <span className="text-right shrink-0">
+                    <span className="block text-sm font-semibold text-text tabular-nums">
                       {formatCurrency(invoice.total, invoice.currency)}
-                    </p>
+                    </span>
                     <span className={`badge ${getStatusColor(invoice.status)}`}>
                       {getStatusLabel(invoice.status)}
                     </span>
-                  </div>
+                  </span>
                 </Link>
-              ))
-            ) : (
-              <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                {t('recentInvoices.empty')}
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-sm text-text-muted py-8">
+              {t('recentInvoices.empty')}
+            </div>
+          )}
         </div>
       </div>
     </div>

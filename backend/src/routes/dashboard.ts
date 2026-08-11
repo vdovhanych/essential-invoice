@@ -16,6 +16,7 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
         COUNT(*) FILTER (WHERE status = 'overdue') as overdue_count,
         COUNT(*) FILTER (WHERE status = 'cancelled') as cancelled_count,
         COALESCE(SUM(CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END) FILTER (WHERE status IN ('sent', 'overdue')), 0) as outstanding_amount,
+        COALESCE(SUM(CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END) FILTER (WHERE status = 'overdue'), 0) as overdue_amount,
         COALESCE(SUM(CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END) FILTER (WHERE status = 'paid'), 0) as paid_amount,
         COALESCE(SUM(CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END) FILTER (WHERE status = 'paid' AND paid_at >= date_trunc('month', CURRENT_DATE)), 0) as paid_this_month
       FROM invoices
@@ -117,6 +118,7 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
         overdueCount: parseInt(stats.overdue_count),
         cancelledCount: parseInt(stats.cancelled_count),
         outstandingAmount: parseFloat(stats.outstanding_amount),
+        overdueAmount: parseFloat(stats.overdue_amount),
         paidAmount: parseFloat(stats.paid_amount),
         paidThisMonth: parseFloat(stats.paid_this_month)
       },

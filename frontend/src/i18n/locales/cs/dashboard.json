@@ -10,7 +10,15 @@
     "overdue": "Po splatnosti",
     "overdueDescription": "Faktury po datu splatnosti",
     "totalPaid": "Celkem zaplaceno",
-    "totalPaidDescription": "Za celou dobu"
+    "totalPaidDescription": "Za celou dobu",
+    "awaiting_one": "{{count}} faktura čeká na zaplacení",
+    "awaiting_few": "{{count}} faktury čekají na zaplacení",
+    "awaiting_other": "{{count}} faktur čeká na zaplacení",
+    "overdueCount_one": "{{count}} po splatnosti",
+    "overdueCount_few": "{{count}} po splatnosti",
+    "overdueCount_other": "{{count}} po splatnosti",
+    "unmatched": "Nespárováno",
+    "matchLink": "spárovat"
   },
   "unmatchedPayments": {
     "message": "Máte {{count}} nespárovaných plateb",
@@ -20,17 +28,36 @@
     "totalRevenue": "Celkové tržby",
     "income": "Příjmy",
     "expenses": "Výdaje",
-    "noData": "Zatím žádná data"
+    "noData": "Zatím žádná data",
+    "net": "Čistý příjem {{year}}"
   },
   "pausalniDan": {
     "label": "Paušální daň ({{tier}}. pásmo)",
     "remaining": "Zbývá {{amount}}",
     "limitExceeded": "Limit překročen – hrozí vyřazení z režimu",
-    "approachingLimit": "Blížíte se k limitu"
+    "approachingLimit": "Blížíte se k limitu",
+    "ofLimit": "{{invoiced}} z {{limit}}",
+    "pace": "Tempo: {{amount}} do prosince",
+    "inside": "— v pásmu {{tier}}",
+    "crosses": "— překročí pásmo {{tier}}",
+    "headroom": "{{amount}} rezerva"
   },
   "recentInvoices": {
     "title": "Poslední faktury",
     "viewAll": "Zobrazit vše",
-    "empty": "Zatím žádné faktury"
+    "empty": "Zatím žádné faktury",
+    "due": "splatnost"
+  },
+  "empty": {
+    "title": "Zatím žádné faktury",
+    "description": "Vystavte první fakturu a tato stránka se zaplní: nezaplacená částka, graf tržeb za rok a sledování limitu paušální daně.",
+    "createFirst": "Vystavit první fakturu",
+    "checklistTitle": "Nastavení · {{done}} z {{total}}",
+    "checklistAction": "Doplnit",
+    "checklist": {
+      "business": "Firemní údaje",
+      "bank": "Bankovní účet pro platby",
+      "logo": "Logo na fakturách"
+    }
   }
 }
