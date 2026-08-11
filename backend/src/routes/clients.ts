@@ -11,7 +11,9 @@ clientRouter.get('/', async (req: AuthRequest, res: Response) => {
     const result = await query(
       `SELECT c.*,
         (SELECT COUNT(*) FROM invoices WHERE client_id = c.id) as invoice_count,
-        (SELECT COALESCE(SUM(total), 0) FROM invoices WHERE client_id = c.id AND status = 'paid') as total_paid
+        (SELECT COALESCE(SUM(total), 0) FROM invoices WHERE client_id = c.id AND status = 'paid') as total_paid,
+        (SELECT COALESCE(SUM(COALESCE(total_czk, total)), 0) FROM invoices WHERE client_id = c.id AND status != 'cancelled') as total_invoiced,
+        (SELECT COALESCE(SUM(COALESCE(total_czk, total)), 0) FROM invoices WHERE client_id = c.id AND status IN ('sent', 'overdue')) as open_balance
        FROM clients c
        WHERE c.user_id = $1
        ORDER BY c.company_name ASC`,
@@ -31,6 +33,8 @@ clientRouter.get('/', async (req: AuthRequest, res: Response) => {
       notes: row.notes,
       invoiceCount: parseInt(row.invoice_count),
       totalPaid: parseFloat(row.total_paid),
+      totalInvoiced: parseFloat(row.total_invoiced),
+      openBalance: parseFloat(row.open_balance),
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }));

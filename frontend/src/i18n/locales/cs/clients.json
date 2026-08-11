@@ -16,7 +16,19 @@
     },
     "confirm": {
       "delete": "Opravdu chcete smazat kontakt \"{{name}}\"?"
-    }
+    },
+    "summary_one": "{{count}} kontakt · {{amount}} fakturováno celkem",
+    "summary_few": "{{count}} kontakty · {{amount}} fakturováno celkem",
+    "summary_other": "{{count}} kontaktů · {{amount}} fakturováno celkem",
+    "columnContact": "Kontakt",
+    "columnPerson": "Osoba",
+    "columnInvoices": "Faktury",
+    "columnRevenueShare": "Podíl na tržbách",
+    "columnOpen": "Nezaplaceno",
+    "icoLabel": "IČO {{ico}}",
+    "newInvoiceFor": "Nová faktura pro tento kontakt",
+    "editContact": "Upravit kontakt",
+    "deleteContact": "Smazat kontakt"
   },
   "modal": {
     "titleNew": "Nový kontakt",
@@ -32,14 +44,18 @@
       "address": "Adresa",
       "contactPerson": "Kontaktní osoba",
       "phone": "Telefon",
-      "notes": "Poznámky"
+      "notes": "Poznámky",
+      "addSecondEmail": "Přidat druhý e-mail pro faktury"
     },
     "ares": {
       "loading": "Načítám...",
       "lookup": "Načíst z ARES",
       "success": "Údaje načteny z ARES",
       "failed": "Nepodařilo se načíst údaje z ARES",
-      "icoValidation": "IČO musí mít 8 číslic"
+      "icoValidation": "IČO musí mít 8 číslic",
+      "foundInAres": "Nalezeno",
+      "filledNote": "Název, adresa a DIČ níže byly doplněny z registru.",
+      "notFoundNote": "V registru nenalezeno — údaje můžete vyplnit ručně."
     },
     "buttons": {
       "cancel": "Zrušit",
@@ -68,7 +84,11 @@
     },
     "stats": {
       "totalRevenue": "Celkové tržby",
-      "pendingAmount": "K úhradě"
+      "pendingAmount": "K úhradě",
+      "invoiceCount": "Faktury",
+      "overdueCount_one": "{{count}} po splatnosti",
+      "overdueCount_few": "{{count}} po splatnosti",
+      "overdueCount_other": "{{count}} po splatnosti"
     },
     "invoices": {
       "title": "Historie faktur",
