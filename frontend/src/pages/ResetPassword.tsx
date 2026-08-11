@@ -43,22 +43,22 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 relative">
+      <div className="min-h-screen flex items-center justify-center bg-canvas px-4 relative">
         <ThemeToggle />
         <div className="max-w-md w-full">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <img src="/favicon.svg" alt="essentialInvoice" className="h-12 w-12" />
+          <div className="mb-7">
+            <div className="mb-4">
+              <img src="/favicon.svg" alt="essentialInvoice" className="h-11 w-11 rounded-[12px]" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
+            
           </div>
-          <div className="card">
-            <div className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-4">
+          <div>
+            <div className="flex items-center space-x-2 p-3 bg-danger-bg text-danger rounded-lg mb-4">
               <AlertCircle className="h-5 w-5 flex-shrink-0" />
               <span>{t('resetPassword.invalidTokenMessage')}</span>
             </div>
-            <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
-              <Link to="/forgot-password" className="text-indigo-600 hover:underline">
+            <p className="text-center text-text-muted mt-4">
+              <Link to="/forgot-password" className="text-accent-link hover:underline">
                 {t('resetPassword.requestNewLink')}
               </Link>
             </p>
@@ -69,26 +69,26 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 relative">
+    <div className="min-h-screen flex items-center justify-center bg-canvas px-4 relative">
       <ThemeToggle />
       <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <img src="/favicon.svg" alt="essentialInvoice" className="h-12 w-12" />
+        <div className="mb-7">
+          <div className="mb-4">
+            <img src="/favicon.svg" alt="essentialInvoice" className="h-11 w-11 rounded-[12px]" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">{t('resetPassword.subtitle')}</p>
+          
+          <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em] text-text mt-5">{t('resetPassword.subtitle')}</h1>
         </div>
 
-        <div className="card">
+        <div>
           {success ? (
             <div>
-              <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg mb-4">
+              <div className="flex items-center space-x-2 p-3 bg-success-bg text-success rounded-lg mb-4">
                 <CheckCircle className="h-5 w-5 flex-shrink-0" />
                 <span>{t('resetPassword.successMessage')}</span>
               </div>
-              <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
-                <Link to="/login" className="text-indigo-600 hover:underline">
+              <p className="text-center text-text-muted mt-4">
+                <Link to="/login" className="text-accent-link hover:underline">
                   {t('resetPassword.loginLink')}
                 </Link>
               </p>
@@ -103,7 +103,7 @@ export default function ResetPassword() {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="input"
+                    className="input-auth"
                     required
                     minLength={8}
                   />
@@ -116,7 +116,7 @@ export default function ResetPassword() {
                     id="confirmPassword"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="input"
+                    className="input-auth"
                     required
                   />
                 </div>
@@ -124,14 +124,14 @@ export default function ResetPassword() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn btn-primary w-full"
+                  className="btn btn-primary w-full py-3.5 rounded-[12px]"
                 >
                   {loading ? t('resetPassword.submittingButton') : t('resetPassword.submitButton')}
                 </button>
               </form>
 
-              <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
-                <Link to="/forgot-password" className="text-indigo-600 hover:underline">
+              <p className="text-center text-text-muted mt-4">
+                <Link to="/forgot-password" className="text-accent-link hover:underline">
                   {t('resetPassword.requestNewLink')}
                 </Link>
               </p>

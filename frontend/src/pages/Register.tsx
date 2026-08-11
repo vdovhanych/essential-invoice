@@ -46,18 +46,18 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-8 relative">
+    <div className="min-h-screen flex items-center justify-center bg-canvas px-4 py-8 relative">
       <ThemeToggle />
       <div className="max-w-lg w-full">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <img src="/favicon.svg" alt="essentialInvoice" className="h-12 w-12" />
+        <div className="mb-7">
+          <div className="mb-4">
+            <img src="/favicon.svg" alt="essentialInvoice" className="h-11 w-11 rounded-[12px]" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">essentialInvoice</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">{t('register.subtitle')}</p>
+          
+          <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em] text-text mt-5">{t('register.subtitle')}</h1>
         </div>
 
-        <div className="card">
+        <div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
@@ -68,7 +68,7 @@ export default function Register() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="input"
+                  className="input-auth"
                   required
                 />
               </div>
@@ -81,7 +81,7 @@ export default function Register() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="input"
+                  className="input-auth"
                   required
                 />
               </div>
@@ -94,7 +94,7 @@ export default function Register() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="input"
+                  className="input-auth"
                   required
                   minLength={8}
                 />
@@ -108,7 +108,7 @@ export default function Register() {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="input"
+                  className="input-auth"
                   required
                 />
               </div>
@@ -117,15 +117,15 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="btn btn-primary w-full mt-6"
+              className="btn btn-primary w-full mt-6 py-3.5 rounded-[12px]"
             >
               {loading ? t('register.submittingButton') : t('register.submitButton')}
             </button>
           </form>
 
-          <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
+          <p className="text-center text-text-muted mt-4">
             {t('register.hasAccountText')}{' '}
-            <Link to="/login" className="text-indigo-600 hover:underline">
+            <Link to="/login" className="text-accent-link hover:underline">
               {t('register.loginLink')}
             </Link>
           </p>
