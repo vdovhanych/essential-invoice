@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
-import { Calculator as CalculatorIcon, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
 import { PageLoader } from '../components/Spinner';
 import { toast } from 'sonner';
@@ -89,99 +88,95 @@ export default function Calculator() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center space-x-3">
-        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-          <CalculatorIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
-      </div>
+    <div className="max-w-[900px] space-y-5">
+      <h1 className="text-2xl font-bold tracking-[-0.02em] text-text">{t('title')}</h1>
 
-      {/* Input Section */}
-      <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('inputs.heading')}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="label">{t('inputs.hourlyRate')}</label>
-            <input
-              type="number"
-              value={hourlyRate}
-              onChange={(e) => setHourlyRate(e.target.value === '' ? '' : parseFloat(e.target.value))}
-              className="input"
-              min="0"
-              step="0.01"
-              placeholder="0"
-            />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-4 lg:gap-5">
+        {/* Inputs */}
+        <div className="card">
+          <h2 className="text-[15px] font-semibold text-text mb-4">{t('inputs.heading')}</h2>
+          <div className="space-y-3">
+            <div>
+              <label className="label">{t('inputs.hourlyRate')}</label>
+              <input
+                type="number"
+                value={hourlyRate}
+                onChange={(e) => setHourlyRate(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                className="input text-right tabular-nums"
+                min="0"
+                step="0.01"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="label">{t('inputs.hoursWorked')}</label>
+              <input
+                type="number"
+                value={hoursWorked}
+                onChange={(e) => setHoursWorked(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                className="input text-right tabular-nums"
+                min="0"
+                step="0.01"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="label">{t('inputs.kpiBonusPercent')}</label>
+              <input
+                type="number"
+                value={kpiBonusPercent}
+                onChange={(e) => setKpiBonusPercent(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                className="input text-right tabular-nums"
+                min="0"
+                max="100"
+                step="0.1"
+                placeholder="0"
+              />
+            </div>
           </div>
-          <div>
-            <label className="label">{t('inputs.hoursWorked')}</label>
-            <input
-              type="number"
-              value={hoursWorked}
-              onChange={(e) => setHoursWorked(e.target.value === '' ? '' : parseFloat(e.target.value))}
-              className="input"
-              min="0"
-              step="0.01"
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label className="label">{t('inputs.kpiBonusPercent')}</label>
-            <input
-              type="number"
-              value={kpiBonusPercent}
-              onChange={(e) => setKpiBonusPercent(e.target.value === '' ? '' : parseFloat(e.target.value))}
-              className="input"
-              min="0"
-              max="100"
-              step="0.1"
-              placeholder="0"
-            />
-          </div>
-        </div>
-      </div>
 
-      {/* Results Section */}
-      <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('results.heading')}</h2>
-        <div className="space-y-3">
-          <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-            <span className="text-gray-600 dark:text-gray-300">{t('results.kpiBonusHours')}</span>
-            <span className="font-medium">
-              {calculations.kpiBonusHours.toLocaleString('cs-CZ', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              })} {t('results.hoursUnit')}
-            </span>
-          </div>
-          <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-            <span className="text-gray-600 dark:text-gray-300">{t('results.kpiBonusAmount')}</span>
-            <span className="font-medium">{formatCurrency(calculations.kpiBonusAmount)}</span>
-          </div>
-          <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-            <span className="text-gray-600 dark:text-gray-300">{t('results.hoursTotal')}</span>
-            <span className="font-medium">{formatCurrency(calculations.hoursTotal)}</span>
-          </div>
-          <div className="flex justify-between items-center py-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg px-3 -mx-3">
-            <span className="font-bold text-gray-900 dark:text-gray-100">{t('results.grandTotal')}</span>
-            <span className="font-bold text-xl text-indigo-600">
-              {formatCurrency(calculations.grandTotal)}
-            </span>
+          {/* Formulas — a quiet footnote, not a boxed alert */}
+          <div className="mt-4 pt-4 border-t border-hairline">
+            <p className="text-[11px] uppercase font-semibold tracking-[.04em] text-text-faint mb-2">
+              {t('formulas.heading')}
+            </p>
+            <ul className="space-y-1 text-xs text-text-faint">
+              <li>{t('formulas.kpiBonusHours')}</li>
+              <li>{t('formulas.kpiBonusAmount')}</li>
+              <li>{t('formulas.hoursTotal')}</li>
+              <li>{t('formulas.grandTotal')}</li>
+            </ul>
           </div>
         </div>
-      </div>
 
-      {/* Info box */}
-      <div className="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <AlertCircle className="h-5 w-5 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-gray-600 dark:text-gray-300">
-          <p className="font-medium mb-1">{t('formulas.heading')}</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>{t('formulas.kpiBonusHours')}</li>
-            <li>{t('formulas.kpiBonusAmount')}</li>
-            <li>{t('formulas.hoursTotal')}</li>
-            <li>{t('formulas.grandTotal')}</li>
-          </ul>
+        {/* Results — the total is the hero */}
+        <div className="card">
+          <h2 className="text-[15px] font-semibold text-text mb-4">{t('results.heading')}</h2>
+          <dl className="space-y-3">
+            <div className="flex justify-between items-baseline">
+              <dt className="text-[13px] text-text-muted">{t('results.kpiBonusHours')}</dt>
+              <dd className="text-sm text-text tabular-nums">
+                {calculations.kpiBonusHours.toLocaleString('cs-CZ', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })} {t('results.hoursUnit')}
+              </dd>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <dt className="text-[13px] text-text-muted">{t('results.kpiBonusAmount')}</dt>
+              <dd className="text-sm text-text tabular-nums">{formatCurrency(calculations.kpiBonusAmount)}</dd>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <dt className="text-[13px] text-text-muted">{t('results.hoursTotal')}</dt>
+              <dd className="text-sm text-text tabular-nums">{formatCurrency(calculations.hoursTotal)}</dd>
+            </div>
+            <div className="flex justify-between items-baseline pt-3 border-t border-hairline">
+              <dt className="text-sm font-semibold text-text">{t('results.grandTotal')}</dt>
+              <dd className="text-[28px] leading-tight font-bold tracking-[-0.02em] text-accent tabular-nums">
+                {formatCurrency(calculations.grandTotal)}
+              </dd>
+            </div>
+          </dl>
         </div>
       </div>
     </div>
