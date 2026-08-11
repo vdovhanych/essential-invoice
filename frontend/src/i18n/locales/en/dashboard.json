@@ -10,7 +10,13 @@
     "overdue": "Overdue",
     "overdueDescription": "Invoices past due date",
     "totalPaid": "Total paid",
-    "totalPaidDescription": "All time"
+    "totalPaidDescription": "All time",
+    "awaiting_one": "{{count}} invoice awaiting payment",
+    "awaiting_other": "{{count}} invoices awaiting payment",
+    "overdueCount_one": "{{count}} overdue",
+    "overdueCount_other": "{{count}} overdue",
+    "unmatched": "Unmatched",
+    "matchLink": "match"
   },
   "unmatchedPayments": {
     "message": "You have {{count}} unmatched payments",
@@ -20,17 +26,36 @@
     "totalRevenue": "Total revenue",
     "income": "Income",
     "expenses": "Expenses",
-    "noData": "No data yet"
+    "noData": "No data yet",
+    "net": "Net {{year}}"
   },
   "pausalniDan": {
     "label": "Flat-rate tax (tier {{tier}})",
     "remaining": "{{amount}} remaining",
     "limitExceeded": "Limit exceeded – risk of exclusion from the regime",
-    "approachingLimit": "Approaching the limit"
+    "approachingLimit": "Approaching the limit",
+    "ofLimit": "{{invoiced}} of {{limit}}",
+    "pace": "Pace: {{amount}} by December",
+    "inside": "— inside tier {{tier}}",
+    "crosses": "— crosses tier {{tier}}",
+    "headroom": "{{amount}} headroom"
   },
   "recentInvoices": {
     "title": "Recent invoices",
     "viewAll": "View all",
-    "empty": "No invoices yet"
+    "empty": "No invoices yet",
+    "due": "due"
+  },
+  "empty": {
+    "title": "No invoices yet",
+    "description": "Create your first invoice and this page fills in: your outstanding balance, the year's revenue chart, and the flat-rate tax tracker.",
+    "createFirst": "Create first invoice",
+    "checklistTitle": "Setup · {{done}} of {{total}}",
+    "checklistAction": "Add",
+    "checklist": {
+      "business": "Your business details",
+      "bank": "Bank account for payments",
+      "logo": "Logo on your invoices"
+    }
   }
 }
