@@ -16,7 +16,16 @@
       "status": "Stav"
     },
     "empty": "Žádné náklady nenalezeny",
-    "addFirst": "Přidat první náklad"
+    "addFirst": "Přidat první náklad",
+    "summary": "{{year}} · {{amount}} v {{count}} dokladech",
+    "statusAll": "Vše",
+    "noReceiptChip": "Bez dokladu",
+    "receiptMissing": "Chybí doklad",
+    "flatRateBanner": "Platíte paušální daň, takže náklady nesnižují vaši daň. Evidují se zde pro vlastní přehled a pro účetního.",
+    "hideBanner": "Skrýt",
+    "shownOf": "Zobrazeno {{shown}} z {{total}}",
+    "noMatch": "Žádné náklady neodpovídají filtrům",
+    "clearFilters": "Zrušit filtry"
   },
   "create": {
     "titleNew": "Nový náklad",
@@ -50,7 +59,9 @@
       "aiExtract": "Vyplnit formulář z dokladu (AI)",
       "aiExtracting": "Čtu doklad...",
       "aiExtractSuccess": "Formulář předvyplněn z dokladu — zkontrolujte prosím hodnoty",
-      "aiExtractFailed": "Nepodařilo se vytěžit data z dokladu"
+      "aiExtractFailed": "Nepodařilo se vytěžit data z dokladu",
+      "remove": "Odebrat",
+      "fileHint": "PDF, JPG nebo PNG · do 5 MB"
     },
     "description": {
       "title": "Popis",
@@ -73,7 +84,8 @@
     },
     "toast": {
       "saveFailed": "Nepodařilo se uložit náklad"
-    }
+    },
+    "flatRateNote": "Paušální daň — náklad nezmění vaši daň. Uloženo pro vaši evidenci."
   },
   "detail": {
     "title": "Náklad {{number}}",
@@ -96,7 +108,8 @@
     "attachment": {
       "title": "Příloha",
       "download": "Stáhnout",
-      "pdfNotSupported": "Váš prohlížeč nepodporuje zobrazení PDF."
+      "pdfNotSupported": "Váš prohlížeč nepodporuje zobrazení PDF.",
+      "missing": "Chybí doklad"
     },
     "notes": {
       "title": "Poznámky"
@@ -126,6 +139,7 @@
       "markUnpaidFailed": "Nepodařilo se označit náklad jako nezaplacený",
       "deleteFailed": "Nepodařilo se smazat náklad",
       "downloadFailed": "Nepodařilo se stáhnout soubor"
-    }
+    },
+    "addedOn": "Přidáno {{date}}"
   }
 }

@@ -110,37 +110,38 @@ export default function ExpenseDetail() {
   }
 
   if (!expense) {
-    return <div className="text-center text-gray-500 dark:text-gray-400">{t('detail.notFound')}</div>;
+    return <div className="text-center text-text-muted">{t('detail.notFound')}</div>;
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate('/expenses')}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {t('detail.title', { number: expense.expenseNumber })}
-            </h1>
-            <span className={`badge ${getExpenseStatusColor(expense.status)}`}>
-              {getExpenseStatusLabel(expense.status)}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
+    <div>
+      {/* Desktop header bar */}
+      <div className="hidden lg:flex items-center gap-4 -mx-7 -mt-7 mb-6 h-[60px] px-7 bg-surface border-b border-border">
+        <button
+          onClick={() => navigate('/expenses')}
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('list.title')}
+        </button>
+        <div className="h-4 w-px bg-border-strong" />
+        <h1 className="text-base font-semibold text-text">
+          {expense.clientName || t('detail.title', { number: expense.expenseNumber })}
+        </h1>
+        <span className={`badge ${getExpenseStatusColor(expense.status)}`}>
+          {getExpenseStatusLabel(expense.status)}
+        </span>
+        <span className="text-xs text-text-faint tabular-nums">
+          {t('detail.addedOn', { date: formatDate(expense.createdAt) })}
+        </span>
+        <div className="ml-auto flex items-center gap-2">
           {expense.status === 'unpaid' && (
             <>
               <Link to={`/expenses/${id}/edit`} className="btn btn-secondary flex items-center space-x-2">
                 <Edit className="h-4 w-4" />
                 <span>{t('detail.actions.edit')}</span>
               </Link>
-              <button onClick={handleMarkPaid} className="btn btn-success flex items-center space-x-2">
+              <button onClick={handleMarkPaid} className="btn btn-primary flex items-center space-x-2">
                 <CheckCircle className="h-4 w-4" />
                 <span>{t('detail.actions.markPaid')}</span>
               </button>
@@ -155,134 +156,169 @@ export default function ExpenseDetail() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Supplier info */}
-          {expense.clientName && (
-            <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.supplier.title')}</h2>
-              <div className="space-y-2">
-                <p className="font-medium text-gray-900 dark:text-gray-100">{expense.clientName}</p>
-                {expense.clientAddress && <p className="text-gray-600 dark:text-gray-300">{expense.clientAddress}</p>}
-                {expense.clientIco && <p className="text-gray-600 dark:text-gray-300">{t('detail.supplier.ico', { value: expense.clientIco })}</p>}
-                {expense.clientDic && <p className="text-gray-600 dark:text-gray-300">{t('detail.supplier.dic', { value: expense.clientDic })}</p>}
-                {expense.clientEmail && <p className="text-gray-600 dark:text-gray-300">{t('detail.supplier.email', { value: expense.clientEmail })}</p>}
-              </div>
-            </div>
+      {/* Mobile header */}
+      <div className="lg:hidden space-y-3 mb-4">
+        <button
+          onClick={() => navigate('/expenses')}
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('list.title')}
+        </button>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-lg font-bold tracking-[-0.02em] text-text truncate">
+            {expense.clientName || t('detail.title', { number: expense.expenseNumber })}
+          </h1>
+          {expense.status === 'unpaid' ? (
+            <button onClick={handleMarkPaid} className="btn btn-primary shrink-0">
+              {t('detail.actions.markPaid')}
+            </button>
+          ) : (
+            <button onClick={handleMarkUnpaid} className="btn btn-secondary shrink-0">
+              {t('detail.actions.markUnpaid')}
+            </button>
           )}
+        </div>
+      </div>
 
-          {/* Amount */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4 lg:gap-5">
+        <div className="space-y-4">
+          {/* Hero card: amount over label-value rows */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.amount.title')}</h2>
-            <div className="space-y-3">
+            <p className="text-[13px] text-text-muted">{t('detail.amount.total')}</p>
+            <p className="mt-1 text-[28px] leading-tight font-bold tracking-[-0.02em] text-text tabular-nums">
+              {formatCurrency(expense.total, expense.currency)}
+            </p>
+            <dl className="mt-4 pt-4 border-t border-hairline space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">{t('detail.amount.taxBase')}</span>
-                <span className="font-medium">{formatCurrency(expense.amount, expense.currency)}</span>
+                <dt className="text-[13px] text-text-muted">{t('detail.amount.taxBase')}</dt>
+                <dd className="text-sm font-medium text-text tabular-nums">
+                  {formatCurrency(expense.amount, expense.currency)}
+                </dd>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">{t('detail.amount.vat', { rate: expense.vatRate })}</span>
-                <span className="font-medium">{formatCurrency(expense.vatAmount, expense.currency)}</span>
+                <dt className="text-[13px] text-text-muted">{t('detail.amount.vat', { rate: expense.vatRate })}</dt>
+                <dd className="text-sm font-medium text-text tabular-nums">
+                  {formatCurrency(expense.vatAmount, expense.currency)}
+                </dd>
               </div>
-              <div className="flex justify-between text-lg border-t border-gray-200 dark:border-gray-700 pt-3">
-                <span className="font-bold">{t('detail.amount.total')}</span>
-                <span className="font-bold text-indigo-600">{formatCurrency(expense.total, expense.currency)}</span>
-              </div>
-            </div>
+              {expense.description && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-[13px] text-text-muted shrink-0">{t('detail.description.title')}</dt>
+                  <dd className="text-sm text-text-secondary text-right whitespace-pre-wrap">
+                    {expense.description}
+                  </dd>
+                </div>
+              )}
+            </dl>
           </div>
 
-          {/* Description */}
-          {expense.description && (
+          {/* Supplier */}
+          {expense.clientName && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.description.title')}</h2>
-              <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{expense.description}</p>
-            </div>
-          )}
-
-          {/* Attachment */}
-          {expense.fileData && expense.fileName && (
-            <div className="card">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('detail.attachment.title')}</h2>
-                <button onClick={handleDownloadFile} className="btn btn-secondary flex items-center space-x-2">
-                  <Download className="h-4 w-4" />
-                  <span>{t('detail.attachment.download')}</span>
-                </button>
+              <h2 className="text-[15px] font-semibold text-text mb-3">{t('detail.supplier.title')}</h2>
+              <p className="text-sm font-medium text-text">{expense.clientName}</p>
+              <div className="mt-1 space-y-0.5 text-[13px] text-text-secondary">
+                {expense.clientAddress && <p className="whitespace-pre-line">{expense.clientAddress}</p>}
+                {expense.clientIco && <p className="tabular-nums">{t('detail.supplier.ico', { value: expense.clientIco })}</p>}
+                {expense.clientDic && <p className="tabular-nums">{t('detail.supplier.dic', { value: expense.clientDic })}</p>}
+                {expense.clientEmail && <p>{t('detail.supplier.email', { value: expense.clientEmail })}</p>}
               </div>
-              {expense.fileMimeType === 'application/pdf' ? (
-                <object
-                  data={`data:application/pdf;base64,${expense.fileData}`}
-                  type="application/pdf"
-                  className="w-full h-[500px] rounded border border-gray-200 dark:border-gray-700"
-                >
-                  <p className="p-4 text-gray-500 dark:text-gray-400 text-center">
-                    {t('detail.attachment.pdfNotSupported')}
-                  </p>
-                </object>
-              ) : (
-                <img
-                  src={`data:${expense.fileMimeType};base64,${expense.fileData}`}
-                  alt={expense.fileName}
-                  className="max-w-full rounded border border-gray-200 dark:border-gray-700"
-                />
-              )}
             </div>
           )}
 
           {/* Notes */}
           {expense.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.notes.title')}</h2>
-              <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{expense.notes}</p>
+              <h2 className="text-[15px] font-semibold text-text mb-3">{t('detail.notes.title')}</h2>
+              <p className="text-sm text-text-secondary whitespace-pre-wrap">{expense.notes}</p>
             </div>
           )}
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
+        {/* Right column */}
+        <div className="space-y-4">
+          {/* Receipt */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[11px] uppercase font-semibold tracking-[.04em] text-text-faint">
+                {t('detail.attachment.title')}
+              </h2>
+              {expense.fileData && expense.fileName && (
+                <button
+                  onClick={handleDownloadFile}
+                  className="flex items-center gap-1 text-[13px] text-accent-link hover:underline"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {t('detail.attachment.download')}
+                </button>
+              )}
+            </div>
+            {expense.fileData && expense.fileName ? (
+              <div className="bg-[#fdfdff] border border-hairline rounded-[12px] p-3">
+                <p className="text-[11px] font-mono text-text-faint truncate mb-2">{expense.fileName}</p>
+                {expense.fileMimeType === 'application/pdf' ? (
+                  <object
+                    data={`data:application/pdf;base64,${expense.fileData}`}
+                    type="application/pdf"
+                    className="w-full h-[400px] rounded"
+                  >
+                    <p className="p-4 text-text-muted text-center text-sm">
+                      {t('detail.attachment.pdfNotSupported')}
+                    </p>
+                  </object>
+                ) : (
+                  <img
+                    src={`data:${expense.fileMimeType};base64,${expense.fileData}`}
+                    alt={expense.fileName}
+                    className="max-w-full rounded"
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2.5 bg-danger-bg text-danger rounded-[12px] px-3.5 py-3 text-[13px]">
+                {t('detail.attachment.missing')}
+              </div>
+            )}
+          </div>
+
           {/* Details */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.info.title')}</h2>
+            <h2 className="text-[15px] font-semibold text-text mb-4">{t('detail.info.title')}</h2>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">{t('detail.info.expenseNumber')}</dt>
-                <dd className="font-medium">{expense.expenseNumber}</dd>
+                <dt className="text-[13px] text-text-muted">{t('detail.info.expenseNumber')}</dt>
+                <dd className="text-sm font-medium text-text tabular-nums">{expense.expenseNumber}</dd>
               </div>
               {expense.supplierInvoiceNumber && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">{t('detail.info.invoiceNumber')}</dt>
-                  <dd className="font-medium">{expense.supplierInvoiceNumber}</dd>
+                  <dt className="text-[13px] text-text-muted">{t('detail.info.invoiceNumber')}</dt>
+                  <dd className="text-sm font-medium text-text tabular-nums">{expense.supplierInvoiceNumber}</dd>
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">{t('detail.info.issueDate')}</dt>
-                <dd className="font-medium">{formatDate(expense.issueDate)}</dd>
+                <dt className="text-[13px] text-text-muted">{t('detail.info.issueDate')}</dt>
+                <dd className="text-sm font-medium text-text tabular-nums">{formatDate(expense.issueDate)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">{t('detail.info.dueDate')}</dt>
-                <dd className="font-medium">{formatDate(expense.dueDate)}</dd>
+                <dt className="text-[13px] text-text-muted">{t('detail.info.dueDate')}</dt>
+                <dd className="text-sm font-medium text-text tabular-nums">{formatDate(expense.dueDate)}</dd>
               </div>
               {expense.paidAt && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">{t('detail.info.paidAt')}</dt>
-                  <dd className="font-medium">{formatDate(expense.paidAt)}</dd>
+                  <dt className="text-[13px] text-text-muted">{t('detail.info.paidAt')}</dt>
+                  <dd className="text-sm font-medium text-text tabular-nums">{formatDate(expense.paidAt)}</dd>
                 </div>
               )}
             </dl>
           </div>
 
-          {/* Actions */}
-          <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.actions.title')}</h2>
-            <div className="space-y-2">
-              <button
-                onClick={handleDelete}
-                className="btn btn-danger w-full flex items-center justify-center space-x-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>{t('detail.actions.delete')}</span>
-              </button>
-            </div>
+          {/* Destructive action — quiet text link */}
+          <div className="px-1">
+            <button onClick={handleDelete} className="flex items-center gap-1.5 text-[13px] text-danger hover:underline">
+              <Trash2 className="h-3.5 w-3.5" />
+              {t('detail.actions.delete')}
+            </button>
           </div>
         </div>
       </div>
