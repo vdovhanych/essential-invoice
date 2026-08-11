@@ -1,6 +1,5 @@
 {
   "title": "Settings",
-
   "smtp": {
     "heading": "Email Sending (SMTP)",
     "server": "SMTP server",
@@ -17,9 +16,9 @@
     "testConnection": "Test connection",
     "testSuccess": "SMTP connection is working",
     "testFailed": "SMTP test failed",
-    "serverPlaceholder": "smtp.example.com"
+    "serverPlaceholder": "smtp.example.com",
+    "description": "Used to send invoices from your own email address."
   },
-
   "imap": {
     "heading": "Email Receiving (IMAP)",
     "description": "Set up IMAP for automatic loading of bank payment notifications.",
@@ -38,7 +37,6 @@
     "testFailed": "IMAP test failed",
     "serverPlaceholder": "imap.example.com"
   },
-
   "ai": {
     "heading": "AI Features",
     "description": "Enable the AI assistant for Czech tax advisory. Works with OpenRouter by default, or any OpenAI-compatible API.",
@@ -53,32 +51,30 @@
     "modelLabel": "Model",
     "modelHelp": "Leave empty to use openai/gpt-5.6-luna. On OpenRouter, the tax advisor automatically adds web search."
   },
-
   "invoiceDefaults": {
     "heading": "Invoice Defaults",
     "vatRate": "Default VAT rate (%)",
     "paymentTerms": "Default payment terms (days)",
     "invoiceNumberPrefix": "Invoice number prefix",
-    "invoiceNumberPrefixPlaceholder": "e.g. FV, INV"
+    "invoiceNumberPrefixPlaceholder": "e.g. FV, INV",
+    "description": "Applied to every new invoice. You can still override any of it per invoice.",
+    "vatRateHelp": "Pre-filled on new invoices — changeable per invoice",
+    "paymentTermsHelp": "Due date is calculated from the issue date"
   },
-
   "calculator": {
     "heading": "Calculator",
     "description": "Enable calculator for computing invoiced amount based on hourly rate and KPI bonus.",
     "enable": "Enable calculator"
   },
-
   "emailTemplate": {
     "heading": "Email Template",
     "variablesHelp": "Use variables: {{invoiceNumber}}, {{total}}, {{dueDate}}, {{clientName}}, {{senderName}}",
     "placeholder": "Hello,\n\nPlease find attached invoice #{{invoiceNumber}} for {{total}}.\n\nDue date: {{dueDate}}\n\nThank you for your cooperation.\n\nBest regards,\n{{senderName}}"
   },
-
   "toast": {
     "saveSuccess": "Settings saved successfully",
     "saveFailed": "Failed to save settings"
   },
-
   "actions": {
     "saving": "Saving...",
     "save": "Save settings"

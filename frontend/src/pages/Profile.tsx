@@ -3,12 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
-import { User, Building, Upload, Trash2, Image, Landmark, ShieldAlert } from 'lucide-react';
+import { User, Building, Upload, Trash2, Image, Landmark, ShieldAlert, Lock, AlertTriangle } from 'lucide-react';
 
 export default function Profile() {
   const { t } = useTranslation('profile');
   const { user, token, updateProfile, refreshUser, logout } = useAuth();
   const [saving, setSaving] = useState(false);
+  const [section, setSection] = useState<'account' | 'business' | 'logo' | 'password' | 'danger'>('account');
   const [changingPassword, setChangingPassword] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -171,17 +172,65 @@ export default function Profile() {
     }
   }
 
-  return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+  const SECTIONS = [
+    { key: 'account' as const, icon: User, label: t('personal.heading') },
+    { key: 'business' as const, icon: Building, label: t('company.heading') },
+    { key: 'logo' as const, icon: Image, label: t('logo.heading') },
+    { key: 'password' as const, icon: Lock, label: t('password.heading') },
+    { key: 'danger' as const, icon: AlertTriangle, label: t('dangerZone.heading') },
+  ];
 
-      {/* Profile form */}
+  return (
+    <div className="space-y-5">
+      <h1 className="text-2xl font-bold tracking-[-0.02em] text-text">{t('title')}</h1>
+
+      {/* Mobile section chips */}
+      <div className="lg:hidden flex gap-2 overflow-x-auto pb-1">
+        {SECTIONS.map(({ key, icon: Icon, label }) => (
+          <button
+            key={key}
+            onClick={() => setSection(key)}
+            className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
+              section === key ? 'bg-accent text-white' : 'bg-surface border border-border text-text-secondary'
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="lg:grid lg:grid-cols-[230px_1fr] lg:gap-6 lg:items-start">
+        {/* Secondary nav — surface-sunken active state, not indigo */}
+        <nav className="hidden lg:block space-y-1">
+          {SECTIONS.map(({ key, icon: Icon, label }) => (
+            <button
+              key={key}
+              onClick={() => setSection(key)}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-[10px] text-sm transition-colors text-left ${
+                section === key
+                  ? 'bg-surface-sunken text-text font-medium'
+                  : key === 'danger'
+                    ? 'text-danger hover:bg-nav-hover'
+                    : 'text-text-secondary hover:bg-nav-hover hover:text-text'
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="space-y-4 min-w-0">
+
+      {(section === 'account' || section === 'business') && (
       <form onSubmit={handleSubmit} className="card space-y-6">
+        {section === 'account' && (<>
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-            <User className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+          <div className="p-2 bg-accent-soft rounded-lg">
+            <User className="h-5 w-5 text-accent" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('personal.heading')}</h2>
+          <h2 className="text-[15px] font-semibold text-text">{t('personal.heading')}</h2>
         </div>
 
         <div>
@@ -214,22 +263,24 @@ export default function Profile() {
           <input
             type="email"
             value={user?.email || ''}
-            className="input bg-gray-50 dark:bg-gray-700"
+            className="input bg-surface-sunken"
             disabled
           />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('personal.emailReadonly')}</p>
+          <p className="text-xs text-text-muted mt-1">{t('personal.emailReadonly')}</p>
         </div>
 
-        <hr className="dark:border-gray-700" />
+        </>)}
+
+        {section === 'business' && (<>
 
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-            <Building className="h-5 w-5 text-green-600 dark:text-green-400" />
+          <div className="p-2 bg-success-bg rounded-lg">
+            <Building className="h-5 w-5 text-success" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('company.heading')}</h2>
+          <h2 className="text-[15px] font-semibold text-text">{t('company.heading')}</h2>
         </div>
 
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-text-muted">
           {t('company.description')}
         </p>
 
@@ -267,25 +318,25 @@ export default function Profile() {
               disabled={!formData.vatPayer}
             />
             {!formData.vatPayer && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('company.dicNotRequired')}</p>
+              <p className="text-xs text-text-muted mt-1">{t('company.dicNotRequired')}</p>
             )}
           </div>
         </div>
 
-        <div className="flex items-start space-x-3 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
+        <div className="flex items-start space-x-3 p-4 bg-accent-tint rounded-lg border border-accent-soft">
           <input
             type="checkbox"
             id="vatPayer"
             name="vatPayer"
             checked={formData.vatPayer}
             onChange={handleChange}
-            className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+            className="mt-1 h-4 w-4 text-accent border-border-strong rounded focus:border-accent"
           />
           <div className="flex-1">
-            <label htmlFor="vatPayer" className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">
+            <label htmlFor="vatPayer" className="text-sm font-medium text-text cursor-pointer">
               {t('company.vatPayer')}
             </label>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-xs text-text-muted mt-1">
               {t('company.vatPayerHelp')}
             </p>
           </div>
@@ -328,17 +379,17 @@ export default function Profile() {
           </div>
         </div>
 
-        <hr className="dark:border-gray-700" />
+        <hr className="" />
 
         {/* Paušální daň section */}
         <div id="pausalni-dan" className="flex items-center space-x-3 scroll-mt-6">
           <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
             <Landmark className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('pausalniDan.heading')}</h2>
+          <h2 className="text-[15px] font-semibold text-text">{t('pausalniDan.heading')}</h2>
         </div>
 
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-text-muted">
           {t('pausalniDan.description')}
         </p>
 
@@ -349,9 +400,9 @@ export default function Profile() {
               name="pausalniDanEnabled"
               checked={formData.pausalniDanEnabled}
               onChange={handleChange}
-              className="rounded border-gray-300 text-indigo-600"
+              className="rounded border-border-strong text-accent"
             />
-            <span className="text-sm text-gray-600 dark:text-gray-400">{t('pausalniDan.enable')}</span>
+            <span className="text-sm text-text-muted">{t('pausalniDan.enable')}</span>
           </label>
 
           {formData.pausalniDanEnabled && (
@@ -368,7 +419,7 @@ export default function Profile() {
                   <option value={2}>{t('pausalniDan.tier2')}</option>
                   <option value={3}>{t('pausalniDan.tier3')}</option>
                 </select>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-text-muted mt-1">
                   {t('pausalniDan.tierHelp')}
                 </p>
               </div>
@@ -398,7 +449,7 @@ export default function Profile() {
                     <option value={2000000}>{t('pausalniDan.limit2m')}</option>
                   )}
                 </select>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-text-muted mt-1">
                   {t('pausalniDan.limitHelp')}
                 </p>
               </div>
@@ -406,23 +457,25 @@ export default function Profile() {
           )}
         </div>
 
+        </>)}
         <div className="flex justify-end">
           <button type="submit" disabled={saving} className="btn btn-primary">
             {saving ? t('actions.saving') : t('actions.save')}
           </button>
         </div>
       </form>
+      )}
 
-      {/* Logo upload */}
+      {section === 'logo' && (
       <div className="card space-y-6">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-            <Image className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <div className="p-2 bg-accent-soft rounded-lg">
+            <Image className="h-5 w-5 text-accent" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('logo.heading')}</h2>
+          <h2 className="text-[15px] font-semibold text-text">{t('logo.heading')}</h2>
         </div>
 
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-text-muted">
           {t('logo.description')}
         </p>
 
@@ -434,12 +487,12 @@ export default function Profile() {
                 <img
                   src={logoUrl}
                   alt={t('logo.altText')}
-                  className="w-32 sm:w-48 h-24 object-contain border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-700 p-2"
+                  className="w-32 sm:w-48 h-24 object-contain border border-border rounded-lg bg-surface p-2"
                 />
               </div>
             ) : (
-              <div className="w-32 sm:w-48 h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-800">
-                <span className="text-gray-400 text-sm">{t('logo.noLogo')}</span>
+              <div className="w-32 sm:w-48 h-24 border-2 border-dashed border-border-strong rounded-lg flex items-center justify-center bg-surface-sunken">
+                <span className="text-text-faint text-sm">{t('logo.noLogo')}</span>
               </div>
             )}
           </div>
@@ -474,16 +527,18 @@ export default function Profile() {
                 </button>
               )}
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-text-muted">
               {t('logo.recommendedSize')}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Password change */}
+      )}
+
+      {section === 'password' && (
       <form onSubmit={handlePasswordSubmit} className="card space-y-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('password.heading')}</h2>
+        <h2 className="text-[15px] font-semibold text-text">{t('password.heading')}</h2>
 
         <div>
           <label className="label">{t('password.currentPassword')}</label>
@@ -528,38 +583,44 @@ export default function Profile() {
           </button>
         </div>
       </form>
+      )}
 
-      {/* Danger Zone */}
-      <div className="border-2 border-red-200 dark:border-red-800 rounded-lg p-4 sm:p-6 space-y-4">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-            <ShieldAlert className="h-5 w-5 text-red-600 dark:text-red-400" />
-          </div>
-          <h2 className="text-lg font-semibold text-red-900 dark:text-red-400">{t('dangerZone.heading')}</h2>
+      {section === 'danger' && (
+      <div className="card space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center justify-center h-9 w-9 rounded-[10px] bg-danger-bg shrink-0">
+            <ShieldAlert className="h-4 w-4 text-danger" />
+          </span>
+          <h2 className="text-[15px] font-semibold text-text">{t('dangerZone.heading')}</h2>
         </div>
 
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-[13px] text-text-muted">
           {t('dangerZone.description')}
         </p>
 
+        {/* Destructive actions stay text links throughout the app */}
         <button
           type="button"
           onClick={() => setShowDeleteModal(true)}
-          className="btn btn-danger"
+          className="text-[13px] font-medium text-danger hover:underline"
         >
           {t('dangerZone.deleteAccount')}
         </button>
+      </div>
+      )}
+
+        </div>
       </div>
 
       {/* Delete Account Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-red-900 dark:text-red-400">{t('dangerZone.deleteModalTitle')}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="bg-surface rounded-[18px] shadow-xl max-w-md w-full p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-danger">{t('dangerZone.deleteModalTitle')}</h3>
+            <p className="text-sm text-text-muted">
               {t('dangerZone.deleteModalDescription')}
             </p>
-            <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1">
+            <ul className="text-sm text-text-muted list-disc list-inside space-y-1">
               <li>{t('dangerZone.deleteModalInvoices')}</li>
               <li>{t('dangerZone.deleteModalClients')}</li>
               <li>{t('dangerZone.deleteModalExpenses')}</li>

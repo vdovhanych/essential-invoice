@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
-import { Mail, Server, Eye, EyeOff, Calculator, Sparkles } from 'lucide-react';
+import { Mail, Server, Eye, EyeOff, Calculator, Sparkles, FileText } from 'lucide-react';
 import { PageLoader } from '../components/Spinner';
 
 interface Settings {
@@ -32,6 +32,16 @@ interface Settings {
   aiModel: string | null;
 }
 
+type SectionKey = 'invoiceDefaults' | 'emailSending' | 'bankMatching' | 'ai' | 'calculator';
+
+const SECTIONS: Array<{ key: SectionKey; icon: typeof Mail; headingKey: string; descriptionKey: string }> = [
+  { key: 'invoiceDefaults', icon: FileText, headingKey: 'invoiceDefaults.heading', descriptionKey: 'invoiceDefaults.description' },
+  { key: 'emailSending', icon: Mail, headingKey: 'smtp.heading', descriptionKey: 'smtp.description' },
+  { key: 'bankMatching', icon: Server, headingKey: 'imap.heading', descriptionKey: 'imap.description' },
+  { key: 'ai', icon: Sparkles, headingKey: 'ai.heading', descriptionKey: 'ai.description' },
+  { key: 'calculator', icon: Calculator, headingKey: 'calculator.heading', descriptionKey: 'calculator.description' },
+];
+
 export default function Settings() {
   const { t } = useTranslation('settings');
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -39,6 +49,7 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<'smtp' | 'imap' | null>(null);
   const [showPasswords, setShowPasswords] = useState({ smtp: false, imap: false, ai: false });
+  const [section, setSection] = useState<SectionKey>('invoiceDefaults');
 
   const [formData, setFormData] = useState({
     smtpHost: '',
@@ -153,401 +164,365 @@ export default function Settings() {
     return <PageLoader />;
   }
 
+  const activeSection = SECTIONS.find(s => s.key === section)!;
+
+  const passwordField = (
+    name: 'smtpPassword' | 'imapPassword' | 'aiApiKey',
+    toggleKey: 'smtp' | 'imap' | 'ai',
+    isSet: boolean | undefined,
+    placeholder?: string
+  ) => (
+    <div className="relative">
+      <input
+        type={showPasswords[toggleKey] ? 'text' : 'password'}
+        name={name}
+        value={formData[name]}
+        onChange={handleChange}
+        className="input pr-10"
+        placeholder={isSet ? '••••••••' : placeholder || ''}
+      />
+      <button
+        type="button"
+        onClick={() => setShowPasswords(p => ({ ...p, [toggleKey]: !p[toggleKey] }))}
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-text-faint hover:text-text-secondary"
+      >
+        {showPasswords[toggleKey] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
+
+  const toggleRow = (name: 'smtpSecure' | 'imapTls' | 'aiEnabled' | 'calculatorEnabled', label: string, description?: string) => (
+    <div className="flex items-center justify-between gap-5 py-1">
+      <div>
+        <p className="text-sm font-medium text-text">{label}</p>
+        {description && <p className="text-xs text-text-faint mt-0.5">{description}</p>}
+      </div>
+      <label className="relative inline-flex items-center cursor-pointer shrink-0">
+        <input
+          type="checkbox"
+          name={name}
+          checked={formData[name] as boolean}
+          onChange={handleChange}
+          className="sr-only peer"
+        />
+        <span className="w-[34px] h-5 bg-border-strong rounded-full peer-checked:bg-accent transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:bg-white after:rounded-full after:transition-transform peer-checked:after:translate-x-3.5" />
+      </label>
+    </div>
+  );
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+    <div className="space-y-5">
+      <h1 className="text-2xl font-bold tracking-[-0.02em] text-text">{t('title')}</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* SMTP Settings */}
-        <div className="card">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-              <Mail className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('smtp.heading')}</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="label">{t('smtp.server')}</label>
-              <input
-                type="text"
-                name="smtpHost"
-                value={formData.smtpHost}
-                onChange={handleChange}
-                className="input"
-                placeholder={t('smtp.serverPlaceholder')}
-              />
-            </div>
-            <div>
-              <label className="label">{t('smtp.port')}</label>
-              <input
-                type="number"
-                name="smtpPort"
-                value={formData.smtpPort}
-                onChange={handleChange}
-                className="input"
-              />
-            </div>
-            <div>
-              <label className="label">{t('smtp.user')}</label>
-              <input
-                type="text"
-                name="smtpUser"
-                value={formData.smtpUser}
-                onChange={handleChange}
-                className="input"
-              />
-            </div>
-            <div>
-              <label className="label">{t('smtp.password')} {settings?.smtpPasswordSet && t('smtp.passwordSet')}</label>
-              <div className="relative">
-                <input
-                  type={showPasswords.smtp ? 'text' : 'password'}
-                  name="smtpPassword"
-                  value={formData.smtpPassword}
-                  onChange={handleChange}
-                  className="input pr-10"
-                  placeholder={settings?.smtpPasswordSet ? '••••••••' : ''}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPasswords(p => ({ ...p, smtp: !p.smtp }))}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  {showPasswords.smtp ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="label">{t('smtp.fromEmail')}</label>
-              <input
-                type="email"
-                name="smtpFromEmail"
-                value={formData.smtpFromEmail}
-                onChange={handleChange}
-                className="input"
-                placeholder={t('smtp.fromEmailPlaceholder')}
-              />
-            </div>
-            <div>
-              <label className="label">{t('smtp.fromName')}</label>
-              <input
-                type="text"
-                name="smtpFromName"
-                value={formData.smtpFromName}
-                onChange={handleChange}
-                className="input"
-                placeholder={t('smtp.fromNamePlaceholder')}
-              />
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="smtpSecure"
-                checked={formData.smtpSecure}
-                onChange={handleChange}
-                className="rounded border-gray-300 text-indigo-600"
-              />
-              <span className="text-sm text-gray-600 dark:text-gray-400">{t('smtp.useTls')}</span>
-            </label>
-            <button
-              type="button"
-              onClick={() => testConnection('smtp')}
-              disabled={testing === 'smtp' || !formData.smtpHost}
-              className="btn btn-secondary"
-            >
-              {testing === 'smtp' ? t('smtp.testing') : t('smtp.testConnection')}
-            </button>
-          </div>
-        </div>
-
-        {/* IMAP Settings */}
-        <div className="card">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <Server className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('imap.heading')}</h2>
-          </div>
-
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            {t('imap.description')}
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="label">{t('imap.server')}</label>
-              <input
-                type="text"
-                name="imapHost"
-                value={formData.imapHost}
-                onChange={handleChange}
-                className="input"
-                placeholder={t('imap.serverPlaceholder')}
-              />
-            </div>
-            <div>
-              <label className="label">{t('imap.port')}</label>
-              <input
-                type="number"
-                name="imapPort"
-                value={formData.imapPort}
-                onChange={handleChange}
-                className="input"
-              />
-            </div>
-            <div>
-              <label className="label">{t('imap.user')}</label>
-              <input
-                type="text"
-                name="imapUser"
-                value={formData.imapUser}
-                onChange={handleChange}
-                className="input"
-              />
-            </div>
-            <div>
-              <label className="label">{t('imap.password')} {settings?.imapPasswordSet && t('imap.passwordSet')}</label>
-              <div className="relative">
-                <input
-                  type={showPasswords.imap ? 'text' : 'password'}
-                  name="imapPassword"
-                  value={formData.imapPassword}
-                  onChange={handleChange}
-                  className="input pr-10"
-                  placeholder={settings?.imapPasswordSet ? '••••••••' : ''}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPasswords(p => ({ ...p, imap: !p.imap }))}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  {showPasswords.imap ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-            <div className="md:col-span-2">
-              <label className="label">{t('imap.bankNotificationEmail')}</label>
-              <input
-                type="email"
-                name="bankNotificationEmail"
-                value={formData.bankNotificationEmail}
-                onChange={handleChange}
-                className="input"
-                placeholder={t('imap.bankNotificationEmailPlaceholder')}
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {t('imap.bankNotificationEmailHelp')}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="imapTls"
-                checked={formData.imapTls}
-                onChange={handleChange}
-                className="rounded border-gray-300 text-indigo-600"
-              />
-              <span className="text-sm text-gray-600 dark:text-gray-400">{t('imap.useTls')}</span>
-            </label>
-            <button
-              type="button"
-              onClick={() => testConnection('imap')}
-              disabled={testing === 'imap' || !formData.imapHost}
-              className="btn btn-secondary"
-            >
-              {testing === 'imap' ? t('imap.testing') : t('imap.testConnection')}
-            </button>
-          </div>
-        </div>
-
-        {/* AI Features Settings */}
-        <div className="card">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-              <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('ai.heading')}</h2>
-          </div>
-
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            {t('ai.description')}
-          </p>
-
-          <label className="flex items-center space-x-2 mb-4">
-            <input
-              type="checkbox"
-              name="aiEnabled"
-              checked={formData.aiEnabled}
-              onChange={handleChange}
-              className="rounded border-gray-300 text-indigo-600"
-            />
-            <span className="text-sm text-gray-600 dark:text-gray-400">{t('ai.enableAi')}</span>
-          </label>
-
-          <div className="space-y-4">
-            <div>
-              <label className="label">{t('ai.apiKeyLabel')} {settings?.aiApiKeySet && t('ai.apiKeySet')}</label>
-              <div className="relative">
-                <input
-                  type={showPasswords.ai ? 'text' : 'password'}
-                  name="aiApiKey"
-                  value={formData.aiApiKey}
-                  onChange={handleChange}
-                  className="input pr-10"
-                  placeholder={settings?.aiApiKeySet ? '••••••••' : t('ai.apiKeyPlaceholder')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPasswords(p => ({ ...p, ai: !p.ai }))}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  {showPasswords.ai ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {t('ai.apiKeyHelp')}{' '}
-                <a
-                  href="https://openrouter.ai/settings/keys"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-600 hover:underline"
-                >
-                  {t('ai.apiKeyLink')}
-                </a>
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="label">{t('ai.apiUrlLabel')}</label>
-                <input
-                  type="text"
-                  name="aiApiUrl"
-                  value={formData.aiApiUrl}
-                  onChange={handleChange}
-                  className="input"
-                  placeholder="https://openrouter.ai/api/v1"
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {t('ai.apiUrlHelp')}
-                </p>
-              </div>
-              <div>
-                <label className="label">{t('ai.modelLabel')}</label>
-                <input
-                  type="text"
-                  name="aiModel"
-                  value={formData.aiModel}
-                  onChange={handleChange}
-                  className="input"
-                  placeholder="openai/gpt-5.6-luna"
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {t('ai.modelHelp')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Invoice defaults */}
-        <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('invoiceDefaults.heading')}</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="label">{t('invoiceDefaults.vatRate')}</label>
-              <select
-                name="defaultVatRate"
-                value={formData.defaultVatRate}
-                onChange={handleChange}
-                className="input"
-              >
-                <option value={0}>0%</option>
-                <option value={12}>12%</option>
-                <option value={21}>21%</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">{t('invoiceDefaults.paymentTerms')}</label>
-              <input
-                type="number"
-                name="defaultPaymentTerms"
-                value={formData.defaultPaymentTerms}
-                onChange={handleChange}
-                className="input"
-                min={1}
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="label">{t('invoiceDefaults.invoiceNumberPrefix')}</label>
-              <input
-                type="text"
-                name="invoiceNumberPrefix"
-                value={formData.invoiceNumberPrefix}
-                onChange={handleChange}
-                className="input"
-                placeholder={t('invoiceDefaults.invoiceNumberPrefixPlaceholder')}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Calculator Settings */}
-        <div className="card">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-              <Calculator className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('calculator.heading')}</h2>
-          </div>
-
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            {t('calculator.description')}
-          </p>
-
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="calculatorEnabled"
-              checked={formData.calculatorEnabled}
-              onChange={handleChange}
-              className="rounded border-gray-300 text-indigo-600"
-            />
-            <span className="text-sm text-gray-600 dark:text-gray-400">{t('calculator.enable')}</span>
-          </label>
-        </div>
-
-        {/* Email template */}
-        <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('emailTemplate.heading')}</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            {t('emailTemplate.variablesHelp')}
-          </p>
-          <textarea
-            name="emailTemplate"
-            value={formData.emailTemplate}
-            onChange={handleChange}
-            className="input"
-            rows={6}
-            placeholder={t('emailTemplate.placeholder')}
-          />
-        </div>
-
-        {/* Submit */}
-        <div className="flex justify-end">
-          <button type="submit" disabled={saving} className="btn btn-primary">
-            {saving ? t('actions.saving') : t('actions.save')}
+      {/* Mobile section chips */}
+      <div className="lg:hidden flex gap-2 overflow-x-auto pb-1">
+        {SECTIONS.map(({ key, icon: Icon, headingKey }) => (
+          <button
+            key={key}
+            onClick={() => setSection(key)}
+            className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
+              section === key
+                ? 'bg-accent text-white'
+                : 'bg-surface border border-border text-text-secondary'
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {t(headingKey)}
           </button>
-        </div>
-      </form>
+        ))}
+      </div>
+
+      <div className="lg:grid lg:grid-cols-[230px_1fr] lg:gap-6 lg:items-start">
+        {/* Secondary nav — surface-sunken active state, deliberately not indigo */}
+        <nav className="hidden lg:block space-y-1">
+          {SECTIONS.map(({ key, icon: Icon, headingKey }) => (
+            <button
+              key={key}
+              onClick={() => setSection(key)}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-[10px] text-sm transition-colors text-left ${
+                section === key
+                  ? 'bg-surface-sunken text-text font-medium'
+                  : 'text-text-secondary hover:bg-nav-hover hover:text-text'
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {t(headingKey)}
+            </button>
+          ))}
+        </nav>
+
+        {/* Content */}
+        <form onSubmit={handleSubmit} className="space-y-4 min-w-0">
+          {/* Page head */}
+          <div>
+            <h2 className="text-xl font-bold tracking-[-0.02em] text-text">{t(activeSection.headingKey)}</h2>
+            <p className="mt-1 text-[13px] text-text-muted">{t(activeSection.descriptionKey)}</p>
+          </div>
+
+          {section === 'invoiceDefaults' && (
+            <div className="card">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">{t('invoiceDefaults.vatRate')}</label>
+                  <select
+                    name="defaultVatRate"
+                    value={formData.defaultVatRate}
+                    onChange={handleChange}
+                    className="input"
+                  >
+                    <option value={0}>0%</option>
+                    <option value={12}>12%</option>
+                    <option value={21}>21%</option>
+                  </select>
+                  <p className="text-xs text-text-faint mt-1">{t('invoiceDefaults.vatRateHelp')}</p>
+                </div>
+                <div>
+                  <label className="label">{t('invoiceDefaults.paymentTerms')}</label>
+                  <input
+                    type="number"
+                    name="defaultPaymentTerms"
+                    value={formData.defaultPaymentTerms}
+                    onChange={handleChange}
+                    className="input tabular-nums"
+                    min={1}
+                  />
+                  <p className="text-xs text-text-faint mt-1">{t('invoiceDefaults.paymentTermsHelp')}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="label">{t('invoiceDefaults.invoiceNumberPrefix')}</label>
+                  <input
+                    type="text"
+                    name="invoiceNumberPrefix"
+                    value={formData.invoiceNumberPrefix}
+                    onChange={handleChange}
+                    className="input font-mono"
+                    placeholder={t('invoiceDefaults.invoiceNumberPrefixPlaceholder')}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {section === 'emailSending' && (
+            <>
+              <div className="card">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">{t('smtp.server')}</label>
+                    <input
+                      type="text"
+                      name="smtpHost"
+                      value={formData.smtpHost}
+                      onChange={handleChange}
+                      className="input"
+                      placeholder={t('smtp.serverPlaceholder')}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">{t('smtp.port')}</label>
+                    <input
+                      type="number"
+                      name="smtpPort"
+                      value={formData.smtpPort}
+                      onChange={handleChange}
+                      className="input tabular-nums"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">{t('smtp.user')}</label>
+                    <input
+                      type="text"
+                      name="smtpUser"
+                      value={formData.smtpUser}
+                      onChange={handleChange}
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">{t('smtp.password')} {settings?.smtpPasswordSet && t('smtp.passwordSet')}</label>
+                    {passwordField('smtpPassword', 'smtp', settings?.smtpPasswordSet)}
+                  </div>
+                  <div>
+                    <label className="label">{t('smtp.fromEmail')}</label>
+                    <input
+                      type="email"
+                      name="smtpFromEmail"
+                      value={formData.smtpFromEmail}
+                      onChange={handleChange}
+                      className="input"
+                      placeholder={t('smtp.fromEmailPlaceholder')}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">{t('smtp.fromName')}</label>
+                    <input
+                      type="text"
+                      name="smtpFromName"
+                      value={formData.smtpFromName}
+                      onChange={handleChange}
+                      className="input"
+                      placeholder={t('smtp.fromNamePlaceholder')}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-hairline flex items-center justify-between gap-4">
+                  <div className="flex-1">{toggleRow('smtpSecure', t('smtp.useTls'))}</div>
+                  <button
+                    type="button"
+                    onClick={() => testConnection('smtp')}
+                    disabled={testing === 'smtp' || !formData.smtpHost}
+                    className="btn btn-secondary shrink-0"
+                  >
+                    {testing === 'smtp' ? t('smtp.testing') : t('smtp.testConnection')}
+                  </button>
+                </div>
+              </div>
+
+              <div className="card">
+                <h3 className="text-[15px] font-semibold text-text mb-1">{t('emailTemplate.heading')}</h3>
+                <p className="text-[13px] text-text-muted mb-3">{t('emailTemplate.variablesHelp')}</p>
+                <textarea
+                  name="emailTemplate"
+                  value={formData.emailTemplate}
+                  onChange={handleChange}
+                  className="input"
+                  rows={6}
+                  placeholder={t('emailTemplate.placeholder')}
+                />
+              </div>
+            </>
+          )}
+
+          {section === 'bankMatching' && (
+            <div className="card">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">{t('imap.server')}</label>
+                  <input
+                    type="text"
+                    name="imapHost"
+                    value={formData.imapHost}
+                    onChange={handleChange}
+                    className="input"
+                    placeholder={t('imap.serverPlaceholder')}
+                  />
+                </div>
+                <div>
+                  <label className="label">{t('imap.port')}</label>
+                  <input
+                    type="number"
+                    name="imapPort"
+                    value={formData.imapPort}
+                    onChange={handleChange}
+                    className="input tabular-nums"
+                  />
+                </div>
+                <div>
+                  <label className="label">{t('imap.user')}</label>
+                  <input
+                    type="text"
+                    name="imapUser"
+                    value={formData.imapUser}
+                    onChange={handleChange}
+                    className="input"
+                  />
+                </div>
+                <div>
+                  <label className="label">{t('imap.password')} {settings?.imapPasswordSet && t('imap.passwordSet')}</label>
+                  {passwordField('imapPassword', 'imap', settings?.imapPasswordSet)}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="label">{t('imap.bankNotificationEmail')}</label>
+                  <input
+                    type="email"
+                    name="bankNotificationEmail"
+                    value={formData.bankNotificationEmail}
+                    onChange={handleChange}
+                    className="input"
+                    placeholder={t('imap.bankNotificationEmailPlaceholder')}
+                  />
+                  <p className="text-xs text-text-faint mt-1">{t('imap.bankNotificationEmailHelp')}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-hairline flex items-center justify-between gap-4">
+                <div className="flex-1">{toggleRow('imapTls', t('imap.useTls'))}</div>
+                <button
+                  type="button"
+                  onClick={() => testConnection('imap')}
+                  disabled={testing === 'imap' || !formData.imapHost}
+                  className="btn btn-secondary shrink-0"
+                >
+                  {testing === 'imap' ? t('imap.testing') : t('imap.testConnection')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {section === 'ai' && (
+            <div className="card space-y-4">
+              {toggleRow('aiEnabled', t('ai.enableAi'))}
+              <div className="pt-4 border-t border-hairline space-y-4">
+                <div>
+                  <label className="label">{t('ai.apiKeyLabel')} {settings?.aiApiKeySet && t('ai.apiKeySet')}</label>
+                  {passwordField('aiApiKey', 'ai', settings?.aiApiKeySet, t('ai.apiKeyPlaceholder'))}
+                  <p className="text-xs text-text-faint mt-1">
+                    {t('ai.apiKeyHelp')}{' '}
+                    <a
+                      href="https://openrouter.ai/settings/keys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent-link hover:underline"
+                    >
+                      {t('ai.apiKeyLink')}
+                    </a>
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">{t('ai.apiUrlLabel')}</label>
+                    <input
+                      type="text"
+                      name="aiApiUrl"
+                      value={formData.aiApiUrl}
+                      onChange={handleChange}
+                      className="input font-mono"
+                      placeholder="https://openrouter.ai/api/v1"
+                    />
+                    <p className="text-xs text-text-faint mt-1">{t('ai.apiUrlHelp')}</p>
+                  </div>
+                  <div>
+                    <label className="label">{t('ai.modelLabel')}</label>
+                    <input
+                      type="text"
+                      name="aiModel"
+                      value={formData.aiModel}
+                      onChange={handleChange}
+                      className="input font-mono"
+                      placeholder="openai/gpt-5.6-luna"
+                    />
+                    <p className="text-xs text-text-faint mt-1">{t('ai.modelHelp')}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {section === 'calculator' && (
+            <div className="card">
+              {toggleRow('calculatorEnabled', t('calculator.enable'), t('calculator.description'))}
+            </div>
+          )}
+
+          {/* Submit */}
+          <div className="flex justify-end">
+            <button type="submit" disabled={saving} className="btn btn-primary">
+              {saving ? t('actions.saving') : t('actions.save')}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

@@ -23,7 +23,8 @@ vi.mock('lucide-react', () => ({
   Eye: () => <span data-testid="eye-icon" />,
   EyeOff: () => <span data-testid="eye-off-icon" />,
   Calculator: () => <span data-testid="calculator-icon" />,
-  Sparkles: () => <span data-testid="sparkles-icon" />
+  Sparkles: () => <span data-testid="sparkles-icon" />,
+  FileText: () => <span data-testid="filetext-icon" />
 }));
 
 const getVatSelect = () => document.querySelector('select[name="defaultVatRate"]') as HTMLSelectElement;
