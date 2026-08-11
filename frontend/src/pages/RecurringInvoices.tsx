@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
-import { formatCurrency, formatDate } from '../utils/format';
+import { formatCurrency, formatDate, getInitials } from '../utils/format';
 import { Plus, Repeat, Play, Pause, Trash2 } from 'lucide-react';
 import { PageLoader } from '../components/Spinner';
 import { toast } from 'sonner';
@@ -23,6 +23,15 @@ interface RecurringInvoice {
   active: boolean;
   subtotal: number;
   createdAt: string;
+}
+
+/** Whole days from today until the given date (negative when past) */
+function daysUntil(date: string): number {
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / 86400000);
 }
 
 export default function RecurringInvoices() {
@@ -71,87 +80,101 @@ export default function RecurringInvoices() {
     return <PageLoader />;
   }
 
+  if (templates.length === 0) {
+    return (
+      <div className="card text-center py-12">
+        <Repeat className="h-12 w-12 text-border-strong mx-auto mb-4" />
+        <p className="text-sm text-text-muted">{t('recurring.list.emptyState')}</p>
+        <Link to="/recurring/new" className="btn btn-primary mt-4 inline-flex items-center space-x-2">
+          <Plus className="h-4 w-4" />
+          <span>{t('recurring.list.createFirst')}</span>
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <div className="card overflow-hidden">
-      {templates.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnContact')}</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnAmount')}</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnDayOfMonth')}</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnNextGeneration')}</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnAutoSend')}</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnStatus')}</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">{t('recurring.list.columnActions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {templates.map((template) => (
-                <tr key={template.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="py-3 px-4">
-                    <Link
-                      to={`/recurring/${template.id}`}
-                      className="font-medium text-indigo-600 hover:underline"
-                    >
-                      {template.clientName}
-                    </Link>
-                  </td>
-                  <td className="py-3 px-4 text-right font-medium">
-                    {formatCurrency(template.subtotal * (1 + template.vatRate / 100), template.currency)}
-                  </td>
-                  <td className="py-3 px-4 text-center">{template.dayOfMonth}.</td>
-                  <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                    {formatDate(template.nextGenerationDate)}
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    {template.autoSend ? (
-                      <span className="badge bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400">{t('recurring.list.autoSendYes')}</span>
-                    ) : (
-                      <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">{t('recurring.list.autoSendNo')}</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    {template.active ? (
-                      <span className="badge bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">{t('recurring.list.statusActive')}</span>
-                    ) : (
-                      <span className="badge bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">{t('recurring.list.statusPaused')}</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    <div className="flex items-center justify-end space-x-1">
-                      <button
-                        onClick={() => handleToggle(template.id)}
-                        className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg"
-                        title={template.active ? t('recurring.list.togglePause') : t('recurring.list.toggleActivate')}
-                      >
-                        {template.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(template.id)}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
-                        title={t('recurring.list.delete')}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <Repeat className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">{t('recurring.list.emptyState')}</p>
-          <Link to="/recurring/new" className="btn btn-primary mt-4 inline-flex items-center space-x-2">
-            <Plus className="h-4 w-4" />
-            <span>{t('recurring.list.createFirst')}</span>
-          </Link>
-        </div>
-      )}
+    <div className="space-y-3">
+      {templates.map((template) => {
+        const days = daysUntil(template.nextGenerationDate);
+        const total = template.subtotal * (1 + template.vatRate / 100);
+        return (
+          <div
+            key={template.id}
+            className={`bg-surface border border-border rounded-[20px] px-[22px] py-[18px] ${
+              template.active ? '' : 'opacity-[.72]'
+            }`}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-[1.6fr_1.3fr_1fr_auto] gap-4 items-center">
+              {/* Client */}
+              <Link to={`/recurring/${template.id}`} className="flex items-center gap-3 min-w-0 group">
+                <span className="flex items-center justify-center h-[34px] w-[34px] rounded-[11px] bg-accent-soft text-accent text-xs font-semibold shrink-0">
+                  {getInitials(template.clientName)}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[15px] font-semibold text-text truncate group-hover:text-accent transition-colors">
+                    {template.clientName}
+                  </span>
+                  <span className="block text-xs text-text-faint truncate">{template.clientEmail}</span>
+                </span>
+              </Link>
+
+              {/* The schedule, stated twice: when first, then the rule */}
+              <div className="min-w-0">
+                <p className="text-[13px] text-text-secondary tabular-nums">
+                  {t('recurring.list.nextOn')}{' '}
+                  <span className="font-semibold text-text">{formatDate(template.nextGenerationDate)}</span>
+                  {days >= 0 && (
+                    <span className="text-text-muted">
+                      {' '}
+                      — {days === 0 ? t('recurring.list.today') : t('recurring.list.inDays', { count: days })}
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-text-faint">
+                  {t('recurring.list.monthlyOn', { day: template.dayOfMonth })} ·{' '}
+                  {template.autoSend ? t('recurring.list.sendsItself') : t('recurring.list.savedAsDraft')}
+                </p>
+              </div>
+
+              {/* Amount */}
+              <p
+                className={`text-[15px] font-semibold tabular-nums sm:text-right ${
+                  template.active ? 'text-text' : 'text-text-faint'
+                }`}
+              >
+                {formatCurrency(total, template.currency)}
+              </p>
+
+              {/* Status + actions */}
+              <div className="flex items-center gap-2 sm:justify-end">
+                <span
+                  className={`badge gap-1 ${
+                    template.active ? 'bg-success-bg text-success' : 'bg-neutral-chip-bg text-neutral-chip-fg'
+                  }`}
+                >
+                  {template.active ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+                  {template.active ? t('recurring.list.statusActive') : t('recurring.list.statusPaused')}
+                </span>
+                <button
+                  onClick={() => handleToggle(template.id)}
+                  className="p-1.5 rounded-lg text-text-faint hover:text-accent hover:bg-nav-hover transition-colors"
+                  title={template.active ? t('recurring.list.togglePause') : t('recurring.list.toggleActivate')}
+                >
+                  {template.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                </button>
+                <button
+                  onClick={() => handleDelete(template.id)}
+                  className="p-1.5 rounded-lg text-text-faint hover:text-danger hover:bg-nav-hover transition-colors"
+                  title={t('recurring.list.delete')}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
