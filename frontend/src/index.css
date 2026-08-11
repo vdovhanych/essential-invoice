@@ -4,6 +4,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* "Calm Indigo" design tokens. The dark skin is a token swap only — same
+   layout, same spacing. Consumed by tailwind.config.js theme colors. */
+:root {
+  --canvas: #f4f5f9;
+  --surface: #ffffff;
+  --surface-sunken: #f2f3f8;
+  --border: #e8eaf1;
+  --border-strong: #e2e5ee;
+  --hairline: #eef0f6;
+  --hairline-soft: #f2f3f8;
+  --text: #1b1d29;
+  --text-secondary: #5c6079;
+  --text-muted: #7a7f99;
+  --text-faint: #8b90a8;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: #e4e2fb;
+  --accent-tint: #eceafd;
+  --accent-quiet: #a5a0f0;
+  --accent-link: #4f46e5;
+  --success: #0f7a5a;
+  --success-bg: #e4f6ee;
+  --danger: #c0392f;
+  --danger-bg: #fdeceb;
+  --neutral-chip-bg: #f2f3f8;
+  --neutral-chip-fg: #5c6079;
+  --chart-secondary: #dfe2ee;
+  --row-hover: #fafbfe;
+  --nav-hover: #f2f3f8;
+}
+
+.dark {
+  --canvas: #0e1016;
+  --surface: #171a23;
+  --surface-sunken: #0e1016;
+  --border: #242836;
+  --border-strong: #2a2e3e;
+  --hairline: #1e2130;
+  --hairline-soft: #1c1f2b;
+  --text: #e9ebf2;
+  --text-secondary: #8b90a8;
+  --text-muted: #6b7189;
+  --text-faint: #5d6378;
+  --accent: #6d63f7;
+  --accent-hover: #7c73f8;
+  --accent-soft: #2a2e45;
+  --accent-tint: rgba(109, 99, 247, 0.18);
+  --accent-quiet: #4d47a8;
+  --accent-link: #a99bff;
+  --success: #34d399;
+  --success-bg: rgba(52, 211, 153, 0.14);
+  --danger: #fb7185;
+  --danger-bg: rgba(251, 113, 133, 0.14);
+  --neutral-chip-bg: rgba(139, 144, 168, 0.14);
+  --neutral-chip-fg: #8b90a8;
+  --chart-secondary: #2a2e45;
+  --row-hover: #1b1e2c;
+  --nav-hover: #1e2130;
+}
+
 body {
   font-family: 'Inter Variable', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
@@ -11,13 +71,13 @@ body {
 
 @layer base {
   body {
-    @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+    @apply bg-canvas text-text;
   }
 }
 
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply px-4 py-2 rounded-[10px] text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn:active:not(:disabled) {
@@ -25,64 +85,68 @@ body {
   }
 
   .btn-primary {
-    @apply bg-indigo-600 text-white hover:bg-indigo-700;
+    @apply bg-accent text-white hover:bg-accent-hover shadow-[0_6px_16px_-6px_rgba(79,70,229,.7)];
   }
 
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600;
+    @apply bg-surface text-text border border-border-strong hover:bg-surface-sunken;
   }
 
   .btn-danger {
-    @apply bg-red-600 text-white hover:bg-red-700;
+    @apply bg-danger text-white hover:opacity-90;
   }
 
   .btn-success {
-    @apply bg-green-600 text-white hover:bg-green-700;
+    @apply bg-success text-white hover:opacity-90;
   }
 
   .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400;
+    @apply w-full px-3 py-2 bg-surface text-text placeholder-text-faint border border-border-strong rounded-[9px] focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)];
   }
 
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300;
+    @apply block text-[13px] font-medium text-text-muted mb-1;
+  }
+
+  /* Auth screens are one task each — larger fields than in-app inputs */
+  .input-auth {
+    @apply w-full px-3.5 py-3.5 text-[15px] bg-surface text-text placeholder-text-faint border border-border-strong rounded-[12px] focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)];
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 dark:bg-gray-800 dark:border-gray-700;
+    @apply bg-surface rounded-[20px] border border-border p-4 sm:p-[22px];
   }
 
   .card-interactive {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 dark:bg-gray-800 dark:border-gray-700 transition-all duration-200;
+    @apply bg-surface rounded-[20px] border border-border p-4 sm:p-[22px] transition-colors duration-200;
   }
 
   .card-interactive:hover {
-    transform: translateY(-2px);
-    @apply shadow-md;
+    @apply bg-row-hover border-border-strong;
   }
 
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold;
   }
 
   .badge-draft {
-    @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300;
+    @apply bg-neutral-chip-bg text-neutral-chip-fg;
   }
 
   .badge-sent {
-    @apply bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400;
+    @apply bg-accent-tint text-accent;
   }
 
   .badge-paid {
-    @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
+    @apply bg-success-bg text-success;
   }
 
   .badge-overdue {
-    @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+    @apply bg-danger-bg text-danger;
   }
 
   .badge-cancelled {
-    @apply bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400;
+    @apply bg-neutral-chip-bg text-text-faint;
   }
 }
 
