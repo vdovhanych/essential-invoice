@@ -16,7 +16,16 @@
       "status": "Status"
     },
     "empty": "No expenses found",
-    "addFirst": "Add first expense"
+    "addFirst": "Add first expense",
+    "summary": "{{year}} · {{amount}} across {{count}} receipts",
+    "statusAll": "All",
+    "noReceiptChip": "No receipt",
+    "receiptMissing": "Receipt missing",
+    "flatRateBanner": "You're on the flat-rate scheme, so expenses don't reduce your tax. They're logged here for your own records and for your accountant.",
+    "hideBanner": "Hide this",
+    "shownOf": "{{shown}} of {{total}} shown",
+    "noMatch": "No expenses match your filters",
+    "clearFilters": "Clear filters"
   },
   "create": {
     "titleNew": "New expense",
@@ -50,7 +59,9 @@
       "aiExtract": "Fill form from document (AI)",
       "aiExtracting": "Reading document...",
       "aiExtractSuccess": "Form pre-filled from the document — please verify the values",
-      "aiExtractFailed": "Failed to extract data from the document"
+      "aiExtractFailed": "Failed to extract data from the document",
+      "remove": "Remove",
+      "fileHint": "PDF, JPG or PNG · up to 5 MB"
     },
     "description": {
       "title": "Description",
@@ -73,7 +84,8 @@
     },
     "toast": {
       "saveFailed": "Failed to save expense"
-    }
+    },
+    "flatRateNote": "Flat rate — this won't change your tax. Saved for your records."
   },
   "detail": {
     "title": "Expense {{number}}",
@@ -96,7 +108,8 @@
     "attachment": {
       "title": "Attachment",
       "download": "Download",
-      "pdfNotSupported": "Your browser does not support PDF viewing."
+      "pdfNotSupported": "Your browser does not support PDF viewing.",
+      "missing": "Receipt missing"
     },
     "notes": {
       "title": "Notes"
@@ -126,6 +139,7 @@
       "markUnpaidFailed": "Failed to mark expense as unpaid",
       "deleteFailed": "Failed to delete expense",
       "downloadFailed": "Failed to download file"
-    }
+    },
+    "addedOn": "Added {{date}}"
   }
 }
