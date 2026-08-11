@@ -41,6 +41,7 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
   - `AIAssistant.tsx` - AI assistant chat component
   - `CommandPalette.tsx` - Global ⌘K/Ctrl+K command palette (mounted in `Layout.tsx`); loads invoices and contacts on open and filters client-side
   - `OfflineBanner.tsx` - Offline state banner driven by the browser `online`/`offline` events
+  - `ErrorBoundary.tsx` - Render-error boundary showing the app's own failure state with a reference code; wraps the routed outlet (reset on navigation) and the whole route tree
   - `ReminderComposer.tsx` - Payment-reminder modal with an AI draft and a Friendly/Neutral/Firm tone control; drafts are editable and only sent on an explicit user action
 - **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, RecurringInvoices, RecurringInvoiceCreate, RecurringInvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
 - **Utils**:
