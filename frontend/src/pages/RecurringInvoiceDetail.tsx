@@ -116,194 +116,192 @@ export default function RecurringInvoiceDetail() {
   }
 
   if (!template) {
-    return <div className="text-center text-gray-500 dark:text-gray-400">{t('recurring.detail.notFound')}</div>;
+    return <div className="text-center text-text-muted">{t('recurring.detail.notFound')}</div>;
   }
+
+  const columnHeader = 'text-[11px] uppercase font-semibold tracking-[.04em] text-text-faint';
 
   const subtotal = template.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
   const vatAmount = subtotal * (template.vatRate / 100);
   const total = subtotal + vatAmount;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate('/invoices?tab=recurring')}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {t('recurring.detail.title', { clientName: template.clientName })}
-            </h1>
-            {template.active ? (
-              <span className="badge bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">{t('recurring.detail.statusActive')}</span>
-            ) : (
-              <span className="badge bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">{t('recurring.detail.statusPaused')}</span>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={handleGenerateNow}
-            disabled={generating}
-            className="btn btn-primary flex items-center space-x-2"
-          >
-            <Zap className="h-4 w-4" />
-            <span>{generating ? t('recurring.detail.generating') : t('recurring.detail.generateNow')}</span>
+    <div>
+      {/* Header bar */}
+      <div className="hidden lg:flex items-center gap-4 -mx-7 -mt-7 mb-6 h-[60px] px-7 bg-surface border-b border-border">
+        <button
+          onClick={() => navigate('/invoices?tab=recurring')}
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('tabs.recurring')}
+        </button>
+        <div className="h-4 w-px bg-border-strong" />
+        <h1 className="text-base font-semibold text-text">
+          {t('recurring.detail.title', { clientName: template.clientName })}
+        </h1>
+        <span className={`badge gap-1 ${template.active ? 'bg-success-bg text-success' : 'bg-neutral-chip-bg text-neutral-chip-fg'}`}>
+          {template.active ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+          {template.active ? t('recurring.detail.statusActive') : t('recurring.detail.statusPaused')}
+        </span>
+        <div className="ml-auto flex items-center gap-2">
+          <button onClick={handleToggle} className="btn btn-secondary flex items-center space-x-2">
+            {template.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            <span>{template.active ? t('recurring.detail.pause') : t('recurring.detail.activate')}</span>
           </button>
           <Link to={`/recurring/${id}/edit`} className="btn btn-secondary flex items-center space-x-2">
             <Edit className="h-4 w-4" />
             <span>{t('recurring.detail.edit')}</span>
           </Link>
-          <button
-            onClick={handleToggle}
-            className="btn btn-secondary flex items-center space-x-2"
-          >
-            {template.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            <span>{template.active ? t('recurring.detail.pause') : t('recurring.detail.activate')}</span>
+          <button onClick={handleGenerateNow} disabled={generating} className="btn btn-primary flex items-center space-x-2">
+            <Zap className="h-4 w-4" />
+            <span>{generating ? t('recurring.detail.generating') : t('recurring.detail.generateNow')}</span>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      {/* Mobile header */}
+      <div className="lg:hidden space-y-3 mb-4">
+        <button
+          onClick={() => navigate('/invoices?tab=recurring')}
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('tabs.recurring')}
+        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="text-lg font-bold tracking-[-0.02em] text-text">
+            {t('recurring.detail.title', { clientName: template.clientName })}
+          </h1>
+          <span className={`badge ${template.active ? 'bg-success-bg text-success' : 'bg-neutral-chip-bg text-neutral-chip-fg'}`}>
+            {template.active ? t('recurring.detail.statusActive') : t('recurring.detail.statusPaused')}
+          </span>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={handleToggle} className="btn btn-secondary flex-1">
+            {template.active ? t('recurring.detail.pause') : t('recurring.detail.activate')}
+          </button>
+          <button onClick={handleGenerateNow} disabled={generating} className="btn btn-primary flex-1">
+            {generating ? t('recurring.detail.generating') : t('recurring.detail.generateNow')}
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4 lg:gap-5">
+        <div className="space-y-4">
           {/* Items */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.detail.itemsSection')}</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.columnDescription')}</th>
-                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.columnQuantity')}</th>
-                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.columnUnitPrice')}</th>
-                    <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.columnTotal')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {template.items.map((item) => (
-                    <tr key={item.id} className="border-b border-gray-100 dark:border-gray-700">
-                      <td className="py-3">{item.description}</td>
-                      <td className="py-3 text-right">{item.quantity} {item.unit}</td>
-                      <td className="py-3 text-right">{formatCurrency(item.unitPrice, template.currency)}</td>
-                      <td className="py-3 text-right font-medium">{formatCurrency(item.quantity * item.unitPrice, template.currency)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t border-gray-200 dark:border-gray-700">
-                    <td colSpan={3} className="py-2 text-right font-medium">{t('recurring.detail.subtotal')}</td>
-                    <td className="py-2 text-right">{formatCurrency(subtotal, template.currency)}</td>
-                  </tr>
-                  <tr>
-                    <td colSpan={3} className="py-2 text-right font-medium">{t('recurring.detail.vatWithRate', { rate: template.vatRate })}</td>
-                    <td className="py-2 text-right">{formatCurrency(vatAmount, template.currency)}</td>
-                  </tr>
-                  <tr className="text-lg">
-                    <td colSpan={3} className="py-2 text-right font-bold">{t('recurring.detail.total')}</td>
-                    <td className="py-2 text-right font-bold text-indigo-600">
-                      {formatCurrency(total, template.currency)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
+            <h2 className="text-[15px] font-semibold text-text mb-4">{t('recurring.detail.itemsSection')}</h2>
+            <div className="grid grid-cols-[2.6fr_0.9fr_1fr_1fr] gap-x-4 pb-2 border-b border-hairline">
+              <span className={columnHeader}>{t('recurring.detail.columnDescription')}</span>
+              <span className={`${columnHeader} text-right`}>{t('recurring.detail.columnQuantity')}</span>
+              <span className={`${columnHeader} text-right`}>{t('recurring.detail.columnUnitPrice')}</span>
+              <span className={`${columnHeader} text-right`}>{t('recurring.detail.columnTotal')}</span>
+            </div>
+            {template.items.map((item) => (
+              <div
+                key={item.id}
+                className="grid grid-cols-[2.6fr_0.9fr_1fr_1fr] gap-x-4 py-3 border-b border-hairline-soft last:border-b-0"
+              >
+                <span className="text-sm text-text">{item.description}</span>
+                <span className="text-sm text-text-secondary text-right tabular-nums">{item.quantity} {item.unit}</span>
+                <span className="text-sm text-text-secondary text-right tabular-nums">{formatCurrency(item.unitPrice, template.currency)}</span>
+                <span className="text-sm font-medium text-text text-right tabular-nums">{formatCurrency(item.quantity * item.unitPrice, template.currency)}</span>
+              </div>
+            ))}
+            <div className="flex justify-end mt-4 pt-4 border-t border-hairline">
+              <div className="min-w-[260px] space-y-2">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[13px] text-text-muted">{t('recurring.detail.subtotal')}</span>
+                  <span className="text-sm text-text tabular-nums">{formatCurrency(subtotal, template.currency)}</span>
+                </div>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[13px] text-text-muted">{t('recurring.detail.vatWithRate', { rate: template.vatRate })}</span>
+                  <span className="text-sm text-text tabular-nums">{formatCurrency(vatAmount, template.currency)}</span>
+                </div>
+                <div className="flex justify-between items-baseline pt-2 border-t border-hairline">
+                  <span className="text-sm font-semibold text-text">{t('recurring.detail.total')}</span>
+                  <span className="text-[26px] leading-tight font-bold tracking-[-0.02em] text-accent tabular-nums">
+                    {formatCurrency(total, template.currency)}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Notes */}
           {template.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.detail.notesSection')}</h2>
-              <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{template.notes}</p>
+              <h2 className="text-[15px] font-semibold text-text mb-4">{t('recurring.detail.notesSection')}</h2>
+              <p className="text-text-secondary whitespace-pre-wrap">{template.notes}</p>
             </div>
           )}
 
           {/* Generated invoices */}
           {generatedInvoices.length > 0 && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.detail.generatedInvoicesSection')}</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.generatedColumnNumber')}</th>
-                      <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.generatedColumnDate')}</th>
-                      <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.generatedColumnAmount')}</th>
-                      <th className="text-center py-2 font-medium text-gray-500 dark:text-gray-400">{t('recurring.detail.generatedColumnStatus')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {generatedInvoices.map((invoice) => (
-                      <tr key={invoice.id} className="border-b border-gray-100 dark:border-gray-700">
-                        <td className="py-3">
-                          <Link to={`/invoices/${invoice.id}`} className="text-indigo-600 hover:underline">
-                            {invoice.invoiceNumber}
-                          </Link>
-                        </td>
-                        <td className="py-3 text-gray-600 dark:text-gray-300">{formatDate(invoice.issueDate)}</td>
-                        <td className="py-3 text-right font-medium">{formatCurrency(invoice.total, invoice.currency)}</td>
-                        <td className="py-3 text-center">
-                          <span className={`badge ${getStatusColor(invoice.status)}`}>
-                            {getStatusLabel(invoice.status)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <h2 className="text-[15px] font-semibold text-text mb-4">{t('recurring.detail.generatedInvoicesSection')}</h2>
+              <div>
+                {generatedInvoices.map((invoice) => (
+                  <Link
+                    key={invoice.id}
+                    to={`/invoices/${invoice.id}`}
+                    className="flex items-center gap-3 py-2.5 border-b border-hairline-soft last:border-b-0 hover:bg-row-hover -mx-2 px-2 rounded-lg transition-colors"
+                  >
+                    <span className="text-[13px] font-medium text-text tabular-nums">{invoice.invoiceNumber}</span>
+                    <span className="text-xs text-text-faint tabular-nums">{formatDate(invoice.issueDate)}</span>
+                    <span className="ml-auto text-sm font-semibold text-text tabular-nums">
+                      {formatCurrency(invoice.total, invoice.currency)}
+                    </span>
+                    <span className={`badge ${getStatusColor(invoice.status)}`}>
+                      {getStatusLabel(invoice.status)}
+                    </span>
+                  </Link>
+                ))}
               </div>
             </div>
           )}
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.detail.scheduleSection')}</h2>
+            <h2 className="text-[15px] font-semibold text-text mb-4">{t('recurring.detail.scheduleSection')}</h2>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.dayOfMonth')}</dt>
-                <dd className="font-medium">{template.dayOfMonth}.</dd>
+                <dt className="text-[13px] text-text-muted">{t('recurring.detail.dayOfMonth')}</dt>
+                <dd className="text-sm font-medium text-text tabular-nums">{template.dayOfMonth}.</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.startDate')}</dt>
-                <dd className="font-medium">{formatDate(template.startDate)}</dd>
+                <dt className="text-[13px] text-text-muted">{t('recurring.detail.startDate')}</dt>
+                <dd className="text-sm font-medium text-text tabular-nums">{formatDate(template.startDate)}</dd>
               </div>
               {template.endDate && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.endDate')}</dt>
-                  <dd className="font-medium">{formatDate(template.endDate)}</dd>
+                  <dt className="text-[13px] text-text-muted">{t('recurring.detail.endDate')}</dt>
+                  <dd className="text-sm font-medium text-text tabular-nums">{formatDate(template.endDate)}</dd>
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.nextGeneration')}</dt>
-                <dd className="font-medium">{formatDate(template.nextGenerationDate)}</dd>
+                <dt className="text-[13px] text-text-muted">{t('recurring.detail.nextGeneration')}</dt>
+                <dd className="text-sm font-medium text-text tabular-nums">{formatDate(template.nextGenerationDate)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.paymentTerms')}</dt>
-                <dd className="font-medium">{t('recurring.detail.paymentTermsDays', { count: template.paymentTerms })}</dd>
+                <dt className="text-[13px] text-text-muted">{t('recurring.detail.paymentTerms')}</dt>
+                <dd className="text-sm font-medium text-text tabular-nums">{t('recurring.detail.paymentTermsDays', { count: template.paymentTerms })}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500 dark:text-gray-400">{t('recurring.detail.autoSend')}</dt>
-                <dd className="font-medium">{template.autoSend ? t('recurring.detail.autoSendYes') : t('recurring.detail.autoSendNo')}</dd>
+                <dt className="text-[13px] text-text-muted">{t('recurring.detail.autoSend')}</dt>
+                <dd className="text-sm font-medium text-text tabular-nums">{template.autoSend ? t('recurring.detail.autoSendYes') : t('recurring.detail.autoSendNo')}</dd>
               </div>
             </dl>
           </div>
 
-          <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.detail.actionsSection')}</h2>
-            <div className="space-y-2">
-              <button
-                onClick={handleDelete}
-                className="btn btn-danger w-full flex items-center justify-center space-x-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>{t('recurring.detail.deleteRecurring')}</span>
-              </button>
-            </div>
+          <div className="px-1">
+            <button onClick={handleDelete} className="flex items-center gap-1.5 text-[13px] text-danger hover:underline">
+              <Trash2 className="h-3.5 w-3.5" />
+              {t('recurring.detail.deleteRecurring')}
+            </button>
           </div>
         </div>
       </div>

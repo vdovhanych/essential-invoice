@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
-import { formatCurrency as formatCurrencyLocale } from '../utils/format';
+import { ArrowLeft, CalendarClock } from 'lucide-react';
+import { formatCurrency as formatCurrencyLocale, formatDate } from '../utils/format';
 import { useLineItems, LineItem } from '../hooks/useLineItems';
 import InvoiceItemsEditor from '../components/InvoiceItemsEditor';
 import { PageLoader } from '../components/Spinner';
@@ -149,75 +149,147 @@ export default function RecurringInvoiceCreate() {
     return formatCurrencyLocale(amount, formData.currency);
   };
 
+  const title = isEdit ? t('recurring.create.titleEdit') : t('recurring.create.title');
+  const submitLabel = saving
+    ? t('recurring.create.saving')
+    : isEdit
+      ? t('recurring.create.saveChanges')
+      : t('recurring.create.createRecurring');
+
+  // Inline control inside the schedule sentence
+  const inlineControl = 'bg-surface text-text border border-border-strong rounded-[9px] px-2.5 py-1 text-sm focus:outline-none focus:border-accent align-baseline';
+  const selectedClient = clients.find(c => c.id === formData.clientId);
+
+  // Preview: the next three issue dates, so the rule is confirmed in plain dates
+  const nextThree = (() => {
+    const dates: Date[] = [];
+    const from = formData.startDate ? new Date(formData.startDate) : new Date();
+    const cursor = new Date(from.getFullYear(), from.getMonth(), Number(formData.dayOfMonth));
+    if (cursor < from) cursor.setMonth(cursor.getMonth() + 1);
+    for (let i = 0; i < 3; i++) {
+      dates.push(new Date(cursor));
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    return dates;
+  })();
+
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center space-x-4 mb-6">
+    <div className="pb-20 lg:pb-0">
+      {/* Header bar */}
+      <div className="hidden lg:flex items-center gap-4 -mx-7 -mt-7 mb-6 h-[60px] px-7 bg-surface border-b border-border">
         <button
           onClick={() => navigate('/invoices?tab=recurring')}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 w-4" />
+          {t('tabs.recurring')}
         </button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {isEdit ? t('recurring.create.titleEdit') : t('recurring.create.title')}
-        </h1>
+        <div className="h-4 w-px bg-border-strong" />
+        <h1 className="text-base font-semibold text-text">{title}</h1>
+        <div className="ml-auto flex items-center gap-2">
+          <button type="button" onClick={() => navigate('/invoices?tab=recurring')} className="btn btn-secondary">
+            {t('recurring.create.cancel')}
+          </button>
+          <button type="submit" form="recurring-form" disabled={saving} className="btn btn-primary">
+            {submitLabel}
+          </button>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Client selection */}
+      {/* Mobile header */}
+      <div className="lg:hidden flex items-center gap-3 mb-4">
+        <button
+          onClick={() => navigate('/invoices?tab=recurring')}
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('tabs.recurring')}
+        </button>
+        <h1 className="text-lg font-bold tracking-[-0.02em] text-text">{title}</h1>
+      </div>
+
+      <form id="recurring-form" onSubmit={handleSubmit} className="max-w-[900px] space-y-4">
+        {/* The schedule, as a sentence rather than a grid of fields */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.create.contactSection')}</h2>
-          <div>
-            <label htmlFor="clientId" className="label">{t('recurring.create.selectContact')}</label>
+          <h2 className="text-[15px] font-semibold text-text mb-4">{t('recurring.create.scheduleSection')}</h2>
+          <p className="text-base leading-[2] text-text-secondary">
+            {t('recurring.create.sentencePart1')}{' '}
             <select
               id="clientId"
               name="clientId"
               value={formData.clientId}
               onChange={handleChange}
-              className="input"
+              className={inlineControl}
+              aria-label={t('recurring.create.selectContact')}
               required
             >
               <option value="">{t('recurring.create.selectContactPlaceholder')}</option>
               {clients.map(client => (
-                <option key={client.id} value={client.id}>
-                  {client.companyName} ({client.primaryEmail})
-                </option>
+                <option key={client.id} value={client.id}>{client.companyName}</option>
               ))}
-            </select>
-          </div>
-        </div>
+            </select>{' '}
+            {t('recurring.create.sentencePart2')}{' '}
+            <select
+              id="dayOfMonth"
+              name="dayOfMonth"
+              value={formData.dayOfMonth}
+              onChange={handleChange}
+              className={inlineControl}
+              aria-label={t('recurring.create.dayOfMonth')}
+              required
+            >
+              {Array.from({ length: 28 }, (_, i) => i + 1).map(day => (
+                <option key={day} value={day}>{day}.</option>
+              ))}
+            </select>{' '}
+            {t('recurring.create.sentencePart3')}{' '}
+            <input
+              type="date"
+              id="startDate"
+              name="startDate"
+              value={formData.startDate}
+              onChange={handleChange}
+              className={`${inlineControl} tabular-nums`}
+              aria-label={t('recurring.create.startDate')}
+              required
+            />.
+          </p>
 
-        {/* Schedule */}
-        <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.create.scheduleSection')}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label htmlFor="dayOfMonth" className="label">{t('recurring.create.dayOfMonth')}</label>
-              <select
-                id="dayOfMonth"
-                name="dayOfMonth"
-                value={formData.dayOfMonth}
-                onChange={handleChange}
-                className="input"
-                required
-              >
-                {Array.from({ length: 28 }, (_, i) => i + 1).map(day => (
-                  <option key={day} value={day}>{day}.</option>
-                ))}
-              </select>
+          {/* Preview footnote — confirms the rule means what the user thinks */}
+          <div className="flex items-start gap-2 mt-4 bg-canvas rounded-[12px] px-3.5 py-3">
+            <CalendarClock className="h-4 w-4 text-text-muted shrink-0 mt-0.5" />
+            <p className="text-xs text-text-muted tabular-nums">
+              {t('recurring.create.nextThree', {
+                dates: nextThree.map(d => formatDate(d.toISOString())).join(' · '),
+              })}
+              {selectedClient && <> — {selectedClient.companyName}</>}
+            </p>
+          </div>
+
+          {/* When it comes due */}
+          <div className="mt-4 pt-4 border-t border-hairline">
+            <p className="text-[13px] font-medium text-text mb-2">{t('recurring.create.whenDueHeading')}</p>
+            <div className="space-y-2">
+              {[
+                { value: true, label: t('recurring.create.autoSendOption') },
+                { value: false, label: t('recurring.create.draftOption') },
+              ].map(({ value, label }) => (
+                <label key={String(value)} className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="autoSend"
+                    checked={formData.autoSend === value}
+                    onChange={() => setFormData(prev => ({ ...prev, autoSend: value }))}
+                    className="accent-accent"
+                  />
+                  <span className="text-sm text-text-secondary">{label}</span>
+                </label>
+              ))}
             </div>
-            <div>
-              <label htmlFor="startDate" className="label">{t('recurring.create.startDate')}</label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
-                className="input"
-                required
-              />
-            </div>
+          </div>
+
+          {/* Ends + terms + currency */}
+          <div className="mt-4 pt-4 border-t border-hairline grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label htmlFor="endDate" className="label">{t('recurring.create.endDate')}</label>
               <input
@@ -226,7 +298,7 @@ export default function RecurringInvoiceCreate() {
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleChange}
-                className="input"
+                className="input tabular-nums"
                 placeholder={t('recurring.create.endDatePlaceholder')}
               />
             </div>
@@ -238,13 +310,11 @@ export default function RecurringInvoiceCreate() {
                 name="paymentTerms"
                 value={formData.paymentTerms}
                 onChange={handleChange}
-                className="input"
+                className="input tabular-nums"
                 min="1"
                 max="365"
               />
             </div>
-          </div>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="currency" className="label">{t('recurring.create.currency')}</label>
               <select
@@ -257,19 +327,6 @@ export default function RecurringInvoiceCreate() {
                 <option value="CZK">CZK</option>
                 <option value="EUR">EUR</option>
               </select>
-            </div>
-            <div className="flex items-center pt-6">
-              <input
-                type="checkbox"
-                id="autoSend"
-                name="autoSend"
-                checked={formData.autoSend}
-                onChange={handleChange}
-                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-2"
-              />
-              <label htmlFor="autoSend" className="text-sm text-gray-700 dark:text-gray-300">
-                {t('recurring.create.autoSend')}
-              </label>
             </div>
           </div>
         </div>
@@ -291,7 +348,7 @@ export default function RecurringInvoiceCreate() {
 
         {/* Notes */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('recurring.create.notesSection')}</h2>
+          <h2 className="text-[15px] font-semibold text-text mb-3">{t('recurring.create.notesSection')}</h2>
           <textarea
             name="notes"
             value={formData.notes}
@@ -301,29 +358,22 @@ export default function RecurringInvoiceCreate() {
             maxLength={300}
             placeholder={t('recurring.create.notesPlaceholder')}
           />
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-text-faint mt-1">
             {t('recurring.create.notesCharCount', { count: formData.notes.length })}
           </p>
         </div>
-
-        {/* Submit */}
-        <div className="flex justify-end space-x-4">
-          <button
-            type="button"
-            onClick={() => navigate('/invoices?tab=recurring')}
-            className="btn btn-secondary"
-          >
-            {t('recurring.create.cancel')}
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="btn btn-primary"
-          >
-            {saving ? t('recurring.create.saving') : (isEdit ? t('recurring.create.saveChanges') : t('recurring.create.createRecurring'))}
-          </button>
-        </div>
       </form>
+
+      {/* Mobile sticky bar */}
+      <div className="lg:hidden fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 px-[18px] py-2.5 bg-surface/95 backdrop-blur border-t border-border flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] text-text-muted">{t('recurring.create.total')}</p>
+          <p className="text-xl font-bold text-text tabular-nums leading-tight">{formatCurrency(total)}</p>
+        </div>
+        <button type="submit" form="recurring-form" disabled={saving} className="btn btn-primary rounded-[12px] py-3 px-6">
+          {submitLabel}
+        </button>
+      </div>
     </div>
   );
 }
