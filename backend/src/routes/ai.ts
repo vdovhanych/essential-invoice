@@ -68,6 +68,8 @@ aiRouter.post('/extract-expense', async (req: AuthRequest, res: Response) => {
 });
 
 // Draft a payment reminder email for a sent/overdue invoice
+const VALID_TONES = ['auto', 'friendly', 'neutral', 'firm'] as const;
+
 aiRouter.post('/draft-reminder', async (req: AuthRequest, res: Response) => {
   try {
     const configured = await isAIConfigured(req.userId!);
@@ -75,7 +77,7 @@ aiRouter.post('/draft-reminder', async (req: AuthRequest, res: Response) => {
       return res.status(503).json({ error: 'AI features not configured. Please add your API key in Settings.' });
     }
 
-    const { invoiceId } = req.body;
+    const { invoiceId, tone } = req.body;
 
     if (!invoiceId) {
       return res.status(400).json({ error: 'Invoice ID is required' });
@@ -120,7 +122,8 @@ aiRouter.post('/draft-reminder', async (req: AuthRequest, res: Response) => {
         daysOverdue,
       },
       language,
-      senderName
+      senderName,
+      VALID_TONES.includes(tone) ? tone : 'auto'
     );
 
     res.json(draft);
