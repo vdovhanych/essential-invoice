@@ -16,7 +16,18 @@
     },
     "confirm": {
       "delete": "Are you sure you want to delete contact \"{{name}}\"?"
-    }
+    },
+    "summary_one": "{{count}} contact · {{amount}} invoiced all time",
+    "summary_other": "{{count}} contacts · {{amount}} invoiced all time",
+    "columnContact": "Contact",
+    "columnPerson": "Person",
+    "columnInvoices": "Invoices",
+    "columnRevenueShare": "Revenue share",
+    "columnOpen": "Open",
+    "icoLabel": "IČO {{ico}}",
+    "newInvoiceFor": "New invoice for this contact",
+    "editContact": "Edit contact",
+    "deleteContact": "Delete contact"
   },
   "modal": {
     "titleNew": "New contact",
@@ -32,14 +43,18 @@
       "address": "Address",
       "contactPerson": "Contact person",
       "phone": "Phone",
-      "notes": "Notes"
+      "notes": "Notes",
+      "addSecondEmail": "Add a second email for invoices"
     },
     "ares": {
       "loading": "Loading...",
       "lookup": "Lookup in ARES",
       "success": "Data loaded from ARES",
       "failed": "Failed to load data from ARES",
-      "icoValidation": "Reg. No. must be 8 digits"
+      "icoValidation": "Reg. No. must be 8 digits",
+      "foundInAres": "Found",
+      "filledNote": "Name, address and VAT ID below were filled from the register.",
+      "notFoundNote": "Not found in the register — you can type the details in yourself."
     },
     "buttons": {
       "cancel": "Cancel",
@@ -68,7 +83,10 @@
     },
     "stats": {
       "totalRevenue": "Total revenue",
-      "pendingAmount": "Pending"
+      "pendingAmount": "Pending",
+      "invoiceCount": "Invoices",
+      "overdueCount_one": "{{count}} overdue",
+      "overdueCount_other": "{{count}} overdue"
     },
     "invoices": {
       "title": "Invoice history",

@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
-import { formatCurrency, formatDate, getStatusLabel, getStatusColor } from '../utils/format';
-import { ArrowLeft, Building, Mail, Phone, FileText, MapPin, Plus } from 'lucide-react';
+import { formatCurrency, formatDate, getStatusLabel, getStatusColor, getInitials } from '../utils/format';
+import { ArrowLeft, FileText, Plus } from 'lucide-react';
 import { PageLoader } from '../components/Spinner';
 import { toast } from 'sonner';
 
@@ -64,7 +64,7 @@ export default function ClientDetail() {
   }
 
   if (!client) {
-    return <div className="text-center text-gray-500 dark:text-gray-400">{t('detail.notFound')}</div>;
+    return <div className="text-center text-text-muted">{t('detail.notFound')}</div>;
   }
 
   const totalRevenue = invoices
@@ -75,184 +75,197 @@ export default function ClientDetail() {
     .filter(i => i.status === 'sent' || i.status === 'overdue')
     .reduce((sum, i) => sum + i.total, 0);
 
+  const overdueCount = invoices.filter(i => i.status === 'overdue').length;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate('/clients')}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
-              <Building className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{client.companyName}</h1>
-              {client.ico && <p className="text-gray-500 dark:text-gray-400">ICO: {client.ico}</p>}
-            </div>
+    <div>
+      {/* Header bar */}
+      <div className="hidden lg:flex items-center gap-4 -mx-7 -mt-7 mb-6 h-[60px] px-7 bg-surface border-b border-border">
+        <button
+          onClick={() => navigate('/clients')}
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('list.title')}
+        </button>
+        <div className="h-4 w-px bg-border-strong" />
+        <span className="flex items-center justify-center h-7 w-7 rounded-[9px] bg-accent-soft text-accent text-[11px] font-semibold shrink-0">
+          {getInitials(client.companyName)}
+        </span>
+        <h1 className="text-base font-semibold text-text">{client.companyName}</h1>
+        {client.ico && (
+          <span className="text-xs text-text-faint tabular-nums">{t('list.icoLabel', { ico: client.ico })}</span>
+        )}
+        <div className="ml-auto">
+          <Link to={`/invoices/new?client=${client.id}`} className="btn btn-primary flex items-center space-x-2">
+            <Plus className="h-4 w-4" />
+            <span>{t('detail.newInvoice')}</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Mobile header */}
+      <div className="lg:hidden space-y-3 mb-4">
+        <button
+          onClick={() => navigate('/clients')}
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('list.title')}
+        </button>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center justify-center h-[38px] w-[38px] rounded-[11px] bg-accent-soft text-accent text-[13px] font-semibold shrink-0">
+            {getInitials(client.companyName)}
+          </span>
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold tracking-[-0.02em] text-text truncate">{client.companyName}</h1>
+            {client.ico && (
+              <p className="text-xs text-text-faint tabular-nums">{t('list.icoLabel', { ico: client.ico })}</p>
+            )}
           </div>
         </div>
-        <Link
-          to={`/invoices/new?clientId=${client.id}`}
-          className="btn btn-primary flex items-center space-x-2 self-start sm:self-auto"
-        >
+        <Link to={`/invoices/new?client=${client.id}`} className="btn btn-primary w-full flex items-center justify-center space-x-2">
           <Plus className="h-4 w-4" />
           <span>{t('detail.newInvoice')}</span>
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Client details */}
-        <div className="lg:col-span-1 space-y-6">
+      {/* Hero row — what this contact is worth, and what they owe */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+        <div className="bg-surface border border-border rounded-[16px] px-4 py-3.5 min-w-0">
+          <p className="text-xs text-text-muted">{t('detail.stats.totalRevenue')}</p>
+          <p className="mt-1 text-[19px] font-semibold tracking-[-0.02em] text-text tabular-nums truncate">
+            {formatCurrency(totalRevenue)}
+          </p>
+        </div>
+        <div className="bg-surface border border-border rounded-[16px] px-4 py-3.5 min-w-0">
+          <p className="text-xs text-text-muted">{t('detail.stats.pendingAmount')}</p>
+          <p
+            className={`mt-1 text-[19px] font-semibold tracking-[-0.02em] tabular-nums truncate ${
+              pendingAmount > 0 ? 'text-danger' : 'text-text-faint'
+            }`}
+          >
+            {formatCurrency(pendingAmount)}
+          </p>
+          {overdueCount > 0 && (
+            <p className="text-[11px] text-danger">{t('detail.stats.overdueCount', { count: overdueCount })}</p>
+          )}
+        </div>
+        <div className="bg-surface border border-border rounded-[16px] px-4 py-3.5 min-w-0 col-span-2 lg:col-span-1">
+          <p className="text-xs text-text-muted">{t('detail.stats.invoiceCount')}</p>
+          <p className="mt-1 text-[19px] font-semibold tracking-[-0.02em] text-text tabular-nums">
+            {invoices.length}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-4 lg:gap-5">
+        {/* Contact details */}
+        <div className="space-y-4">
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.contactInfo.title')}</h2>
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('detail.contactInfo.primaryEmail')}</p>
-                  <a href={`mailto:${client.primaryEmail}`} className="text-indigo-600 hover:underline">
+            <h2 className="text-[15px] font-semibold text-text mb-4">{t('detail.contactInfo.title')}</h2>
+            <dl className="space-y-3">
+              <div>
+                <dt className="text-xs text-text-faint">{t('detail.contactInfo.primaryEmail')}</dt>
+                <dd>
+                  <a href={`mailto:${client.primaryEmail}`} className="text-[13px] text-accent-link hover:underline">
                     {client.primaryEmail}
                   </a>
-                </div>
+                </dd>
               </div>
-
               {client.secondaryEmail && (
-                <div className="flex items-start space-x-3">
-                  <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('detail.contactInfo.secondaryEmail')}</p>
-                    <a href={`mailto:${client.secondaryEmail}`} className="text-indigo-600 hover:underline">
+                <div>
+                  <dt className="text-xs text-text-faint">{t('detail.contactInfo.secondaryEmail')}</dt>
+                  <dd>
+                    <a href={`mailto:${client.secondaryEmail}`} className="text-[13px] text-accent-link hover:underline">
                       {client.secondaryEmail}
                     </a>
-                  </div>
+                  </dd>
                 </div>
               )}
-
               {client.contactPerson && (
-                <div className="flex items-start space-x-3">
-                  <Building className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('detail.contactInfo.contactPerson')}</p>
-                    <p className="text-gray-900 dark:text-gray-100">{client.contactPerson}</p>
-                  </div>
+                <div>
+                  <dt className="text-xs text-text-faint">{t('detail.contactInfo.contactPerson')}</dt>
+                  <dd className="text-[13px] text-text-secondary">{client.contactPerson}</dd>
                 </div>
               )}
-
               {client.contactPhone && (
-                <div className="flex items-start space-x-3">
-                  <Phone className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('detail.contactInfo.phone')}</p>
-                    <a href={`tel:${client.contactPhone}`} className="text-indigo-600 hover:underline">
+                <div>
+                  <dt className="text-xs text-text-faint">{t('detail.contactInfo.phone')}</dt>
+                  <dd>
+                    <a href={`tel:${client.contactPhone}`} className="text-[13px] text-accent-link hover:underline tabular-nums">
                       {client.contactPhone}
                     </a>
-                  </div>
+                  </dd>
                 </div>
               )}
-
               {client.address && (
-                <div className="flex items-start space-x-3">
-                  <MapPin className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('detail.contactInfo.address')}</p>
-                    <p className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{client.address}</p>
-                  </div>
+                <div>
+                  <dt className="text-xs text-text-faint">{t('detail.contactInfo.address')}</dt>
+                  <dd className="text-[13px] text-text-secondary whitespace-pre-wrap">{client.address}</dd>
                 </div>
               )}
-            </div>
-          </div>
-
-          {client.dic && (
-            <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.taxInfo.title')}</h2>
-              <div className="space-y-2">
-                {client.ico && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">{t('detail.taxInfo.ico')}</span>
-                    <span className="font-medium">{client.ico}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">{t('detail.taxInfo.dic')}</span>
-                  <span className="font-medium">{client.dic}</span>
+              {(client.ico || client.dic) && (
+                <div className="pt-3 border-t border-hairline space-y-3">
+                  {client.ico && (
+                    <div className="flex justify-between">
+                      <dt className="text-[13px] text-text-muted">{t('detail.taxInfo.ico')}</dt>
+                      <dd className="text-[13px] font-medium text-text tabular-nums">{client.ico}</dd>
+                    </div>
+                  )}
+                  {client.dic && (
+                    <div className="flex justify-between">
+                      <dt className="text-[13px] text-text-muted">{t('detail.taxInfo.dic')}</dt>
+                      <dd className="text-[13px] font-medium text-text tabular-nums">{client.dic}</dd>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-          )}
+              )}
+            </dl>
+          </div>
 
           {client.notes && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.notes.title')}</h2>
-              <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{client.notes}</p>
+              <h2 className="text-[15px] font-semibold text-text mb-3">{t('detail.notes.title')}</h2>
+              <p className="text-sm text-text-secondary whitespace-pre-wrap">{client.notes}</p>
             </div>
           )}
         </div>
 
         {/* Invoices */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="card">
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('detail.stats.totalRevenue')}</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totalRevenue)}</p>
+        <div className="card">
+          <h2 className="text-[15px] font-semibold text-text mb-3">{t('detail.invoices.title')}</h2>
+          {invoices.length > 0 ? (
+            <div>
+              {invoices.map(invoice => (
+                <Link
+                  key={invoice.id}
+                  to={`/invoices/${invoice.id}`}
+                  className="flex items-center gap-3 py-2.5 border-b border-hairline-soft last:border-b-0 hover:bg-row-hover -mx-2 px-2 rounded-lg transition-colors"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] font-medium text-text tabular-nums">
+                      {invoice.invoiceNumber}
+                    </span>
+                    <span className="block text-xs text-text-faint tabular-nums">
+                      {formatDate(invoice.issueDate)}
+                    </span>
+                  </span>
+                  <span className="text-sm font-semibold text-text tabular-nums shrink-0">
+                    {formatCurrency(invoice.total, invoice.currency)}
+                  </span>
+                  <span className={`badge shrink-0 ${getStatusColor(invoice.status)}`}>
+                    {getStatusLabel(invoice.status)}
+                  </span>
+                </Link>
+              ))}
             </div>
-            <div className="card">
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('detail.stats.pendingAmount')}</p>
-              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{formatCurrency(pendingAmount)}</p>
+          ) : (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 text-border-strong mx-auto mb-4" />
+              <p className="text-sm text-text-muted">{t('detail.invoices.empty')}</p>
             </div>
-          </div>
-
-          {/* Invoice list */}
-          <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('detail.invoices.title')}</h2>
-            {invoices.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">{t('detail.invoices.table.number')}</th>
-                      <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">{t('detail.invoices.table.date')}</th>
-                      <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">{t('detail.invoices.table.amount')}</th>
-                      <th className="text-center py-2 font-medium text-gray-500 dark:text-gray-400">{t('detail.invoices.table.status')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoices.map(invoice => (
-                      <tr key={invoice.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td className="py-3">
-                          <Link
-                            to={`/invoices/${invoice.id}`}
-                            className="font-medium text-indigo-600 hover:underline"
-                          >
-                            {invoice.invoiceNumber}
-                          </Link>
-                        </td>
-                        <td className="py-3 text-gray-600 dark:text-gray-300">{formatDate(invoice.issueDate)}</td>
-                        <td className="py-3 text-right font-medium">
-                          {formatCurrency(invoice.total, invoice.currency)}
-                        </td>
-                        <td className="py-3 text-center">
-                          <span className={`badge ${getStatusColor(invoice.status)}`}>
-                            {getStatusLabel(invoice.status)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">{t('detail.invoices.empty')}</p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>
