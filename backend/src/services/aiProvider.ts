@@ -280,7 +280,17 @@ export async function extractExpenseFromDocument(
  * @param invoice - Invoice facts to include in the reminder
  * @param language - Language to write the email in ('cs' or 'en')
  * @param senderName - Name to sign the email with
+ * @param tone - Requested tone; 'auto' lets the model pick based on how overdue the invoice is
  */
+export type ReminderTone = 'auto' | 'friendly' | 'neutral' | 'firm';
+
+const TONE_INSTRUCTIONS: Record<ReminderTone, string> = {
+  auto: 'Keep a friendly but professional tone appropriate to how overdue the invoice is (gentle if just due, firmer if long overdue).',
+  friendly: 'Keep the tone warm and light — assume the client simply forgot.',
+  neutral: 'Keep the tone plain and factual, with no warmth or pressure either way.',
+  firm: 'Keep the tone direct and businesslike, clearly stating that payment is outstanding and asking for a settlement date. Stay professional and never threatening.',
+};
+
 export async function draftPaymentReminder(
   userId: string,
   invoice: {
@@ -292,7 +302,8 @@ export async function draftPaymentReminder(
     daysOverdue: number;
   },
   language: string,
-  senderName: string | null
+  senderName: string | null,
+  tone: ReminderTone = 'auto'
 ): Promise<{ subject: string; body: string }> {
   const config = await getUserAIConfig(userId);
   if (!config) {
@@ -312,7 +323,7 @@ export async function draftPaymentReminder(
   const messages: AIMessage[] = [
     {
       role: 'system',
-      content: 'You draft short, polite payment reminder emails for Czech freelancers chasing unpaid invoices. Keep a friendly but professional tone appropriate to how overdue the invoice is (gentle if just due, firmer if long overdue). Plain text only, no markdown. Use ONLY the facts provided; never invent bank details or amounts (the invoice PDF will be attached to the email). Return ONLY a JSON object with keys: subject (string), body (string).',
+      content: `You draft short, polite payment reminder emails for Czech freelancers chasing unpaid invoices. ${TONE_INSTRUCTIONS[tone]} Plain text only, no markdown. Use ONLY the facts provided; never invent bank details or amounts (the invoice PDF will be attached to the email). Return ONLY a JSON object with keys: subject (string), body (string).`,
     },
     {
       role: 'user',

@@ -23,6 +23,8 @@ export interface ExtractedExpense {
   description: string | null;
 }
 
+export type ReminderTone = 'auto' | 'friendly' | 'neutral' | 'firm';
+
 interface AIContextType {
   aiStatus: AIFeatures | null;
   loading: boolean;
@@ -33,7 +35,7 @@ interface AIContextType {
   checkAIStatus: () => Promise<void>;
   askTaxAdvisor: (question: string) => Promise<any>;
   extractExpense: (fileData: string, fileMimeType: string, fileName?: string) => Promise<ExtractedExpense>;
-  draftReminder: (invoiceId: string) => Promise<{ subject: string; body: string }>;
+  draftReminder: (invoiceId: string, tone?: ReminderTone) => Promise<{ subject: string; body: string }>;
 }
 
 const AIContext = createContext<AIContextType | undefined>(undefined);
@@ -124,7 +126,7 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
   );
 
   const draftReminder = useCallback(
-    async (invoiceId: string) => {
+    async (invoiceId: string, tone: ReminderTone = 'auto') => {
       if (!token) throw new Error('Not authenticated');
 
       const response = await fetch('/api/ai/draft-reminder', {
@@ -133,7 +135,7 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ invoiceId }),
+        body: JSON.stringify({ invoiceId, tone }),
       });
 
       const data = await response.json();
