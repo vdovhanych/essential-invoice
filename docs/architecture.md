@@ -29,6 +29,7 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
 ## Frontend (`frontend/src/`)
 
 - **React 18** with TypeScript, Vite, and TailwindCSS
+- **Design system ("Calm Indigo")**: semantic colour tokens defined as CSS custom properties in `index.css` (`:root` for light, `.dark` for dark) and mapped to Tailwind names in `tailwind.config.js` — `canvas`, `surface`, `surface-sunken`, `border`, `border-strong`, `hairline`, `hairline-soft`, `text`, `text-secondary`, `text-muted`, `text-faint`, `accent` (with `-hover`, `-soft`, `-tint`, `-quiet`, `-link`), `success`, `success-bg`, `danger`, `danger-bg`, `neutral-chip-bg/fg`, `chart-secondary`, `row-hover`, `nav-hover`. Dark mode is a pure token swap — components carry no `dark:` colour variants. Shared component classes (`card`, `btn*`, `badge*`, `input`, `input-auth`, `label`) live in `index.css`
 - **i18n**: react-i18next with 10 namespaces (common, dashboard, invoices, expenses, clients, payments, settings, profile, auth, calculator). Translation JSON files in `i18n/locales/{cs,en}/`. Language switcher on the Profile page persists the choice to the `users.language` column via `PUT /auth/me`. Format utilities (`utils/format.ts`) are locale-aware
 - **Context**:
   - `context/AuthContext.tsx` - Authentication state management
@@ -38,6 +39,9 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
   - `Layout.tsx` - Main layout wrapper with navigation (desktop sidebar; mobile uses bottom tab bar)
   - `MobileBottomNav.tsx` - Mobile bottom tab bar (Dashboard, Invoices, new-invoice action, Clients, More sheet with secondary navigation, AI assistant, appearance toggle, and logout)
   - `AIAssistant.tsx` - AI assistant chat component
+  - `CommandPalette.tsx` - Global ⌘K/Ctrl+K command palette (mounted in `Layout.tsx`); loads invoices and contacts on open and filters client-side
+  - `OfflineBanner.tsx` - Offline state banner driven by the browser `online`/`offline` events
+  - `ReminderComposer.tsx` - Payment-reminder modal with an AI draft and a Friendly/Neutral/Firm tone control; drafts are editable and only sent on an explicit user action
 - **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, RecurringInvoices, RecurringInvoiceCreate, RecurringInvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
 - **Utils**:
   - `utils/format.ts` - Date/currency formatting helpers

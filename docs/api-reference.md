@@ -18,7 +18,7 @@ All endpoints require JWT authentication unless noted otherwise. Include the tok
 
 ## Clients
 
-- `GET /api/clients` - List all clients
+- `GET /api/clients` - List all clients (each row also carries `invoiceCount`, `totalPaid`, `totalInvoiced` and `openBalance`, the latter two normalised to CZK for the contacts ranking)
 - `GET /api/clients/:id` - Get client details
 - `GET /api/clients/:id/invoices` - Get client's invoices
 - `POST /api/clients` - Create client
@@ -80,7 +80,7 @@ EUR invoices include `exchangeRate` (CNB rate at issue date) and `totalCzk` (con
 
 ## Dashboard
 
-- `GET /api/dashboard` - Get dashboard statistics
+- `GET /api/dashboard` - Get dashboard statistics (`stats` includes `outstandingAmount` and `overdueAmount`, both CZK-normalised)
 - `GET /api/dashboard/quick-stats` - Get quick stats for header
 
 ## Settings
@@ -95,4 +95,4 @@ EUR invoices include `exchangeRate` (CNB rate at issue date) and `totalCzk` (con
 - `GET /api/ai/status` - Check AI feature availability
 - `POST /api/ai/tax-advisor` - Czech tax advisor chat (personalized with the user's VAT status, paušální daň settings, and revenue)
 - `POST /api/ai/extract-expense` - Extract expense fields from an uploaded document (PDF/JPEG/PNG, max 5MB; returns `extracted` object)
-- `POST /api/ai/draft-reminder` - Draft a payment reminder email for a sent/overdue invoice (returns `subject` and `body`)
+- `POST /api/ai/draft-reminder` - Draft a payment reminder email for a sent/overdue invoice (returns `subject` and `body`). Accepts an optional `tone` of `auto` (default, chosen from how overdue the invoice is), `friendly`, `neutral` or `firm`

@@ -85,16 +85,20 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
 
 ### Frontend (`frontend/src/`)
 - **React 18** with TypeScript, Vite, and TailwindCSS
+- **Design system ("Calm Indigo")**: colours live as CSS custom properties in `index.css` (`:root` light, `.dark` dark) and are exposed to Tailwind in `tailwind.config.js` as semantic names — `canvas`, `surface`/`surface-sunken`, `border`/`border-strong`, `hairline`/`hairline-soft`, `text`/`text-secondary`/`text-muted`/`text-faint`, `accent` (+`-hover`/`-soft`/`-tint`/`-quiet`/`-link`), `success`/`danger` (+`-bg`), `neutral-chip-*`, `chart-secondary`, `row-hover`, `nav-hover`. **Use these tokens, never raw Tailwind palette colours (`gray-500`, `indigo-600`, …)** — dark mode is a token swap, so `dark:` variants are not needed for colour. Component utilities (`card`, `btn`, `btn-primary`, `btn-secondary`, `badge`, `input`, `input-auth`, `label`) are defined in `index.css`. All numeric values use `tabular-nums`
 - **i18n**: react-i18next with 10 namespaces (common, dashboard, invoices, expenses, clients, payments, settings, profile, auth, calculator). Translation JSON files live in `i18n/locales/{cs,en}/`. Configured in `i18n/i18n.ts`. Format utilities in `utils/format.ts` are locale-aware via `i18n.language`
 - **Context**:
   - `context/AuthContext.tsx` - Authentication state management
   - `context/AIContext.tsx` - AI assistant state management
   - `context/ThemeContext.tsx` - Dark/light theme state management
 - **Components**: `components/` - Reusable UI:
-  - `Layout.tsx` - Main layout wrapper with navigation (desktop sidebar; mobile uses bottom tab bar)
+  - `Layout.tsx` - Main layout wrapper with navigation (desktop sidebar; mobile uses bottom tab bar). The sidebar is a flex column: brand, nav (Payments carries an unmatched-count badge), and the user menu anchored to the bottom (opens upward). The header holds only the ⌘K search hint
   - `MobileBottomNav.tsx` - Mobile bottom tab bar (Dashboard, Invoices, new-invoice action, Clients, More sheet with secondary navigation, AI assistant, appearance toggle, and logout)
   - `ThemeToggle.tsx` - Theme switcher + language picker dropdown (used on auth pages)
   - `AIAssistant.tsx` - AI assistant chat component
+  - `CommandPalette.tsx` - Global ⌘K/Ctrl+K palette mounted in `Layout.tsx`. Fetches `/invoices` and `/clients` on open and filters client-side (no server search endpoint); groups results into Invoices/Contacts/Actions, supports arrow-key navigation and `>` for commands only
+  - `OfflineBanner.tsx` - Amber banner shown while `navigator.onLine` is false
+  - `ReminderComposer.tsx` - Reviewable payment-reminder modal used by `InvoiceDetail.tsx`. Drafts via `POST /ai/draft-reminder` with a Friendly/Neutral/Firm tone control; the draft is fully editable and **nothing is ever sent without the user pressing send**
 - **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, RecurringInvoices, RecurringInvoiceCreate, RecurringInvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
 - **Utils**:
   - `utils/format.ts` - Locale-aware date/currency formatting helpers
