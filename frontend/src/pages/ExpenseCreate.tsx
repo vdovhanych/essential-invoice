@@ -214,7 +214,7 @@ export default function ExpenseCreate() {
   const isImage = fileMimeType?.startsWith('image/');
 
   return (
-    <div className="pb-20 lg:pb-0">
+    <div className="pb-28 lg:pb-0">
       {/* Desktop header bar */}
       <div className="hidden lg:flex items-center gap-4 -mx-7 -mt-7 mb-6 h-[60px] px-7 bg-surface border-b border-border">
         <button
@@ -481,7 +481,7 @@ export default function ExpenseCreate() {
       </form>
 
       {/* Mobile sticky total bar */}
-      <div className="lg:hidden fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 px-[18px] py-2.5 bg-surface/95 backdrop-blur border-t border-border flex items-center justify-between gap-3">
+      <div className="lg:hidden fixed inset-x-0 bottom-[calc(var(--mobile-nav-height)+env(safe-area-inset-bottom))] z-20 px-[18px] py-2.5 bg-surface border-t border-border flex items-center justify-between gap-3">
         <div>
           <p className="text-[11px] text-text-muted">{t('create.amount.total')}</p>
           <p className="text-xl font-bold text-text tabular-nums leading-tight">

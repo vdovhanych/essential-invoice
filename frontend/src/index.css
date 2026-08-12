@@ -33,6 +33,10 @@
   --chart-secondary: #dfe2ee;
   --row-hover: #fafbfe;
   --nav-hover: #f2f3f8;
+
+  /* Height of the mobile tab bar's content box, excluding the safe-area
+     inset it adds below. Sticky page bars sit exactly on top of it. */
+  --mobile-nav-height: 56px;
 }
 
 .dark {
@@ -101,7 +105,7 @@ body {
   }
 
   .input {
-    @apply w-full px-3 py-2 bg-surface text-text placeholder-text-faint border border-border-strong rounded-[9px] focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)];
+    @apply w-full min-h-[42px] px-3 py-2 bg-surface text-text placeholder-text-faint border border-border-strong rounded-[9px] focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)];
   }
 
   .label {
@@ -152,6 +156,33 @@ body {
 
 input[type="checkbox"] {
   transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+/* iOS Safari gives date and time inputs an intrinsic width derived from the
+   locale's date format, which wins over w-full and pushes them past their
+   container — on a 390px screen they overflow the card. Dropping the native
+   appearance lets them shrink like any other field.
+   Scoped to .input/.input-auth on purpose: date controls sized to their own
+   content (the inline ones in the recurring schedule sentence) must keep the
+   intrinsic width this would remove. */
+.input[type="date"],
+.input[type="datetime-local"],
+.input[type="time"],
+.input[type="month"],
+.input-auth[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* An empty date input has no content once the native appearance is gone, so
+   it would collapse to its padding and sit shorter than its neighbours.
+   The strut keeps a full line box whether or not a date is set. */
+.input[type="date"]::-webkit-date-and-time-value,
+.input-auth[type="date"]::-webkit-date-and-time-value {
+  min-height: 1.5em;
+  text-align: left;
 }
 
 /* Hide scrollbars for app-like feel */

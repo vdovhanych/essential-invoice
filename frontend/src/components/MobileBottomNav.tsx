@@ -132,7 +132,7 @@ export default function MobileBottomNav({ calculatorEnabled }: MobileBottomNavPr
 
       {/* Bottom tab bar */}
       <nav className="fixed bottom-0 inset-x-0 z-30 lg:hidden bg-surface border-t border-border pb-[env(safe-area-inset-bottom)]">
-        <div className="grid grid-cols-5 items-center">
+        <div className="grid grid-cols-5 items-center h-[var(--mobile-nav-height)]">
           {leftTabs.map((item) => (
             <Link key={item.path} to={item.path} className={tabClass(isActive(item.path))}>
               <item.icon className="h-5 w-5" />
