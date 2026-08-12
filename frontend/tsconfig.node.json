@@ -1,6 +1,12 @@
 {
   "compilerOptions": {
     "composite": true,
+    // This project only type-checks vite.config.ts. A referenced project
+    // cannot set noEmit (TS6310), so send the output somewhere harmless:
+    // emitting beside the source produces a vite.config.js that Vite
+    // resolves *before* vite.config.ts, silently shadowing the real config.
+    "outDir": "./node_modules/.tmp/tsconfig-node",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig-node/tsconfig.node.tsbuildinfo",
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
