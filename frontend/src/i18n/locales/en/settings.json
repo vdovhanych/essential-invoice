@@ -78,5 +78,14 @@
   "actions": {
     "saving": "Saving...",
     "save": "Save settings"
+  },
+  "appearance": {
+    "heading": "Appearance",
+    "description": "How the app looks on this device. Applies immediately.",
+    "themeLabel": "Theme",
+    "themeHelp": "System follows your device setting",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

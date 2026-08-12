@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
-import { Mail, Server, Eye, EyeOff, Calculator, Sparkles, FileText } from 'lucide-react';
+import { Mail, Server, Eye, EyeOff, Calculator, Sparkles, FileText, Sun, Moon, Monitor } from 'lucide-react';
 import { PageLoader } from '../components/Spinner';
+import { useTheme } from '../context/ThemeContext';
 
 interface Settings {
   smtpHost: string | null;
@@ -32,7 +33,7 @@ interface Settings {
   aiModel: string | null;
 }
 
-type SectionKey = 'invoiceDefaults' | 'emailSending' | 'bankMatching' | 'ai' | 'calculator';
+type SectionKey = 'invoiceDefaults' | 'emailSending' | 'bankMatching' | 'ai' | 'calculator' | 'appearance';
 
 const SECTIONS: Array<{ key: SectionKey; icon: typeof Mail; headingKey: string; descriptionKey: string }> = [
   { key: 'invoiceDefaults', icon: FileText, headingKey: 'invoiceDefaults.heading', descriptionKey: 'invoiceDefaults.description' },
@@ -40,10 +41,12 @@ const SECTIONS: Array<{ key: SectionKey; icon: typeof Mail; headingKey: string; 
   { key: 'bankMatching', icon: Server, headingKey: 'imap.heading', descriptionKey: 'imap.description' },
   { key: 'ai', icon: Sparkles, headingKey: 'ai.heading', descriptionKey: 'ai.description' },
   { key: 'calculator', icon: Calculator, headingKey: 'calculator.heading', descriptionKey: 'calculator.description' },
+  { key: 'appearance', icon: Sun, headingKey: 'appearance.heading', descriptionKey: 'appearance.description' },
 ];
 
 export default function Settings() {
   const { t } = useTranslation('settings');
+  const { theme, setTheme } = useTheme();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -509,18 +512,52 @@ export default function Settings() {
             </div>
           )}
 
+          {section === 'appearance' && (
+            <div className="card">
+              <div className="flex items-center justify-between gap-5">
+                <div>
+                  <p className="text-sm font-medium text-text">{t('appearance.themeLabel')}</p>
+                  <p className="text-xs text-text-faint mt-0.5">{t('appearance.themeHelp')}</p>
+                </div>
+                <div className="flex bg-surface-sunken rounded-[9px] p-[3px] shrink-0">
+                  {([
+                    { value: 'light' as const, icon: Sun, label: t('appearance.light') },
+                    { value: 'dark' as const, icon: Moon, label: t('appearance.dark') },
+                    { value: 'system' as const, icon: Monitor, label: t('appearance.system') },
+                  ]).map(({ value, icon: Icon, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setTheme(value)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium rounded-[7px] transition-colors ${
+                        theme === value
+                          ? 'bg-surface shadow-[0_1px_2px_rgba(20,22,40,.08)] text-text'
+                          : 'text-text-muted hover:text-text'
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {section === 'calculator' && (
             <div className="card">
               {toggleRow('calculatorEnabled', t('calculator.enable'), t('calculator.description'))}
             </div>
           )}
 
-          {/* Submit */}
-          <div className="flex justify-end">
-            <button type="submit" disabled={saving} className="btn btn-primary">
-              {saving ? t('actions.saving') : t('actions.save')}
-            </button>
-          </div>
+          {/* Appearance applies on change, so it has nothing to save */}
+          {section !== 'appearance' && (
+            <div className="flex justify-end">
+              <button type="submit" disabled={saving} className="btn btn-primary">
+                {saving ? t('actions.saving') : t('actions.save')}
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

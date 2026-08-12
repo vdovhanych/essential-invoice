@@ -14,7 +14,9 @@
   "userMenu": {
     "profile": "Profile",
     "logout": "Sign out",
-    "appearance": "Appearance"
+    "appearance": "Appearance",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode"
   },
   "theme": {
     "light": "Light",

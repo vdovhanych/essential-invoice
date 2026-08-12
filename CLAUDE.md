@@ -95,6 +95,7 @@ This is a self-hosted invoicing application for Czech freelancers with frontend/
   - `Layout.tsx` - Main layout wrapper with navigation (desktop sidebar; mobile uses bottom tab bar). The sidebar is a flex column: brand, nav (Payments carries an unmatched-count badge), and the user menu anchored to the bottom (opens upward). The header holds only the ⌘K search hint
   - `MobileBottomNav.tsx` - Mobile bottom tab bar (Dashboard, Invoices, new-invoice action, Clients, More sheet with secondary navigation, AI assistant, appearance toggle, and logout)
   - `ThemeToggle.tsx` - Theme switcher + language picker dropdown (used on auth pages)
+  - Theme selection lives in **Settings → Appearance** (light/dark/system); the sidebar user menu and the mobile More sheet carry only a one-tap light↔dark toggle, so every row in those menus behaves as an action
   - `AIAssistant.tsx` - AI assistant chat component
   - `CommandPalette.tsx` - Global ⌘K/Ctrl+K palette mounted in `Layout.tsx`. Fetches `/invoices` and `/clients` on open and filters client-side (no server search endpoint); groups results into Invoices/Contacts/Actions, supports arrow-key navigation and `>` for commands only
   - `OfflineBanner.tsx` - Amber banner shown while `navigator.onLine` is false

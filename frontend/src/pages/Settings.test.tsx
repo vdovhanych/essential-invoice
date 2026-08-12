@@ -14,6 +14,11 @@ vi.mock('../utils/api', () => ({
   }
 }));
 
+const mockSetTheme = vi.fn();
+vi.mock('../context/ThemeContext', () => ({
+  useTheme: () => ({ theme: 'system', resolvedTheme: 'light', setTheme: mockSetTheme }),
+}));
+
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
   Mail: () => <span data-testid="mail-icon" />,
@@ -24,7 +29,10 @@ vi.mock('lucide-react', () => ({
   EyeOff: () => <span data-testid="eye-off-icon" />,
   Calculator: () => <span data-testid="calculator-icon" />,
   Sparkles: () => <span data-testid="sparkles-icon" />,
-  FileText: () => <span data-testid="filetext-icon" />
+  FileText: () => <span data-testid="filetext-icon" />,
+  Sun: () => <span data-testid="sun-icon" />,
+  Moon: () => <span data-testid="moon-icon" />,
+  Monitor: () => <span data-testid="monitor-icon" />
 }));
 
 const getVatSelect = () => document.querySelector('select[name="defaultVatRate"]') as HTMLSelectElement;
@@ -109,6 +117,26 @@ describe('Settings Component', () => {
     await waitFor(() => {
       expect(getVatSelect().value).toBe('0');
     });
+  });
+
+  it('offers the full three-way theme choice in its own section', async () => {
+    mockGet.mockResolvedValueOnce(defaultSettings);
+
+    render(<Settings />);
+    await waitFor(() => expect(getVatSelect()).toBeTruthy());
+
+    // The section is reachable from both the desktop nav and the mobile chips
+    fireEvent.click(screen.getAllByRole('button', { name: /Vzhled/ })[0]);
+
+    // All three options, including system — the user menu only toggles light/dark
+    expect(screen.getByRole('button', { name: /Světlý/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Systémový/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /^Tmavý/ }));
+    expect(mockSetTheme).toHaveBeenCalledWith('dark');
+
+    // Appearance applies immediately, so there is nothing to save here
+    expect(screen.queryByRole('button', { name: /uložit nastavení/i })).not.toBeInTheDocument();
   });
 
   it('should not render paušální daň section', async () => {
