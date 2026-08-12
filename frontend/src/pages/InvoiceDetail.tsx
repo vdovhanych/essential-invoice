@@ -259,7 +259,7 @@ export default function InvoiceDetail() {
   );
 
   return (
-    <div className={showActionBar ? 'pb-16 lg:pb-0' : ''}>
+    <div className={showActionBar ? 'pb-28 lg:pb-0' : ''}>
       {/* Desktop header bar */}
       <div className="hidden lg:flex items-center gap-4 -mx-7 -mt-7 mb-6 h-[60px] px-7 bg-surface border-b border-border">
         <button
@@ -550,7 +550,7 @@ export default function InvoiceDetail() {
 
       {/* Mobile sticky action bar */}
       {showActionBar && (
-        <div className="lg:hidden fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 px-[18px] py-2.5 bg-surface/95 backdrop-blur border-t border-border flex gap-2.5">
+        <div className="lg:hidden fixed inset-x-0 bottom-[calc(var(--mobile-nav-height)+env(safe-area-inset-bottom))] z-20 px-[18px] py-2.5 bg-surface border-t border-border flex gap-2.5">
           {invoice.status === 'draft' ? (
             <>
               <Link
