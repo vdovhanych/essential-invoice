@@ -64,6 +64,10 @@ cd frontend && bun vitest run src/utils/format.test.ts
 - API routes (authentication, authorization, validation)
 - Frontend utilities (date/currency formatting, status labels)
 
+### Pull request CI
+
+On pull requests, `.github/workflows/test.yml` runs backend and/or frontend tests based on changed paths (`backend/**`, `frontend/**`). A single **Tests** check aggregates the results so branch protection can require one status.
+
 ## Admin Scripts
 
 ### Seed Test Data
@@ -122,7 +126,7 @@ essential-invoice/
 │   ├── nginx.conf           # Production Nginx config
 │   └── package.json
 ├── docs/                    # Detailed documentation
-├── .github/workflows/       # CI/CD (Docker build)
+├── .github/workflows/       # CI/CD (PR tests, Docker build, chart publish)
 ├── helm-chart/              # Helm chart (see helm-chart/README.md)
 ├── docker-compose.yml
 ├── docker-compose.production.yml
