@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getExpenseStatusLabel, getExpenseStatusColor } from '../utils/format';
 import { PageLoader } from '../components/Spinner';
+import { useObjectUrl, toPreviewMimeType } from '../hooks/useObjectUrl';
 import {
   ArrowLeft,
   Edit,
@@ -53,6 +54,11 @@ export default function ExpenseDetail() {
   useEffect(() => {
     loadExpense();
   }, [id]);
+
+  // Narrowed to a literal, then handed to the browser to mint a blob: URL —
+  // no stored string is interpolated into the element attribute.
+  const previewMimeType = toPreviewMimeType(expense?.fileMimeType);
+  const previewUrl = useObjectUrl(expense?.fileData ?? null, previewMimeType);
 
   async function loadExpense() {
     try {
@@ -257,22 +263,18 @@ export default function ExpenseDetail() {
             {expense.fileData && expense.fileName ? (
               <div className="bg-[#fdfdff] border border-hairline rounded-[12px] p-3">
                 <p className="text-[11px] font-mono text-text-faint truncate mb-2">{expense.fileName}</p>
-                {expense.fileMimeType === 'application/pdf' ? (
-                  <object
-                    data={`data:application/pdf;base64,${expense.fileData}`}
-                    type="application/pdf"
-                    className="w-full h-[400px] rounded"
-                  >
+                {!previewUrl ? (
+                  <p className="p-4 text-text-muted text-center text-sm">
+                    {t('detail.attachment.previewUnavailable')}
+                  </p>
+                ) : previewMimeType === 'application/pdf' ? (
+                  <object data={previewUrl} type="application/pdf" className="w-full h-[400px] rounded">
                     <p className="p-4 text-text-muted text-center text-sm">
                       {t('detail.attachment.pdfNotSupported')}
                     </p>
                   </object>
                 ) : (
-                  <img
-                    src={`data:${expense.fileMimeType};base64,${expense.fileData}`}
-                    alt={expense.fileName}
-                    className="max-w-full rounded"
-                  />
+                  <img src={previewUrl} alt={expense.fileName} className="max-w-full rounded" />
                 )}
               </div>
             ) : (

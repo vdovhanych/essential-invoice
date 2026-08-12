@@ -8,6 +8,7 @@ import { formatCurrency } from '../utils/format';
 import { PageLoader } from '../components/Spinner';
 import { useAI } from '../context/AIContext';
 import { findSupplierClient } from '../utils/supplierMatch';
+import { useObjectUrl, toPreviewMimeType } from '../hooks/useObjectUrl';
 
 interface Client {
   id: string;
@@ -44,6 +45,14 @@ export default function ExpenseCreate() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileMimeType, setFileMimeType] = useState<string | null>(null);
   const [flatRateEnabled, setFlatRateEnabled] = useState(false);
+
+  // Images preview inline; a PDF shows the file icon instead. Narrowing to a
+  // literal keeps the stored MIME string out of the URL entirely.
+  const imageMimeType = (() => {
+    const narrowed = toPreviewMimeType(fileMimeType);
+    return narrowed === 'application/pdf' ? null : narrowed;
+  })();
+  const previewUrl = useObjectUrl(fileData, imageMimeType);
 
   useEffect(() => {
     loadData();
@@ -211,7 +220,6 @@ export default function ExpenseCreate() {
     : isEdit
       ? t('create.buttons.saveChanges')
       : t('create.buttons.createExpense');
-  const isImage = fileMimeType?.startsWith('image/');
 
   return (
     <div className="pb-28 lg:pb-0">
@@ -436,9 +444,9 @@ export default function ExpenseCreate() {
                 <div className="space-y-3">
                   <div className="bg-[#fdfdff] border border-hairline rounded-[12px] p-3">
                     <p className="text-[11px] font-mono text-text-faint truncate mb-2">{fileName}</p>
-                    {isImage && fileData ? (
+                    {previewUrl ? (
                       <img
-                        src={`data:${fileMimeType};base64,${fileData}`}
+                        src={previewUrl}
                         alt={fileName}
                         className="w-full max-h-[300px] object-contain rounded"
                       />

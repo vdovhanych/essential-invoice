@@ -109,7 +109,8 @@
       "title": "Příloha",
       "download": "Stáhnout",
       "pdfNotSupported": "Váš prohlížeč nepodporuje zobrazení PDF.",
-      "missing": "Chybí doklad"
+      "missing": "Chybí doklad",
+      "previewUnavailable": "Náhled není pro tento typ souboru k dispozici"
     },
     "notes": {
       "title": "Poznámky"

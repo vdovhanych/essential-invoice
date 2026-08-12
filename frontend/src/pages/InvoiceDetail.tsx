@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAI } from '../context/AIContext';
 import ReminderComposer from '../components/ReminderComposer';
+import { useObjectUrl } from '../hooks/useObjectUrl';
 
 interface InvoiceItem {
   id: string;
@@ -107,6 +108,9 @@ export default function InvoiceDetail() {
       loadPreview();
     }
   }, [showSendModal, id]);
+
+  // Browser-minted blob: URL rather than a data: URL carrying the whole PDF
+  const pdfPreviewUrl = useObjectUrl(previewData?.pdfBase64 ?? null, 'application/pdf');
 
   async function loadPreview() {
     setPreviewLoading(true);
@@ -614,14 +618,14 @@ export default function InvoiceDetail() {
                 <div className="lg:w-1/2 p-[22px] border-b lg:border-b-0 lg:border-r border-hairline overflow-auto">
                   <h3 className="text-[11px] uppercase font-semibold tracking-[.04em] text-text-faint mb-2">{t('detail.sendModal.pdfPreview')}</h3>
                   <object
-                    data={`data:application/pdf;base64,${previewData.pdfBase64}`}
+                    data={pdfPreviewUrl ?? undefined}
                     type="application/pdf"
                     className="w-full h-[400px] lg:h-[calc(100%-2rem)] rounded border border-border"
                   >
                     <p className="p-4 text-text-muted text-center">
                       {t('detail.sendModal.pdfNotSupported')}{' '}
                       <a
-                        href={`data:application/pdf;base64,${previewData.pdfBase64}`}
+                        href={pdfPreviewUrl ?? undefined}
                         download={`${invoice.invoiceNumber}.pdf`}
                         className="text-accent-link hover:underline"
                       >
