@@ -109,7 +109,8 @@
       "title": "Attachment",
       "download": "Download",
       "pdfNotSupported": "Your browser does not support PDF viewing.",
-      "missing": "Receipt missing"
+      "missing": "Receipt missing",
+      "previewUnavailable": "Preview not available for this file type"
     },
     "notes": {
       "title": "Notes"
