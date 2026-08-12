@@ -1,9 +1,10 @@
 # TypeScript incremental build cache
 *.tsbuildinfo
 
-# Emitted by tsconfig.node.json ("composite": true) from vite.config.ts.
-# vite.config.js must not be committed — Vite resolves it *before*
-# vite.config.ts, so a stale copy would silently shadow the real config.
+# Safety net: tsconfig.node.json sends its emit to node_modules/.tmp, so these
+# should never appear here. If they do, do not commit them — Vite resolves
+# vite.config.js *before* vite.config.ts and a stale copy silently shadows
+# the real config.
 vite.config.js
 vite.config.d.ts
 
