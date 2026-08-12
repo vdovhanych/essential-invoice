@@ -14,7 +14,9 @@
   "userMenu": {
     "profile": "Profil",
     "logout": "Odhlásit se",
-    "appearance": "Vzhled aplikace"
+    "appearance": "Vzhled aplikace",
+    "darkMode": "Tmavý režim",
+    "lightMode": "Světlý režim"
   },
   "theme": {
     "light": "Světlý",

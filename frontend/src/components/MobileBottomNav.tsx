@@ -19,7 +19,6 @@ import {
   Sparkles,
   Sun,
   Moon,
-  Monitor
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -28,7 +27,7 @@ interface MobileBottomNavProps {
 
 export default function MobileBottomNav({ calculatorEnabled }: MobileBottomNavProps) {
   const { logout } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const { aiStatus, openAssistant } = useAI();
   const { t } = useTranslation('common');
   const location = useLocation();
@@ -56,11 +55,6 @@ export default function MobileBottomNav({ calculatorEnabled }: MobileBottomNavPr
 
   const moreActive = moreItems.some((item) => isActive(item.path));
 
-  const themeOptions = [
-    { value: 'light' as const, icon: Sun, label: t('theme.light') },
-    { value: 'dark' as const, icon: Moon, label: t('theme.dark') },
-    { value: 'system' as const, icon: Monitor, label: t('theme.system') },
-  ];
 
   const tabClass = (active: boolean) =>
     `flex flex-col items-center justify-center gap-1 py-2 min-w-[56px] min-h-[44px] ${
@@ -107,25 +101,19 @@ export default function MobileBottomNav({ calculatorEnabled }: MobileBottomNavPr
                 </button>
               )}
               <hr className="my-1 border-hairline" />
-              <div className="px-3 py-2">
-                <p className="text-xs text-text-muted mb-2">{t('userMenu.appearance')}</p>
-                <div className="flex items-center bg-surface-sunken rounded-[9px] p-[3px]">
-                  {themeOptions.map(({ value, icon: Icon, label }) => (
-                    <button
-                      key={value}
-                      onClick={() => setTheme(value)}
-                      className={`flex-1 flex items-center justify-center px-2 py-1.5 rounded-[7px] transition-colors ${
-                        theme === value
-                          ? 'bg-surface shadow-[0_1px_2px_rgba(20,22,40,.08)] text-text'
-                          : 'text-text-faint hover:text-text-secondary'
-                      }`}
-                      title={label}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* One-tap light/dark; the full three-way choice lives in Settings */}
+              <button
+                onClick={() => {
+                  setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+                  setMoreOpen(false);
+                }}
+                className="flex items-center space-x-3 px-3 py-2.5 rounded-[10px] text-sm text-text-secondary hover:bg-nav-hover hover:text-text w-full"
+              >
+                {resolvedTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                <span className="font-medium">
+                  {resolvedTheme === 'dark' ? t('userMenu.lightMode') : t('userMenu.darkMode')}
+                </span>
+              </button>
               <hr className="my-1 border-hairline" />
               <button
                 onClick={() => {

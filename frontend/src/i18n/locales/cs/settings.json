@@ -78,5 +78,14 @@
   "actions": {
     "saving": "Ukládám...",
     "save": "Uložit nastavení"
+  },
+  "appearance": {
+    "heading": "Vzhled",
+    "description": "Jak aplikace vypadá na tomto zařízení. Projeví se okamžitě.",
+    "themeLabel": "Motiv",
+    "themeHelp": "Systémový sleduje nastavení vašeho zařízení",
+    "light": "Světlý",
+    "dark": "Tmavý",
+    "system": "Systémový"
   }
 }

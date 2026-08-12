@@ -24,13 +24,12 @@ import {
   Receipt,
   Sun,
   Moon,
-  Monitor,
   Search
 } from 'lucide-react';
 
 export default function Layout() {
   const { user, logout } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const { t } = useTranslation('common');
   const location = useLocation();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -89,11 +88,6 @@ export default function Layout() {
     { path: '/settings', icon: Settings, label: t('nav.settings') },
   ];
 
-  const themeOptions = [
-    { value: 'light' as const, icon: Sun, label: t('theme.light') },
-    { value: 'dark' as const, icon: Moon, label: t('theme.dark') },
-    { value: 'system' as const, icon: Monitor, label: t('theme.system') },
-  ];
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -176,25 +170,17 @@ export default function Layout() {
                   <span>{t('nav.settings')}</span>
                 </Link>
                 <hr className="my-1 border-hairline" />
-                <div className="px-4 py-2">
-                  <p className="text-xs text-text-muted mb-2">{t('userMenu.appearance')}</p>
-                  <div className="flex items-center bg-surface-sunken rounded-[9px] p-[3px]">
-                    {themeOptions.map(({ value, icon: Icon, label }) => (
-                      <button
-                        key={value}
-                        onClick={() => setTheme(value)}
-                        className={`flex-1 flex items-center justify-center px-2 py-1.5 rounded-[7px] transition-colors ${
-                          theme === value
-                            ? 'bg-surface shadow-[0_1px_2px_rgba(20,22,40,.08)] text-text'
-                            : 'text-text-faint hover:text-text-secondary'
-                        }`}
-                        title={label}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                {/* One-tap light/dark; the full three-way choice lives in Settings */}
+                <button
+                  onClick={() => {
+                    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+                    setUserMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 text-sm text-text-secondary hover:bg-nav-hover hover:text-text w-full"
+                >
+                  {resolvedTheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  <span>{resolvedTheme === 'dark' ? t('userMenu.lightMode') : t('userMenu.darkMode')}</span>
+                </button>
                 <hr className="my-1 border-hairline" />
                 <button
                   onClick={() => {

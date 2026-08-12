@@ -25,6 +25,7 @@ vi.mock('../context/AIContext', () => ({
 vi.mock('../context/ThemeContext', () => ({
   useTheme: () => ({
     theme: 'system',
+    resolvedTheme: 'light',
     setTheme: mockSetTheme,
   })
 }));
@@ -130,9 +131,10 @@ describe('MobileBottomNav', () => {
 
     fireEvent.click(screen.getByText('Více'));
 
-    expect(screen.getByText('Vzhled aplikace')).toBeInTheDocument();
-    fireEvent.click(screen.getByTitle('Tmavý'));
+    // A single action row now, matching the other rows: it switches and closes
+    fireEvent.click(screen.getByText('Tmavý režim'));
     expect(mockSetTheme).toHaveBeenCalledWith('dark');
+    expect(screen.queryByText('Odhlásit se')).not.toBeInTheDocument();
   });
 
   it('calls logout from the More sheet', () => {
