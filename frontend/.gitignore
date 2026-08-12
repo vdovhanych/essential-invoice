@@ -1,0 +1,11 @@
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Emitted by tsconfig.node.json ("composite": true) from vite.config.ts.
+# vite.config.js must not be committed — Vite resolves it *before*
+# vite.config.ts, so a stale copy would silently shadow the real config.
+vite.config.js
+vite.config.d.ts
+
+# vite-plugin-pwa development output
+dev-dist/
