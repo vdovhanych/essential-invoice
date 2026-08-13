@@ -3,7 +3,7 @@
 A lightweight, self-hosted invoicing web application designed for Czech freelancers and small businesses. Features include PDF invoice generation with QR payment codes, SMTP email sending, and automatic bank payment matching via bank email notifications parsing.
 
 <p align="center">
-  <img src="docs/dashboard-showcase.png" alt="Dashboard" width="80%">
+  <img src="docs/dashboard-showcase.png" alt="Dashboard" width="100%">
 </p>
 
 ## Features
