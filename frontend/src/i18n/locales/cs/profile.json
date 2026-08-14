@@ -30,6 +30,32 @@
     "bankCodePlaceholder": "0100"
   },
 
+  "bank": {
+    "heading": "Banka a paušální daň"
+  },
+
+  "index": {
+    "groups": {
+      "personal": "Osobní",
+      "company": "Firma",
+      "security": "Zabezpečení"
+    },
+    "rows": {
+      "name": "Jméno",
+      "email": "Email",
+      "companyDetails": "Firemní údaje",
+      "bankAccount": "Bankovní účet",
+      "flatRateTax": "Paušální daň",
+      "companyLogo": "Logo firmy"
+    },
+    "status": {
+      "notSet": "Nevyplněno",
+      "none": "Žádné",
+      "off": "Vypnuto",
+      "tier": "{{tier}}. pásmo"
+    }
+  },
+
   "pausalniDan": {
     "heading": "Paušální daň",
     "description": "Sledujte, kolik můžete ještě fakturovat v rámci limitu paušální daně. Limit závisí na pásmu a typu příjmů (výdajový paušál).",
@@ -106,6 +132,8 @@
 
   "actions": {
     "saving": "Ukládám...",
-    "save": "Uložit změny"
+    "save": "Uložit změny",
+    "discard": "Zahodit",
+    "unsavedChanges": "Máte neuložené změny"
   }
 }

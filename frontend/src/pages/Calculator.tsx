@@ -49,7 +49,8 @@ export default function Calculator() {
     try {
       const settings = await api.get('/settings');
       if (!settings.calculatorEnabled) {
-        navigate('/settings');
+        // Straight to the switch that turns it back on
+        navigate('/settings/calculator');
         return;
       }
       setEnabled(true);

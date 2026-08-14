@@ -14,7 +14,6 @@ import {
   Settings,
   Receipt,
   Calculator,
-  User,
   LogOut,
   Sparkles,
   Sun,
@@ -49,8 +48,8 @@ export default function MobileBottomNav({ calculatorEnabled }: MobileBottomNavPr
     { path: '/expenses', icon: Receipt, label: t('nav.expenses') },
     { path: '/payments', icon: CreditCard, label: t('nav.payments') },
     ...(calculatorEnabled ? [{ path: '/calculator', icon: Calculator, label: t('nav.calculator') }] : []),
+    // No Profile entry — the settings index is the single way into it on mobile
     { path: '/settings', icon: Settings, label: t('nav.settings') },
-    { path: '/profile', icon: User, label: t('userMenu.profile') },
   ];
 
   const moreActive = moreItems.some((item) => isActive(item.path));
