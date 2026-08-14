@@ -12,7 +12,9 @@ import './i18n/i18n'
 import './index.css'
 
 function ToasterWithTheme() {
-  // Toasts are dark in both skins by design (§17); position follows viewport
+  // Toasts are dark in both skins by design (§17). On mobile they sit at the top:
+  // the bottom of the viewport belongs to the tab bar, and a bottom-anchored toast
+  // covers its buttons. Desktop has no such conflict and keeps bottom-right.
   const [isMobile, setIsMobile] = React.useState(
     () => typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches
   );
@@ -27,7 +29,8 @@ function ToasterWithTheme() {
   return (
     <Toaster
       theme="dark"
-      position={isMobile ? 'bottom-center' : 'bottom-right'}
+      position={isMobile ? 'top-center' : 'bottom-right'}
+      offset={isMobile ? 'calc(env(safe-area-inset-top) + 16px)' : undefined}
       closeButton
       toastOptions={{
         style: {
