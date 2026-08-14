@@ -30,6 +30,32 @@
     "bankCodePlaceholder": "0100"
   },
 
+  "bank": {
+    "heading": "Bank & flat-rate tax"
+  },
+
+  "index": {
+    "groups": {
+      "personal": "Personal",
+      "company": "Company",
+      "security": "Security"
+    },
+    "rows": {
+      "name": "Name",
+      "email": "Email",
+      "companyDetails": "Company details",
+      "bankAccount": "Bank account",
+      "flatRateTax": "Flat-rate tax",
+      "companyLogo": "Company logo"
+    },
+    "status": {
+      "notSet": "Not set",
+      "none": "None",
+      "off": "Off",
+      "tier": "Tier {{tier}}"
+    }
+  },
+
   "pausalniDan": {
     "heading": "Flat-rate Tax (Pausalni dan)",
     "description": "Track how much you can still invoice within the flat-rate tax limit. The limit depends on the tier and type of income (expense lump sum).",
@@ -106,6 +132,8 @@
 
   "actions": {
     "saving": "Saving...",
-    "save": "Save changes"
+    "save": "Save changes",
+    "discard": "Discard",
+    "unsavedChanges": "You have unsaved changes"
   }
 }

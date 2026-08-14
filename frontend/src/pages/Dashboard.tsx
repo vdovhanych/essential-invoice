@@ -196,9 +196,9 @@ export default function Dashboard() {
   if (isFirstRun) {
     // Completed items get a check and a struck-through label; open ones carry the action
     const checklist = [
-      { key: 'business', done: !!user?.companyIco, to: '/profile' },
-      { key: 'bank', done: !!user?.bankAccount, to: '/profile' },
-      { key: 'logo', done: !!user?.hasLogo, to: '/profile' },
+      { key: 'business', done: !!user?.companyIco, to: '/profile/company' },
+      { key: 'bank', done: !!user?.bankAccount, to: '/profile/bank' },
+      { key: 'logo', done: !!user?.hasLogo, to: '/profile/logo' },
     ];
     const doneCount = checklist.filter(item => item.done).length;
 

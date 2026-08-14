@@ -77,7 +77,51 @@
   },
   "actions": {
     "saving": "Ukládám...",
-    "save": "Uložit nastavení"
+    "save": "Uložit nastavení",
+    "discard": "Zahodit",
+    "unsavedChanges": "Máte neuložené změny"
+  },
+  "language": {
+    "heading": "Jazyk",
+    "description": "Jazyk aplikace, faktur a e-mailů. Projeví se okamžitě.",
+    "cs": "Čeština",
+    "en": "English"
+  },
+  "index": {
+    "groups": {
+      "business": "Vaše firma",
+      "invoicing": "Fakturace",
+      "app": "Aplikace"
+    },
+    "rows": {
+      "companyDetails": "Firemní údaje",
+      "bankAndTax": "Banka a paušální daň",
+      "companyLogo": "Logo firmy",
+      "invoiceDefaults": "Výchozí hodnoty faktur",
+      "emailSending": "Odesílání e-mailů",
+      "bankMatching": "Párování plateb",
+      "appearance": "Vzhled",
+      "language": "Jazyk",
+      "ai": "AI funkce",
+      "calculator": "Kalkulačka",
+      "changePassword": "Změna hesla",
+      "logout": "Odhlásit se"
+    },
+    "status": {
+      "vatPayer": "Plátce DPH",
+      "nonVatPayer": "Neplátce DPH",
+      "tier": "{{tier}}. pásmo",
+      "set": "Nastaveno",
+      "none": "Žádné",
+      "notSet": "Nevyplněno",
+      "connected": "Připojeno",
+      "notSetUp": "Nenastaveno",
+      "off": "Vypnuto",
+      "on": "Zapnuto",
+      "invoiceDefaults_one": "{{vat}} % · {{days}} den",
+      "invoiceDefaults_few": "{{vat}} % · {{days}} dny",
+      "invoiceDefaults_other": "{{vat}} % · {{days}} dní"
+    }
   },
   "appearance": {
     "heading": "Vzhled",

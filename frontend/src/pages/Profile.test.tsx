@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import Profile from './Profile';
 
 const mockUpdateProfile = vi.fn();
@@ -24,40 +25,38 @@ vi.mock('../utils/api', () => ({
   }
 }));
 
-vi.mock('lucide-react', () => ({
-  User: () => <span data-testid="user-icon" />,
-  Building: () => <span data-testid="building-icon" />,
-  AlertCircle: () => <span data-testid="alert-icon" />,
-  CheckCircle: () => <span data-testid="check-icon" />,
-  Upload: () => <span data-testid="upload-icon" />,
-  Trash2: () => <span data-testid="trash-icon" />,
-  Image: () => <span data-testid="image-icon" />,
-  Landmark: () => <span data-testid="landmark-icon" />,
-  ShieldAlert: () => <span data-testid="shield-alert-icon" />,
-  Lock: () => <span data-testid="lock-icon" />,
-  AlertTriangle: () => <span data-testid="alert-triangle-icon" />,
-}));
+// Every lucide icon stubs out, so adding an icon never breaks these tests.
+// No JSX in here — the factory is hoisted above the JSX runtime import.
+vi.mock('lucide-react', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return Object.fromEntries(Object.keys(actual).map((name) => [name, () => null]));
+});
+
+function renderAt(path: string) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <Routes>
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:section" element={<Profile />} />
+      </Routes>
+    </MemoryRouter>
+  );
+}
 
 describe('Profile Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  /** Company and tax fields live under the "business" section of the page nav */
-  function renderBusinessSection() {
-    render(<Profile />);
-    fireEvent.click(screen.getAllByRole('button', { name: /Firemní údaje/ })[0]);
-  }
-
   it('renders paušální daň section with "Používám paušální daň" checkbox', () => {
-    renderBusinessSection();
+    renderAt('/profile/bank');
 
     expect(screen.getByText('Paušální daň')).toBeInTheDocument();
     expect(screen.getByLabelText('Používám paušální daň')).toBeInTheDocument();
   });
 
   it('vatPayer defaults to false for user with undefined vatPayer', () => {
-    renderBusinessSection();
+    renderAt('/profile/company');
 
     const vatPayerCheckbox = screen.getByLabelText('Jsem plátce DPH') as HTMLInputElement;
     expect(vatPayerCheckbox.checked).toBe(false);
@@ -67,8 +66,36 @@ describe('Profile Component', () => {
     expect(dicInput.disabled).toBe(true);
   });
 
+  it('reveals the save bar only once a field changes, and discard restores the saved value', () => {
+    renderAt('/profile/company');
+
+    expect(screen.queryByRole('button', { name: /uložit změny/i })).not.toBeInTheDocument();
+
+    const companyName = document.querySelector('input[name="companyName"]') as HTMLInputElement;
+    fireEvent.change(companyName, { target: { value: 'Nová firma' } });
+
+    expect(screen.getByRole('button', { name: /uložit změny/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /zahodit/i }));
+
+    expect((document.querySelector('input[name="companyName"]') as HTMLInputElement).value).toBe('');
+    expect(screen.queryByRole('button', { name: /uložit změny/i })).not.toBeInTheDocument();
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
+  });
+
+  it('shows the password save bar only once a password field is typed into', () => {
+    renderAt('/profile/password');
+
+    expect(screen.queryByRole('button', { name: /^Změnit heslo$/ })).not.toBeInTheDocument();
+
+    const current = document.querySelector('input[name="currentPassword"]') as HTMLInputElement;
+    fireEvent.change(current, { target: { value: 'secret123' } });
+
+    expect(screen.getByRole('button', { name: /^Změnit heslo$/ })).toBeInTheDocument();
+  });
+
   it('paušální daň fields appear when checkbox is checked', () => {
-    renderBusinessSection();
+    renderAt('/profile/bank');
 
     // Initially no tier/limit selects
     expect(document.querySelector('select[name="pausalniDanTier"]')).toBeNull();
@@ -83,5 +110,30 @@ describe('Profile Component', () => {
     expect(document.querySelector('select[name="pausalniDanLimit"]')).toBeTruthy();
     expect(screen.getByText('Pásmo paušální daně')).toBeInTheDocument();
     expect(screen.getByText('Limit příjmů')).toBeInTheDocument();
+  });
+
+  describe('mobile index', () => {
+    it('summarises the profile and drills into each section', () => {
+      renderAt('/profile');
+      // The desktop nav renders alongside (hidden by CSS), so scope to the index
+      const index = within(screen.getByTestId('profile-index'));
+
+      expect(index.getByRole('link', { name: /Jméno/ })).toHaveAttribute('href', '/profile/personal');
+      expect(index.getByRole('link', { name: /Bankovní účet/ })).toHaveAttribute('href', '/profile/bank');
+      // Language is not repeated here — it lives in Settings
+      expect(index.queryByText('Jazyk')).not.toBeInTheDocument();
+
+      // The email row is read-only, so it never becomes a link
+      expect(index.queryByRole('link', { name: /test@test.com/ })).not.toBeInTheDocument();
+    });
+
+    it('opens the delete-account modal straight from the security row', () => {
+      renderAt('/profile');
+
+      const index = within(screen.getByTestId('profile-index'));
+      fireEvent.click(index.getByRole('button', { name: /Smazat účet/ }));
+
+      expect(screen.getByRole('heading', { name: 'Opravdu chcete smazat účet?' })).toBeInTheDocument();
+    });
   });
 });

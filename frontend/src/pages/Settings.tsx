@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
-import { Mail, Server, Eye, EyeOff, Calculator, Sparkles, FileText, Sun, Moon, Monitor } from 'lucide-react';
+import {
+  Mail, Server, Eye, EyeOff, Calculator, Sparkles, FileText, Sun, Moon, Monitor,
+  Globe, Building, Landmark, Image, Lock, LogOut, ChevronRight, Check,
+} from 'lucide-react';
 import { PageLoader } from '../components/Spinner';
+import StickySaveBar from '../components/StickySaveBar';
+import { SettingsGroup, SettingsRow, SettingsBackHeader, StatusValue, RowToggle } from '../components/SettingsList';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { getInitials } from '../utils/format';
 
 interface Settings {
   smtpHost: string | null;
@@ -33,52 +41,89 @@ interface Settings {
   aiModel: string | null;
 }
 
-type SectionKey = 'invoiceDefaults' | 'emailSending' | 'bankMatching' | 'ai' | 'calculator' | 'appearance';
+type SectionKey = 'invoiceDefaults' | 'emailSending' | 'bankMatching' | 'ai' | 'calculator' | 'appearance' | 'language';
 
-const SECTIONS: Array<{ key: SectionKey; icon: typeof Mail; headingKey: string; descriptionKey: string }> = [
-  { key: 'invoiceDefaults', icon: FileText, headingKey: 'invoiceDefaults.heading', descriptionKey: 'invoiceDefaults.description' },
-  { key: 'emailSending', icon: Mail, headingKey: 'smtp.heading', descriptionKey: 'smtp.description' },
-  { key: 'bankMatching', icon: Server, headingKey: 'imap.heading', descriptionKey: 'imap.description' },
-  { key: 'ai', icon: Sparkles, headingKey: 'ai.heading', descriptionKey: 'ai.description' },
-  { key: 'calculator', icon: Calculator, headingKey: 'calculator.heading', descriptionKey: 'calculator.description' },
-  { key: 'appearance', icon: Sun, headingKey: 'appearance.heading', descriptionKey: 'appearance.description' },
+/** Sections are routes (`/settings/<slug>`) so mobile can drill in and back out */
+const SECTIONS: Array<{ key: SectionKey; slug: string; icon: typeof Mail; headingKey: string; descriptionKey: string }> = [
+  { key: 'invoiceDefaults', slug: 'invoicing', icon: FileText, headingKey: 'invoiceDefaults.heading', descriptionKey: 'invoiceDefaults.description' },
+  { key: 'emailSending', slug: 'email', icon: Mail, headingKey: 'smtp.heading', descriptionKey: 'smtp.description' },
+  { key: 'bankMatching', slug: 'bank-matching', icon: Server, headingKey: 'imap.heading', descriptionKey: 'imap.description' },
+  { key: 'ai', slug: 'ai', icon: Sparkles, headingKey: 'ai.heading', descriptionKey: 'ai.description' },
+  { key: 'calculator', slug: 'calculator', icon: Calculator, headingKey: 'calculator.heading', descriptionKey: 'calculator.description' },
+  { key: 'appearance', slug: 'appearance', icon: Sun, headingKey: 'appearance.heading', descriptionKey: 'appearance.description' },
+  { key: 'language', slug: 'language', icon: Globe, headingKey: 'language.heading', descriptionKey: 'language.description' },
 ];
+
+const EMPTY_FORM = {
+  smtpHost: '',
+  smtpPort: 587,
+  smtpUser: '',
+  smtpPassword: '',
+  smtpSecure: true,
+  smtpFromEmail: '',
+  smtpFromName: '',
+  imapHost: '',
+  imapPort: 993,
+  imapUser: '',
+  imapPassword: '',
+  imapTls: true,
+  bankNotificationEmail: '',
+  emailPollingInterval: 300,
+  invoiceNumberPrefix: '',
+  defaultVatRate: 21,
+  defaultPaymentTerms: 14,
+  emailTemplate: '',
+  calculatorEnabled: false,
+  aiEnabled: true,
+  aiApiKey: '',
+  aiApiUrl: '',
+  aiModel: '',
+};
+
+type FormState = typeof EMPTY_FORM;
+
+function toFormState(result: Settings): FormState {
+  return {
+    smtpHost: result.smtpHost || '',
+    smtpPort: result.smtpPort ?? 587,
+    smtpUser: result.smtpUser || '',
+    smtpPassword: '',
+    smtpSecure: result.smtpSecure ?? true,
+    smtpFromEmail: result.smtpFromEmail || '',
+    smtpFromName: result.smtpFromName || '',
+    imapHost: result.imapHost || '',
+    imapPort: result.imapPort ?? 993,
+    imapUser: result.imapUser || '',
+    imapPassword: '',
+    imapTls: result.imapTls ?? true,
+    bankNotificationEmail: result.bankNotificationEmail || '',
+    emailPollingInterval: result.emailPollingInterval ?? 300,
+    invoiceNumberPrefix: result.invoiceNumberPrefix || '',
+    defaultVatRate: result.defaultVatRate ?? 21,
+    defaultPaymentTerms: result.defaultPaymentTerms ?? 14,
+    emailTemplate: result.emailTemplate || '',
+    calculatorEnabled: result.calculatorEnabled ?? false,
+    aiEnabled: result.aiEnabled ?? true,
+    aiApiKey: '',
+    aiApiUrl: result.aiApiUrl || '',
+    aiModel: result.aiModel || '',
+  };
+}
 
 export default function Settings() {
   const { t } = useTranslation('settings');
   const { theme, setTheme } = useTheme();
+  const { user, updateProfile, logout } = useAuth();
+  const { section: slug } = useParams();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<'smtp' | 'imap' | null>(null);
   const [showPasswords, setShowPasswords] = useState({ smtp: false, imap: false, ai: false });
-  const [section, setSection] = useState<SectionKey>('invoiceDefaults');
 
-  const [formData, setFormData] = useState({
-    smtpHost: '',
-    smtpPort: 587,
-    smtpUser: '',
-    smtpPassword: '',
-    smtpSecure: true,
-    smtpFromEmail: '',
-    smtpFromName: '',
-    imapHost: '',
-    imapPort: 993,
-    imapUser: '',
-    imapPassword: '',
-    imapTls: true,
-    bankNotificationEmail: '',
-    emailPollingInterval: 300,
-    invoiceNumberPrefix: '',
-    defaultVatRate: 21,
-    defaultPaymentTerms: 14,
-    emailTemplate: '',
-    calculatorEnabled: false,
-    aiEnabled: true,
-    aiApiKey: '',
-    aiApiUrl: '',
-    aiModel: '',
-  });
+  const [formData, setFormData] = useState<FormState>(EMPTY_FORM);
+  // Last saved state — the save bar only appears once formData drifts from it
+  const [savedForm, setSavedForm] = useState<FormState>(EMPTY_FORM);
 
   useEffect(() => {
     loadSettings();
@@ -88,31 +133,9 @@ export default function Settings() {
     try {
       const result = await api.get('/settings');
       setSettings(result);
-      setFormData({
-        smtpHost: result.smtpHost || '',
-        smtpPort: result.smtpPort ?? 587,
-        smtpUser: result.smtpUser || '',
-        smtpPassword: '',
-        smtpSecure: result.smtpSecure ?? true,
-        smtpFromEmail: result.smtpFromEmail || '',
-        smtpFromName: result.smtpFromName || '',
-        imapHost: result.imapHost || '',
-        imapPort: result.imapPort ?? 993,
-        imapUser: result.imapUser || '',
-        imapPassword: '',
-        imapTls: result.imapTls ?? true,
-        bankNotificationEmail: result.bankNotificationEmail || '',
-        emailPollingInterval: result.emailPollingInterval ?? 300,
-        invoiceNumberPrefix: result.invoiceNumberPrefix || '',
-        defaultVatRate: result.defaultVatRate ?? 21,
-        defaultPaymentTerms: result.defaultPaymentTerms ?? 14,
-        emailTemplate: result.emailTemplate || '',
-        calculatorEnabled: result.calculatorEnabled ?? false,
-        aiEnabled: result.aiEnabled ?? true,
-        aiApiKey: '',
-        aiApiUrl: result.aiApiUrl || '',
-        aiModel: result.aiModel || '',
-      });
+      const next = toFormState(result);
+      setFormData(next);
+      setSavedForm(next);
     } catch (error) {
       console.error('Failed to load settings:', error);
       toast.error(t('common:errors.loadFailed'));
@@ -149,6 +172,35 @@ export default function Settings() {
     }
   }
 
+  /** Index toggles apply straight away — there is no Save button on the index */
+  async function toggleFromIndex(name: 'calculatorEnabled') {
+    const next = { ...formData, [name]: !formData[name] };
+    setFormData(next);
+    setSavedForm(next);
+
+    try {
+      await api.put('/settings', next);
+      window.dispatchEvent(new Event('settings-updated'));
+      toast.success(t('toast.saveSuccess'));
+    } catch (err: unknown) {
+      setFormData(formData);
+      setSavedForm(formData);
+      toast.error((err as Error).message || t('toast.saveFailed'));
+    }
+  }
+
+  /** Language lives on the user record; PUT /auth/me replaces company fields, so send the whole profile */
+  async function changeLanguage(language: 'cs' | 'en') {
+    if (user?.language === language) return;
+
+    try {
+      await updateProfile({ ...user, language });
+      toast.success(t('toast.saveSuccess'));
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t('toast.saveFailed'));
+    }
+  }
+
   async function testConnection(type: 'smtp' | 'imap') {
     setTesting(type);
 
@@ -167,7 +219,12 @@ export default function Settings() {
     return <PageLoader />;
   }
 
-  const activeSection = SECTIONS.find(s => s.key === section)!;
+  // No slug: the mobile index. Desktop ignores it and shows the first section.
+  const activeSection = SECTIONS.find(s => s.slug === slug) ?? SECTIONS[0];
+  const section = activeSection.key;
+  const isDirty = (Object.keys(EMPTY_FORM) as Array<keyof FormState>).some(key => formData[key] !== savedForm[key]);
+  const themeLabel = t(`appearance.${theme}`);
+  const languageLabel = t(`language.${user?.language === 'en' ? 'en' : 'cs'}`);
 
   const passwordField = (
     name: 'smtpPassword' | 'imapPassword' | 'aiApiKey',
@@ -214,352 +271,493 @@ export default function Settings() {
   );
 
   return (
-    <div className="space-y-5">
-      <h1 className="text-2xl font-bold tracking-[-0.02em] text-text">{t('title')}</h1>
+    <>
+      {/* Mobile index — one entry point to everything, including the profile */}
+      {!slug && (
+        <div className="lg:hidden" data-testid="settings-index">
+          <h1 className="text-2xl font-bold tracking-[-0.02em] text-text mb-[18px]">{t('title')}</h1>
 
-      {/* Mobile section chips */}
-      <div className="lg:hidden flex gap-2 overflow-x-auto pb-1">
-        {SECTIONS.map(({ key, icon: Icon, headingKey }) => (
-          <button
-            key={key}
-            onClick={() => setSection(key)}
-            className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
-              section === key
-                ? 'bg-accent text-white'
-                : 'bg-surface border border-border text-text-secondary'
-            }`}
+          <Link
+            to="/profile"
+            className="flex items-center gap-3.5 bg-surface border border-border rounded-[20px] px-4 py-3.5 mb-[22px] active:bg-nav-hover transition-colors"
           >
-            <Icon className="h-3.5 w-3.5" />
-            {t(headingKey)}
-          </button>
-        ))}
-      </div>
+            <span className="flex items-center justify-center h-11 w-11 rounded-full bg-accent-soft text-accent text-sm font-semibold shrink-0">
+              {user?.name ? getInitials(user.name) : '—'}
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-[15px] font-semibold text-text truncate">{user?.name}</span>
+              <span className="block text-[13px] text-text-muted truncate">
+                {[user?.email, user?.companyName].filter(Boolean).join(' · ')}
+              </span>
+            </span>
+            <ChevronRight className="h-[18px] w-[18px] text-text-faint shrink-0" />
+          </Link>
 
-      <div className="lg:grid lg:grid-cols-[230px_1fr] lg:gap-6 lg:items-start">
-        {/* Secondary nav — surface-sunken active state, deliberately not indigo */}
-        <nav className="hidden lg:block space-y-1">
-          {SECTIONS.map(({ key, icon: Icon, headingKey }) => (
-            <button
-              key={key}
-              onClick={() => setSection(key)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-[10px] text-sm transition-colors text-left ${
-                section === key
-                  ? 'bg-surface-sunken text-text font-medium'
-                  : 'text-text-secondary hover:bg-nav-hover hover:text-text'
-              }`}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {t(headingKey)}
-            </button>
-          ))}
-        </nav>
+          <SettingsGroup caption={t('index.groups.business')} className="mb-[22px]">
+            <SettingsRow
+              icon={Building}
+              tint="success"
+              label={t('index.rows.companyDetails')}
+              value={user?.vatPayer ? t('index.status.vatPayer') : t('index.status.nonVatPayer')}
+              to="/profile/company"
+            />
+            <SettingsRow
+              icon={Landmark}
+              tint="success"
+              label={t('index.rows.bankAndTax')}
+              value={
+                user?.pausalniDanEnabled
+                  ? t('index.status.tier', { tier: user?.pausalniDanTier ?? 1 })
+                  : user?.bankAccount || t('index.status.notSet')
+              }
+              to="/profile/bank"
+            />
+            <SettingsRow
+              icon={Image}
+              tint="accent"
+              label={t('index.rows.companyLogo')}
+              value={user?.hasLogo ? t('index.status.set') : t('index.status.none')}
+              to="/profile/logo"
+            />
+          </SettingsGroup>
 
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="space-y-4 min-w-0">
-          {/* Page head */}
-          <div>
-            <h2 className="text-xl font-bold tracking-[-0.02em] text-text">{t(activeSection.headingKey)}</h2>
-            <p className="mt-1 text-[13px] text-text-muted">{t(activeSection.descriptionKey)}</p>
-          </div>
+          <SettingsGroup caption={t('index.groups.invoicing')} className="mb-[22px]">
+            <SettingsRow
+              icon={FileText}
+              tint="accent"
+              label={t('index.rows.invoiceDefaults')}
+              value={t('index.status.invoiceDefaults', {
+                vat: formData.defaultVatRate,
+                days: formData.defaultPaymentTerms,
+                count: Number(formData.defaultPaymentTerms),
+              })}
+              to="/settings/invoicing"
+            />
+            <SettingsRow
+              icon={Mail}
+              tint="accent"
+              label={t('index.rows.emailSending')}
+              value={
+                <StatusValue
+                  connected={Boolean(formData.smtpHost)}
+                  label={formData.smtpHost ? t('index.status.connected') : t('index.status.notSetUp')}
+                />
+              }
+              to="/settings/email"
+            />
+            <SettingsRow
+              icon={Server}
+              tint="accent"
+              label={t('index.rows.bankMatching')}
+              value={
+                <StatusValue
+                  connected={Boolean(formData.imapHost)}
+                  label={formData.imapHost ? t('index.status.connected') : t('index.status.off')}
+                />
+              }
+              to="/settings/bank-matching"
+            />
+          </SettingsGroup>
 
-          {section === 'invoiceDefaults' && (
-            <div className="card">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="label">{t('invoiceDefaults.vatRate')}</label>
-                  <select
-                    name="defaultVatRate"
-                    value={formData.defaultVatRate}
-                    onChange={handleChange}
-                    className="input"
-                  >
-                    <option value={0}>0%</option>
-                    <option value={12}>12%</option>
-                    <option value={21}>21%</option>
-                  </select>
-                  <p className="text-xs text-text-faint mt-1">{t('invoiceDefaults.vatRateHelp')}</p>
-                </div>
-                <div>
-                  <label className="label">{t('invoiceDefaults.paymentTerms')}</label>
-                  <input
-                    type="number"
-                    name="defaultPaymentTerms"
-                    value={formData.defaultPaymentTerms}
-                    onChange={handleChange}
-                    className="input tabular-nums"
-                    min={1}
-                  />
-                  <p className="text-xs text-text-faint mt-1">{t('invoiceDefaults.paymentTermsHelp')}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="label">{t('invoiceDefaults.invoiceNumberPrefix')}</label>
-                  <input
-                    type="text"
-                    name="invoiceNumberPrefix"
-                    value={formData.invoiceNumberPrefix}
-                    onChange={handleChange}
-                    className="input font-mono"
-                    placeholder={t('invoiceDefaults.invoiceNumberPrefixPlaceholder')}
-                  />
-                </div>
-              </div>
+          <SettingsGroup caption={t('index.groups.app')} className="mb-[22px]">
+            <SettingsRow icon={Sun} label={t('index.rows.appearance')} value={themeLabel} to="/settings/appearance" />
+            <SettingsRow icon={Globe} label={t('index.rows.language')} value={languageLabel} to="/settings/language" />
+            {/* Drills in rather than toggling: the API key, URL and model live behind it */}
+            <SettingsRow
+              icon={Sparkles}
+              tint="accent"
+              label={t('index.rows.ai')}
+              value={formData.aiEnabled ? t('index.status.on') : t('index.status.off')}
+              to="/settings/ai"
+            />
+            <SettingsRow
+              icon={Calculator}
+              label={t('index.rows.calculator')}
+              value={
+                <RowToggle
+                  checked={formData.calculatorEnabled}
+                  onChange={() => toggleFromIndex('calculatorEnabled')}
+                  label={t('calculator.enable')}
+                />
+              }
+              chevron={false}
+            />
+          </SettingsGroup>
+
+          <SettingsGroup className="mb-4">
+            <SettingsRow icon={Lock} label={t('index.rows.changePassword')} to="/profile/password" />
+            <SettingsRow
+              icon={LogOut}
+              tint="danger"
+              label={t('index.rows.logout')}
+              onClick={logout}
+              danger
+              chevron={false}
+            />
+          </SettingsGroup>
+
+        </div>
+      )}
+
+      {/* Section detail on mobile; the full two-column layout on desktop */}
+      <div className={!slug ? 'hidden lg:block' : ''}>
+        {slug && (
+          <SettingsBackHeader to="/settings" backLabel={t('title')} title={t(activeSection.headingKey)} />
+        )}
+        <div className="space-y-5">
+          <h1 className="hidden lg:block text-2xl font-bold tracking-[-0.02em] text-text">{t('title')}</h1>
+
+          <div className="lg:grid lg:grid-cols-[230px_1fr] lg:gap-6 lg:items-start">
+          {/* Secondary nav — surface-sunken active state, deliberately not indigo */}
+          <nav className="hidden lg:block space-y-1">
+            {SECTIONS.map(({ key, slug: sectionSlug, icon: Icon, headingKey }) => (
+              <Link
+                key={key}
+                to={`/settings/${sectionSlug}`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-[10px] text-sm transition-colors text-left ${
+                  section === key
+                    ? 'bg-surface-sunken text-text font-medium'
+                    : 'text-text-secondary hover:bg-nav-hover hover:text-text'
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {t(headingKey)}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Content */}
+          <form onSubmit={handleSubmit} className="space-y-4 min-w-0">
+            {/* Page head — on mobile the section title sits in the back header */}
+            <div>
+              <h2 className="hidden lg:block text-xl font-bold tracking-[-0.02em] text-text">{t(activeSection.headingKey)}</h2>
+              <p className="lg:mt-1 text-[13px] text-text-muted">{t(activeSection.descriptionKey)}</p>
             </div>
-          )}
 
-          {section === 'emailSending' && (
-            <>
+            {section === 'invoiceDefaults' && (
               <div className="card">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="label">{t('smtp.server')}</label>
-                    <input
-                      type="text"
-                      name="smtpHost"
-                      value={formData.smtpHost}
+                    <label className="label">{t('invoiceDefaults.vatRate')}</label>
+                    <select
+                      name="defaultVatRate"
+                      value={formData.defaultVatRate}
                       onChange={handleChange}
                       className="input"
-                      placeholder={t('smtp.serverPlaceholder')}
+                    >
+                      <option value={0}>0%</option>
+                      <option value={12}>12%</option>
+                      <option value={21}>21%</option>
+                    </select>
+                    <p className="text-xs text-text-faint mt-1">{t('invoiceDefaults.vatRateHelp')}</p>
+                  </div>
+                  <div>
+                    <label className="label">{t('invoiceDefaults.paymentTerms')}</label>
+                    <input
+                      type="number"
+                      name="defaultPaymentTerms"
+                      value={formData.defaultPaymentTerms}
+                      onChange={handleChange}
+                      className="input tabular-nums"
+                      min={1}
+                    />
+                    <p className="text-xs text-text-faint mt-1">{t('invoiceDefaults.paymentTermsHelp')}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="label">{t('invoiceDefaults.invoiceNumberPrefix')}</label>
+                    <input
+                      type="text"
+                      name="invoiceNumberPrefix"
+                      value={formData.invoiceNumberPrefix}
+                      onChange={handleChange}
+                      className="input font-mono"
+                      placeholder={t('invoiceDefaults.invoiceNumberPrefixPlaceholder')}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {section === 'emailSending' && (
+              <>
+                <div className="card">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="label">{t('smtp.server')}</label>
+                      <input
+                        type="text"
+                        name="smtpHost"
+                        value={formData.smtpHost}
+                        onChange={handleChange}
+                        className="input"
+                        placeholder={t('smtp.serverPlaceholder')}
+                      />
+                    </div>
+                    <div>
+                      <label className="label">{t('smtp.port')}</label>
+                      <input
+                        type="number"
+                        name="smtpPort"
+                        value={formData.smtpPort}
+                        onChange={handleChange}
+                        className="input tabular-nums"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">{t('smtp.user')}</label>
+                      <input
+                        type="text"
+                        name="smtpUser"
+                        value={formData.smtpUser}
+                        onChange={handleChange}
+                        className="input"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">{t('smtp.password')} {settings?.smtpPasswordSet && t('smtp.passwordSet')}</label>
+                      {passwordField('smtpPassword', 'smtp', settings?.smtpPasswordSet)}
+                    </div>
+                    <div>
+                      <label className="label">{t('smtp.fromEmail')}</label>
+                      <input
+                        type="email"
+                        name="smtpFromEmail"
+                        value={formData.smtpFromEmail}
+                        onChange={handleChange}
+                        className="input"
+                        placeholder={t('smtp.fromEmailPlaceholder')}
+                      />
+                    </div>
+                    <div>
+                      <label className="label">{t('smtp.fromName')}</label>
+                      <input
+                        type="text"
+                        name="smtpFromName"
+                        value={formData.smtpFromName}
+                        onChange={handleChange}
+                        className="input"
+                        placeholder={t('smtp.fromNamePlaceholder')}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-hairline space-y-3">
+                    {toggleRow('smtpSecure', t('smtp.useTls'))}
+                    <button
+                      type="button"
+                      onClick={() => testConnection('smtp')}
+                      disabled={testing === 'smtp' || !formData.smtpHost}
+                      className="btn btn-secondary w-full sm:w-auto"
+                    >
+                      {testing === 'smtp' ? t('smtp.testing') : t('smtp.testConnection')}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="card">
+                  <h3 className="text-[15px] font-semibold text-text mb-1">{t('emailTemplate.heading')}</h3>
+                  <p className="text-[13px] text-text-muted mb-3">{t('emailTemplate.variablesHelp')}</p>
+                  <textarea
+                    name="emailTemplate"
+                    value={formData.emailTemplate}
+                    onChange={handleChange}
+                    className="input"
+                    rows={6}
+                    placeholder={t('emailTemplate.placeholder')}
+                  />
+                </div>
+              </>
+            )}
+
+            {section === 'bankMatching' && (
+              <div className="card">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">{t('imap.server')}</label>
+                    <input
+                      type="text"
+                      name="imapHost"
+                      value={formData.imapHost}
+                      onChange={handleChange}
+                      className="input"
+                      placeholder={t('imap.serverPlaceholder')}
                     />
                   </div>
                   <div>
-                    <label className="label">{t('smtp.port')}</label>
+                    <label className="label">{t('imap.port')}</label>
                     <input
                       type="number"
-                      name="smtpPort"
-                      value={formData.smtpPort}
+                      name="imapPort"
+                      value={formData.imapPort}
                       onChange={handleChange}
                       className="input tabular-nums"
                     />
                   </div>
                   <div>
-                    <label className="label">{t('smtp.user')}</label>
+                    <label className="label">{t('imap.user')}</label>
                     <input
                       type="text"
-                      name="smtpUser"
-                      value={formData.smtpUser}
+                      name="imapUser"
+                      value={formData.imapUser}
                       onChange={handleChange}
                       className="input"
                     />
                   </div>
                   <div>
-                    <label className="label">{t('smtp.password')} {settings?.smtpPasswordSet && t('smtp.passwordSet')}</label>
-                    {passwordField('smtpPassword', 'smtp', settings?.smtpPasswordSet)}
+                    <label className="label">{t('imap.password')} {settings?.imapPasswordSet && t('imap.passwordSet')}</label>
+                    {passwordField('imapPassword', 'imap', settings?.imapPasswordSet)}
                   </div>
-                  <div>
-                    <label className="label">{t('smtp.fromEmail')}</label>
+                  <div className="md:col-span-2">
+                    <label className="label">{t('imap.bankNotificationEmail')}</label>
                     <input
                       type="email"
-                      name="smtpFromEmail"
-                      value={formData.smtpFromEmail}
+                      name="bankNotificationEmail"
+                      value={formData.bankNotificationEmail}
                       onChange={handleChange}
                       className="input"
-                      placeholder={t('smtp.fromEmailPlaceholder')}
+                      placeholder={t('imap.bankNotificationEmailPlaceholder')}
                     />
-                  </div>
-                  <div>
-                    <label className="label">{t('smtp.fromName')}</label>
-                    <input
-                      type="text"
-                      name="smtpFromName"
-                      value={formData.smtpFromName}
-                      onChange={handleChange}
-                      className="input"
-                      placeholder={t('smtp.fromNamePlaceholder')}
-                    />
+                    <p className="text-xs text-text-faint mt-1">{t('imap.bankNotificationEmailHelp')}</p>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-hairline flex items-center justify-between gap-4">
-                  <div className="flex-1">{toggleRow('smtpSecure', t('smtp.useTls'))}</div>
+                <div className="mt-4 pt-4 border-t border-hairline space-y-3">
+                  {toggleRow('imapTls', t('imap.useTls'))}
                   <button
                     type="button"
-                    onClick={() => testConnection('smtp')}
-                    disabled={testing === 'smtp' || !formData.smtpHost}
-                    className="btn btn-secondary shrink-0"
+                    onClick={() => testConnection('imap')}
+                    disabled={testing === 'imap' || !formData.imapHost}
+                    className="btn btn-secondary w-full sm:w-auto"
                   >
-                    {testing === 'smtp' ? t('smtp.testing') : t('smtp.testConnection')}
+                    {testing === 'imap' ? t('imap.testing') : t('imap.testConnection')}
                   </button>
                 </div>
               </div>
+            )}
 
+            {section === 'ai' && (
+              <div className="card space-y-4">
+                {toggleRow('aiEnabled', t('ai.enableAi'))}
+                <div className="pt-4 border-t border-hairline space-y-4">
+                  <div>
+                    <label className="label">{t('ai.apiKeyLabel')} {settings?.aiApiKeySet && t('ai.apiKeySet')}</label>
+                    {passwordField('aiApiKey', 'ai', settings?.aiApiKeySet, t('ai.apiKeyPlaceholder'))}
+                    <p className="text-xs text-text-faint mt-1">
+                      {t('ai.apiKeyHelp')}{' '}
+                      <a
+                        href="https://openrouter.ai/settings/keys"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-accent-link hover:underline"
+                      >
+                        {t('ai.apiKeyLink')}
+                      </a>
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="label">{t('ai.apiUrlLabel')}</label>
+                      <input
+                        type="text"
+                        name="aiApiUrl"
+                        value={formData.aiApiUrl}
+                        onChange={handleChange}
+                        className="input font-mono"
+                        placeholder="https://openrouter.ai/api/v1"
+                      />
+                      <p className="text-xs text-text-faint mt-1">{t('ai.apiUrlHelp')}</p>
+                    </div>
+                    <div>
+                      <label className="label">{t('ai.modelLabel')}</label>
+                      <input
+                        type="text"
+                        name="aiModel"
+                        value={formData.aiModel}
+                        onChange={handleChange}
+                        className="input font-mono"
+                        placeholder="openai/gpt-5.6-luna"
+                      />
+                      <p className="text-xs text-text-faint mt-1">{t('ai.modelHelp')}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {section === 'appearance' && (
               <div className="card">
-                <h3 className="text-[15px] font-semibold text-text mb-1">{t('emailTemplate.heading')}</h3>
-                <p className="text-[13px] text-text-muted mb-3">{t('emailTemplate.variablesHelp')}</p>
-                <textarea
-                  name="emailTemplate"
-                  value={formData.emailTemplate}
-                  onChange={handleChange}
-                  className="input"
-                  rows={6}
-                  placeholder={t('emailTemplate.placeholder')}
-                />
-              </div>
-            </>
-          )}
-
-          {section === 'bankMatching' && (
-            <div className="card">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="label">{t('imap.server')}</label>
-                  <input
-                    type="text"
-                    name="imapHost"
-                    value={formData.imapHost}
-                    onChange={handleChange}
-                    className="input"
-                    placeholder={t('imap.serverPlaceholder')}
-                  />
-                </div>
-                <div>
-                  <label className="label">{t('imap.port')}</label>
-                  <input
-                    type="number"
-                    name="imapPort"
-                    value={formData.imapPort}
-                    onChange={handleChange}
-                    className="input tabular-nums"
-                  />
-                </div>
-                <div>
-                  <label className="label">{t('imap.user')}</label>
-                  <input
-                    type="text"
-                    name="imapUser"
-                    value={formData.imapUser}
-                    onChange={handleChange}
-                    className="input"
-                  />
-                </div>
-                <div>
-                  <label className="label">{t('imap.password')} {settings?.imapPasswordSet && t('imap.passwordSet')}</label>
-                  {passwordField('imapPassword', 'imap', settings?.imapPasswordSet)}
-                </div>
-                <div className="md:col-span-2">
-                  <label className="label">{t('imap.bankNotificationEmail')}</label>
-                  <input
-                    type="email"
-                    name="bankNotificationEmail"
-                    value={formData.bankNotificationEmail}
-                    onChange={handleChange}
-                    className="input"
-                    placeholder={t('imap.bankNotificationEmailPlaceholder')}
-                  />
-                  <p className="text-xs text-text-faint mt-1">{t('imap.bankNotificationEmailHelp')}</p>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-hairline flex items-center justify-between gap-4">
-                <div className="flex-1">{toggleRow('imapTls', t('imap.useTls'))}</div>
-                <button
-                  type="button"
-                  onClick={() => testConnection('imap')}
-                  disabled={testing === 'imap' || !formData.imapHost}
-                  className="btn btn-secondary shrink-0"
-                >
-                  {testing === 'imap' ? t('imap.testing') : t('imap.testConnection')}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {section === 'ai' && (
-            <div className="card space-y-4">
-              {toggleRow('aiEnabled', t('ai.enableAi'))}
-              <div className="pt-4 border-t border-hairline space-y-4">
-                <div>
-                  <label className="label">{t('ai.apiKeyLabel')} {settings?.aiApiKeySet && t('ai.apiKeySet')}</label>
-                  {passwordField('aiApiKey', 'ai', settings?.aiApiKeySet, t('ai.apiKeyPlaceholder'))}
-                  <p className="text-xs text-text-faint mt-1">
-                    {t('ai.apiKeyHelp')}{' '}
-                    <a
-                      href="https://openrouter.ai/settings/keys"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-accent-link hover:underline"
-                    >
-                      {t('ai.apiKeyLink')}
-                    </a>
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Stacks below sm — side by side the segmented control would overflow the card */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
                   <div>
-                    <label className="label">{t('ai.apiUrlLabel')}</label>
-                    <input
-                      type="text"
-                      name="aiApiUrl"
-                      value={formData.aiApiUrl}
-                      onChange={handleChange}
-                      className="input font-mono"
-                      placeholder="https://openrouter.ai/api/v1"
-                    />
-                    <p className="text-xs text-text-faint mt-1">{t('ai.apiUrlHelp')}</p>
+                    <p className="text-sm font-medium text-text">{t('appearance.themeLabel')}</p>
+                    <p className="text-xs text-text-faint mt-0.5">{t('appearance.themeHelp')}</p>
                   </div>
-                  <div>
-                    <label className="label">{t('ai.modelLabel')}</label>
-                    <input
-                      type="text"
-                      name="aiModel"
-                      value={formData.aiModel}
-                      onChange={handleChange}
-                      className="input font-mono"
-                      placeholder="openai/gpt-5.6-luna"
-                    />
-                    <p className="text-xs text-text-faint mt-1">{t('ai.modelHelp')}</p>
+                  <div className="grid grid-cols-3 bg-surface-sunken rounded-[9px] p-[3px] sm:flex sm:shrink-0">
+                    {([
+                      { value: 'light' as const, icon: Sun, label: t('appearance.light') },
+                      { value: 'dark' as const, icon: Moon, label: t('appearance.dark') },
+                      { value: 'system' as const, icon: Monitor, label: t('appearance.system') },
+                    ]).map(({ value, icon: Icon, label }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setTheme(value)}
+                        className={`flex items-center justify-center gap-1.5 min-w-0 px-2.5 sm:px-3 py-1.5 text-[13px] font-medium rounded-[7px] transition-colors ${
+                          theme === value
+                            ? 'bg-surface shadow-[0_1px_2px_rgba(20,22,40,.08)] text-text'
+                            : 'text-text-muted hover:text-text'
+                        }`}
+                      >
+                        <Icon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {section === 'appearance' && (
-            <div className="card">
-              <div className="flex items-center justify-between gap-5">
-                <div>
-                  <p className="text-sm font-medium text-text">{t('appearance.themeLabel')}</p>
-                  <p className="text-xs text-text-faint mt-0.5">{t('appearance.themeHelp')}</p>
-                </div>
-                <div className="flex bg-surface-sunken rounded-[9px] p-[3px] shrink-0">
-                  {([
-                    { value: 'light' as const, icon: Sun, label: t('appearance.light') },
-                    { value: 'dark' as const, icon: Moon, label: t('appearance.dark') },
-                    { value: 'system' as const, icon: Monitor, label: t('appearance.system') },
-                  ]).map(({ value, icon: Icon, label }) => (
+            {section === 'language' && (
+              <div className="bg-surface border border-border rounded-[20px] overflow-hidden">
+                {(['cs', 'en'] as const).map((code, i) => (
+                  <div key={code}>
+                    {i > 0 && <div className="h-px bg-hairline ml-4" />}
                     <button
-                      key={value}
                       type="button"
-                      onClick={() => setTheme(value)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium rounded-[7px] transition-colors ${
-                        theme === value
-                          ? 'bg-surface shadow-[0_1px_2px_rgba(20,22,40,.08)] text-text'
-                          : 'text-text-muted hover:text-text'
-                      }`}
+                      onClick={() => changeLanguage(code)}
+                      className="w-full flex items-center gap-3 px-4 py-[13px] min-h-[44px] text-left active:bg-nav-hover transition-colors"
                     >
-                      <Icon className="h-3.5 w-3.5" />
-                      {label}
+                      <span className="flex-1 text-[15px] text-text">{t(`language.${code}`)}</span>
+                      {(user?.language === 'en' ? 'en' : 'cs') === code && <Check className="h-4 w-4 text-accent" />}
                     </button>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          )}
+            )}
 
-          {section === 'calculator' && (
-            <div className="card">
-              {toggleRow('calculatorEnabled', t('calculator.enable'), t('calculator.description'))}
-            </div>
-          )}
+            {section === 'calculator' && (
+              <div className="card">
+                {toggleRow('calculatorEnabled', t('calculator.enable'), t('calculator.description'))}
+              </div>
+            )}
 
-          {/* Appearance applies on change, so it has nothing to save */}
-          {section !== 'appearance' && (
-            <div className="flex justify-end">
-              <button type="submit" disabled={saving} className="btn btn-primary">
-                {saving ? t('actions.saving') : t('actions.save')}
-              </button>
-            </div>
-          )}
-        </form>
+            {/* Room for the save bar so it never covers the last field */}
+            {isDirty && <div className="h-16" aria-hidden />}
+
+            {/* Appearance and language apply on change; every other section saves from the bar */}
+            <StickySaveBar
+              show={isDirty}
+              saving={saving}
+              saveLabel={t('actions.save')}
+              savingLabel={t('actions.saving')}
+              message={t('actions.unsavedChanges')}
+              discardLabel={t('actions.discard')}
+              onDiscard={() => setFormData(savedForm)}
+            />
+          </form>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

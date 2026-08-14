@@ -85,8 +85,9 @@ describe('MobileBottomNav', () => {
     expect(screen.getByText('Náklady')).toBeInTheDocument();
     expect(screen.getByText('Platby')).toBeInTheDocument();
     expect(screen.getByText('Nastavení')).toBeInTheDocument();
-    expect(screen.getByText('Profil')).toBeInTheDocument();
     expect(screen.getByText('Odhlásit se')).toBeInTheDocument();
+    // The profile is reached through the settings index, not from here
+    expect(screen.queryByText('Profil')).not.toBeInTheDocument();
     expect(screen.queryByText('Kalkulačka')).not.toBeInTheDocument();
   });
 

@@ -104,8 +104,11 @@ export default function App() {
           <Route path="clients/:id" element={<ClientDetail />} />
           <Route path="payments" element={<Payments />} />
           <Route path="calculator" element={<Calculator />} />
+          {/* Sections are routes so mobile can drill in and the back button works */}
           <Route path="settings" element={<Settings />} />
+          <Route path="settings/:section" element={<Settings />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="profile/:section" element={<Profile />} />
         </Route>
       </Routes>
       </Suspense>

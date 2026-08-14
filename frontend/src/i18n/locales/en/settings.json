@@ -77,7 +77,50 @@
   },
   "actions": {
     "saving": "Saving...",
-    "save": "Save settings"
+    "save": "Save settings",
+    "discard": "Discard",
+    "unsavedChanges": "You have unsaved changes"
+  },
+  "language": {
+    "heading": "Language",
+    "description": "Language of the app, invoices and emails. Applies immediately.",
+    "cs": "Čeština",
+    "en": "English"
+  },
+  "index": {
+    "groups": {
+      "business": "Your business",
+      "invoicing": "Invoicing",
+      "app": "App"
+    },
+    "rows": {
+      "companyDetails": "Company details",
+      "bankAndTax": "Bank & flat-rate tax",
+      "companyLogo": "Company logo",
+      "invoiceDefaults": "Invoice defaults",
+      "emailSending": "Email sending",
+      "bankMatching": "Bank matching",
+      "appearance": "Appearance",
+      "language": "Language",
+      "ai": "AI features",
+      "calculator": "Calculator",
+      "changePassword": "Change password",
+      "logout": "Log out"
+    },
+    "status": {
+      "vatPayer": "VAT payer",
+      "nonVatPayer": "Not a VAT payer",
+      "tier": "Tier {{tier}}",
+      "set": "Set",
+      "none": "None",
+      "notSet": "Not set",
+      "connected": "Connected",
+      "notSetUp": "Not set up",
+      "off": "Off",
+      "on": "On",
+      "invoiceDefaults_one": "{{vat}}% · {{days}} day",
+      "invoiceDefaults_other": "{{vat}}% · {{days}} days"
+    }
   },
   "appearance": {
     "heading": "Appearance",

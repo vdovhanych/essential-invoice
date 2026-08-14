@@ -37,13 +37,16 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
   - `context/ThemeContext.tsx` - Dark/light theme state management
 - **Components**: `components/` - Reusable UI:
   - `Layout.tsx` - Main layout wrapper with navigation (desktop sidebar; mobile uses bottom tab bar)
-  - `MobileBottomNav.tsx` - Mobile bottom tab bar (Dashboard, Invoices, new-invoice action, Clients, More sheet with secondary navigation, AI assistant, appearance toggle, and logout)
+  - `MobileBottomNav.tsx` - Mobile bottom tab bar (Dashboard, Invoices, new-invoice action, Clients, More sheet with secondary navigation, AI assistant, appearance toggle, and logout). The sheet has no Profile entry — the mobile settings index is the only way into it
   - `AIAssistant.tsx` - AI assistant chat component
   - `CommandPalette.tsx` - Global ⌘K/Ctrl+K command palette (mounted in `Layout.tsx`); loads invoices and contacts on open and filters client-side
   - `OfflineBanner.tsx` - Offline state banner driven by the browser `online`/`offline` events
   - `ErrorBoundary.tsx` - Render-error boundary showing the app's own failure state with a reference code; wraps the routed outlet (reset on navigation) and the whole route tree
   - `ReminderComposer.tsx` - Payment-reminder modal with an AI draft and a Friendly/Neutral/Firm tone control; drafts are editable and only sent on an explicit user action
+  - `SettingsList.tsx` - Grouped settings-list primitives (group card with inset dividers, row with icon tile / trailing value / toggle, drill-in back header) used by the mobile Settings and Profile indexes
+  - `StickySaveBar.tsx` - Save/discard bar for Settings and Profile; hidden until the form differs from its last saved state, then fixed above the mobile tab bar
 - **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, RecurringInvoices, RecurringInvoiceCreate, RecurringInvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
+  - `Settings.tsx` / `Profile.tsx`: sections are routes (`/settings/:section`, `/profile/:section`) rather than local state, so mobile can drill in and the browser Back button works. Desktop keeps the two-column `[230px_1fr]` nav + panel; below `lg` the section-less route renders a grouped index instead. The Settings index is the single mobile entry point and includes the profile rows; Language moved from Profile to `/settings/language` and applies immediately, as Appearance does
   - `Dashboard.tsx` revenue chart: hand-rolled bar pairs (no chart library), hover-only. The tooltip carries the month's Income, Expenses and Net and is anchored in pixels off a measured wrapper so the edge months stay inside the card; it uses `bg-text`/`text-canvas`, which invert together, so it reads in both themes. The year picker runs oldest→newest with the latest on the right and shows three years at a time, chevrons page further back. The flat-rate tax footnote follows the selected year — a pace projection for the running year, a final in/over verdict for a year that has closed
 - **Utils**:
   - `utils/format.ts` - Date/currency formatting helpers

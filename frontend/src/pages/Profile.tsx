@@ -1,15 +1,23 @@
 import { useState, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { User, Building, Upload, Trash2, Image, Landmark, ShieldAlert, Lock, AlertTriangle } from 'lucide-react';
+import StickySaveBar from '../components/StickySaveBar';
+import { SettingsGroup, SettingsRow, SettingsBackHeader } from '../components/SettingsList';
+import { getInitials } from '../utils/format';
+
+const EMPTY_PASSWORDS = { currentPassword: '', newPassword: '', confirmPassword: '' };
+
+type SectionKey = 'personal' | 'company' | 'bank' | 'logo' | 'password' | 'danger';
 
 export default function Profile() {
   const { t } = useTranslation('profile');
   const { user, token, updateProfile, refreshUser, logout } = useAuth();
+  const { section: slug } = useParams();
   const [saving, setSaving] = useState(false);
-  const [section, setSection] = useState<'account' | 'business' | 'logo' | 'password' | 'danger'>('account');
   const [changingPassword, setChangingPassword] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -23,7 +31,7 @@ export default function Profile() {
     return `/api/auth/me/logo?token=${encodeURIComponent(token)}&v=${logoKey}`;
   }, [token, logoKey]);
 
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     name: user?.name || '',
     companyName: user?.companyName || '',
     companyIco: user?.companyIco || '',
@@ -36,13 +44,18 @@ export default function Profile() {
     pausalniDanEnabled: user?.pausalniDanEnabled ?? false,
     pausalniDanTier: user?.pausalniDanTier ?? 1,
     pausalniDanLimit: user?.pausalniDanLimit ?? 1000000,
-  });
+  };
 
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
+  const [formData, setFormData] = useState(initialFormData);
+  // Last saved state — the save bar only appears once formData drifts from it
+  const [savedForm, setSavedForm] = useState(initialFormData);
+
+  const [passwordData, setPasswordData] = useState(EMPTY_PASSWORDS);
+
+  const isDirty = (Object.keys(savedForm) as Array<keyof typeof savedForm>).some(
+    key => formData[key] !== savedForm[key]
+  );
+  const passwordDirty = Object.values(passwordData).some(value => value !== '');
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const target = e.target;
@@ -69,6 +82,7 @@ export default function Profile() {
     setSaving(true);
     try {
       await updateProfile(formData);
+      setSavedForm(formData);
       toast.success(t('toast.profileUpdated'));
     } catch (err: unknown) {
       const error = err as Error;
@@ -98,7 +112,7 @@ export default function Profile() {
         newPassword: passwordData.newPassword,
       });
       toast.success(t('toast.passwordChanged'));
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordData(EMPTY_PASSWORDS);
     } catch (err: unknown) {
       const error = err as Error;
       toast.error(error.message || t('toast.passwordChangeFailed'));
@@ -172,78 +186,166 @@ export default function Profile() {
     }
   }
 
-  const SECTIONS = [
-    { key: 'account' as const, icon: User, label: t('personal.heading') },
-    { key: 'business' as const, icon: Building, label: t('company.heading') },
-    { key: 'logo' as const, icon: Image, label: t('logo.heading') },
-    { key: 'password' as const, icon: Lock, label: t('password.heading') },
-    { key: 'danger' as const, icon: AlertTriangle, label: t('dangerZone.heading') },
+  /** Sections are routes (`/profile/<slug>`) so mobile can drill in and back out */
+  const SECTIONS: Array<{ key: SectionKey; icon: typeof User; label: string }> = [
+    { key: 'personal', icon: User, label: t('personal.heading') },
+    { key: 'company', icon: Building, label: t('company.heading') },
+    { key: 'bank', icon: Landmark, label: t('bank.heading') },
+    { key: 'logo', icon: Image, label: t('logo.heading') },
+    { key: 'password', icon: Lock, label: t('password.heading') },
+    { key: 'danger', icon: AlertTriangle, label: t('dangerZone.heading') },
   ];
 
-  return (
-    <div className="space-y-5">
-      <h1 className="text-2xl font-bold tracking-[-0.02em] text-text">{t('title')}</h1>
+  const activeSection = SECTIONS.find(s => s.key === slug) ?? SECTIONS[0];
+  const section = activeSection.key;
 
-      {/* Mobile section chips */}
-      <div className="lg:hidden flex gap-2 overflow-x-auto pb-1">
-        {SECTIONS.map(({ key, icon: Icon, label }) => (
-          <button
-            key={key}
-            onClick={() => setSection(key)}
-            className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
-              section === key ? 'bg-accent text-white' : 'bg-surface border border-border text-text-secondary'
-            }`}
-          >
-            <Icon className="h-3.5 w-3.5" />
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <div className="lg:grid lg:grid-cols-[230px_1fr] lg:gap-6 lg:items-start">
-        {/* Secondary nav — surface-sunken active state, not indigo */}
-        <nav className="hidden lg:block space-y-1">
-          {SECTIONS.map(({ key, icon: Icon, label }) => (
+  const deleteModal = showDeleteModal && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-surface rounded-[18px] shadow-xl max-w-md w-full p-6 space-y-4">
+        <h3 className="text-lg font-semibold text-danger">{t('dangerZone.deleteModalTitle')}</h3>
+        <p className="text-sm text-text-muted">
+          {t('dangerZone.deleteModalDescription')}
+        </p>
+        <ul className="text-sm text-text-muted list-disc list-inside space-y-1">
+          <li>{t('dangerZone.deleteModalInvoices')}</li>
+          <li>{t('dangerZone.deleteModalClients')}</li>
+          <li>{t('dangerZone.deleteModalExpenses')}</li>
+          <li>{t('dangerZone.deleteModalPayments')}</li>
+          <li>{t('dangerZone.deleteModalSettings')}</li>
+        </ul>
+        <form onSubmit={handleDeleteAccount} className="space-y-4">
+          <div>
+            <label className="label">{t('dangerZone.deleteModalPasswordLabel')}</label>
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              className="input"
+              required
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end space-x-3">
             <button
-              key={key}
-              onClick={() => setSection(key)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-[10px] text-sm transition-colors text-left ${
-                section === key
-                  ? 'bg-surface-sunken text-text font-medium'
-                  : key === 'danger'
-                    ? 'text-danger hover:bg-nav-hover'
-                    : 'text-text-secondary hover:bg-nav-hover hover:text-text'
-              }`}
+              type="button"
+              onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }}
+              className="btn btn-secondary"
+              disabled={deletingAccount}
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              {label}
+              {t('dangerZone.deleteModalCancel')}
             </button>
-          ))}
-        </nav>
+            <button
+              type="submit"
+              disabled={deletingAccount || !deletePassword}
+              className="btn btn-danger"
+            >
+              {deletingAccount ? t('dangerZone.deleteModalDeleting') : t('dangerZone.deleteModalConfirm')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 
-        <div className="space-y-4 min-w-0">
+  return (
+    <>
+      {/* Mobile index — the profile at a glance, each row drilling into one section */}
+      {!slug && (
+        <div className="lg:hidden" data-testid="profile-index">
+          <SettingsBackHeader to="/settings" backLabel={t('settings:title')} title={t('title')} />
 
-      {(section === 'account' || section === 'business') && (
+          <div className="flex flex-col items-center gap-2.5 mb-6">
+            <span className="flex items-center justify-center h-[72px] w-[72px] rounded-full bg-accent-soft text-accent text-[22px] font-semibold">
+              {user?.name ? getInitials(user.name) : '—'}
+            </span>
+            <span className="text-[13px] text-text-muted">{user?.email}</span>
+          </div>
+
+          <SettingsGroup caption={t('index.groups.personal')} inset="label" className="mb-[22px]">
+            <SettingsRow leadingLabel={t('index.rows.name')} label={user?.name || '—'} to="/profile/personal" />
+            {/* Language is not repeated here — it lives in Settings → Language */}
+            <SettingsRow
+              leadingLabel={t('index.rows.email')}
+              label={user?.email || '—'}
+              trailingIcon={Lock}
+              chevron={false}
+            />
+          </SettingsGroup>
+
+          <SettingsGroup caption={t('index.groups.company')} inset="label" className="mb-2">
+            <SettingsRow
+              label={t('index.rows.companyDetails')}
+              value={user?.companyName || t('index.status.notSet')}
+              to="/profile/company"
+            />
+            <SettingsRow
+              label={t('index.rows.bankAccount')}
+              value={user?.bankAccount ? `${user.bankAccount}${user.bankCode ? `/${user.bankCode}` : ''}` : t('index.status.notSet')}
+              to="/profile/bank"
+            />
+            <SettingsRow
+              label={t('index.rows.flatRateTax')}
+              value={user?.pausalniDanEnabled ? t('index.status.tier', { tier: user?.pausalniDanTier ?? 1 }) : t('index.status.off')}
+              to="/profile/bank"
+            />
+            <SettingsRow
+              label={t('index.rows.companyLogo')}
+              value={
+                user?.hasLogo ? (
+                  <img src={logoUrl} alt={t('logo.altText')} className="w-[52px] h-6 object-contain border border-border rounded-[6px] bg-surface" />
+                ) : (
+                  t('index.status.none')
+                )
+              }
+              to="/profile/logo"
+            />
+          </SettingsGroup>
+          <p className="px-1.5 mb-[22px] text-xs leading-relaxed text-text-faint">{t('company.description')}</p>
+
+          <SettingsGroup caption={t('index.groups.security')} inset="label" className="mb-[22px]">
+            <SettingsRow label={t('password.heading')} to="/profile/password" />
+            <SettingsRow label={t('dangerZone.deleteAccount')} onClick={() => setShowDeleteModal(true)} danger />
+          </SettingsGroup>
+        </div>
+      )}
+
+      {/* Section detail on mobile; the full two-column layout on desktop */}
+      <div className={!slug ? 'hidden lg:block' : ''}>
+        {slug && <SettingsBackHeader to="/profile" backLabel={t('title')} title={activeSection.label} />}
+        <div className="space-y-5">
+          <h1 className="hidden lg:block text-2xl font-bold tracking-[-0.02em] text-text">{t('title')}</h1>
+
+          <div className="lg:grid lg:grid-cols-[230px_1fr] lg:gap-6 lg:items-start">
+          {/* Secondary nav — surface-sunken active state, not indigo */}
+          <nav className="hidden lg:block space-y-1">
+            {SECTIONS.map(({ key, icon: Icon, label }) => (
+              <Link
+                key={key}
+                to={`/profile/${key}`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-[10px] text-sm transition-colors text-left ${
+                  section === key
+                    ? 'bg-surface-sunken text-text font-medium'
+                    : key === 'danger'
+                      ? 'text-danger hover:bg-nav-hover'
+                      : 'text-text-secondary hover:bg-nav-hover hover:text-text'
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="space-y-4 min-w-0">
+
+      {(section === 'personal' || section === 'company' || section === 'bank') && (
       <form onSubmit={handleSubmit} className="card space-y-6">
-        {section === 'account' && (<>
-        <div className="flex items-center space-x-3">
+        {section === 'personal' && (<>
+        <div className="hidden lg:flex items-center space-x-3">
           <div className="p-2 bg-accent-soft rounded-lg">
             <User className="h-5 w-5 text-accent" />
           </div>
           <h2 className="text-[15px] font-semibold text-text">{t('personal.heading')}</h2>
-        </div>
-
-        <div>
-          <label className="label">{t('language.label')}</label>
-          <select
-            name="language"
-            value={formData.language || 'cs'}
-            onChange={handleChange}
-            className="input"
-          >
-            <option value="cs">{t('language.cs')}</option>
-            <option value="en">{t('language.en')}</option>
-          </select>
         </div>
 
         <div>
@@ -271,9 +373,9 @@ export default function Profile() {
 
         </>)}
 
-        {section === 'business' && (<>
+        {section === 'company' && (<>
 
-        <div className="flex items-center space-x-3">
+        <div className="hidden lg:flex items-center space-x-3">
           <div className="p-2 bg-success-bg rounded-lg">
             <Building className="h-5 w-5 text-success" />
           </div>
@@ -353,6 +455,17 @@ export default function Profile() {
           />
         </div>
 
+        </>)}
+
+        {section === 'bank' && (<>
+
+        <div className="hidden lg:flex items-center space-x-3">
+          <div className="p-2 bg-success-bg rounded-lg">
+            <Landmark className="h-5 w-5 text-success" />
+          </div>
+          <h2 className="text-[15px] font-semibold text-text">{t('bank.heading')}</h2>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="label">{t('company.bankAccount')}</label>
@@ -379,7 +492,7 @@ export default function Profile() {
           </div>
         </div>
 
-        <hr className="" />
+        <hr className="border-hairline" />
 
         {/* Paušální daň section */}
         <div id="pausalni-dan" className="flex items-center space-x-3 scroll-mt-6">
@@ -458,17 +571,22 @@ export default function Profile() {
         </div>
 
         </>)}
-        <div className="flex justify-end">
-          <button type="submit" disabled={saving} className="btn btn-primary">
-            {saving ? t('actions.saving') : t('actions.save')}
-          </button>
-        </div>
+
+        <StickySaveBar
+          show={isDirty}
+          saving={saving}
+          saveLabel={t('actions.save')}
+          savingLabel={t('actions.saving')}
+          message={t('actions.unsavedChanges')}
+          discardLabel={t('actions.discard')}
+          onDiscard={() => setFormData(savedForm)}
+        />
       </form>
       )}
 
       {section === 'logo' && (
       <div className="card space-y-6">
-        <div className="flex items-center space-x-3">
+        <div className="hidden lg:flex items-center space-x-3">
           <div className="p-2 bg-accent-soft rounded-lg">
             <Image className="h-5 w-5 text-accent" />
           </div>
@@ -538,7 +656,7 @@ export default function Profile() {
 
       {section === 'password' && (
       <form onSubmit={handlePasswordSubmit} className="card space-y-6">
-        <h2 className="text-[15px] font-semibold text-text">{t('password.heading')}</h2>
+        <h2 className="hidden lg:block text-[15px] font-semibold text-text">{t('password.heading')}</h2>
 
         <div>
           <label className="label">{t('password.currentPassword')}</label>
@@ -577,11 +695,15 @@ export default function Profile() {
           />
         </div>
 
-        <div className="flex justify-end">
-          <button type="submit" disabled={changingPassword} className="btn btn-primary">
-            {changingPassword ? t('password.changing') : t('password.change')}
-          </button>
-        </div>
+        <StickySaveBar
+          show={passwordDirty}
+          saving={changingPassword}
+          saveLabel={t('password.change')}
+          savingLabel={t('password.changing')}
+          message={t('actions.unsavedChanges')}
+          discardLabel={t('actions.discard')}
+          onDiscard={() => setPasswordData(EMPTY_PASSWORDS)}
+        />
       </form>
       )}
 
@@ -609,57 +731,14 @@ export default function Profile() {
       </div>
       )}
 
+          {/* Room for the save bar so it never covers the last field */}
+          {(isDirty || passwordDirty) && <div className="h-16" aria-hidden />}
+          </div>
+          </div>
         </div>
       </div>
 
-      {/* Delete Account Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-surface rounded-[18px] shadow-xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-danger">{t('dangerZone.deleteModalTitle')}</h3>
-            <p className="text-sm text-text-muted">
-              {t('dangerZone.deleteModalDescription')}
-            </p>
-            <ul className="text-sm text-text-muted list-disc list-inside space-y-1">
-              <li>{t('dangerZone.deleteModalInvoices')}</li>
-              <li>{t('dangerZone.deleteModalClients')}</li>
-              <li>{t('dangerZone.deleteModalExpenses')}</li>
-              <li>{t('dangerZone.deleteModalPayments')}</li>
-              <li>{t('dangerZone.deleteModalSettings')}</li>
-            </ul>
-            <form onSubmit={handleDeleteAccount} className="space-y-4">
-              <div>
-                <label className="label">{t('dangerZone.deleteModalPasswordLabel')}</label>
-                <input
-                  type="password"
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  className="input"
-                  required
-                  autoFocus
-                />
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }}
-                  className="btn btn-secondary"
-                  disabled={deletingAccount}
-                >
-                  {t('dangerZone.deleteModalCancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={deletingAccount || !deletePassword}
-                  className="btn btn-danger"
-                >
-                  {deletingAccount ? t('dangerZone.deleteModalDeleting') : t('dangerZone.deleteModalConfirm')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+      {deleteModal}
+    </>
   );
 }
