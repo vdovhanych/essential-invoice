@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { query } from '../db/init';
 import { AuthRequest } from '../middleware/auth';
+import { convertEurToCzk } from '../services/cnbExchangeRate';
 
 export const expenseRouter: ReturnType<typeof Router> = Router();
 
@@ -32,6 +33,7 @@ expenseRouter.get('/', async (req: AuthRequest, res: Response) => {
       SELECT e.id, e.expense_number, e.supplier_invoice_number, e.status, e.currency,
              e.client_id, e.issue_date, e.due_date, e.delivery_date,
              e.amount, e.vat_rate, e.vat_amount, e.total,
+             e.exchange_rate, e.total_czk,
              e.description, e.notes, e.paid_at, e.created_at, e.updated_at,
              e.file_name, e.file_mime_type,
              c.company_name as client_name
@@ -81,6 +83,8 @@ expenseRouter.get('/', async (req: AuthRequest, res: Response) => {
       vatRate: parseFloat(row.vat_rate),
       vatAmount: parseFloat(row.vat_amount),
       total: parseFloat(row.total),
+      exchangeRate: row.exchange_rate ? parseFloat(row.exchange_rate) : null,
+      totalCzk: row.total_czk ? parseFloat(row.total_czk) : null,
       description: row.description,
       notes: row.notes,
       hasFile: !!row.file_name,
@@ -132,6 +136,8 @@ expenseRouter.get('/:id', async (req: AuthRequest, res: Response) => {
       vatRate: parseFloat(row.vat_rate),
       vatAmount: parseFloat(row.vat_amount),
       total: parseFloat(row.total),
+      exchangeRate: row.exchange_rate ? parseFloat(row.exchange_rate) : null,
+      totalCzk: row.total_czk ? parseFloat(row.total_czk) : null,
       description: row.description,
       notes: row.notes,
       fileData: row.file_data,
@@ -193,6 +199,17 @@ expenseRouter.post('/',
       const vatAmount = parseFloat(amount) * (parseFloat(vatRate) / 100);
       const total = parseFloat(amount) + vatAmount;
 
+      // Fetch exchange rate for EUR expenses so dashboard totals can sum in CZK
+      let exchangeRate: number | null = null;
+      let totalCzk: number | null = null;
+      if (currency === 'EUR') {
+        const conversion = await convertEurToCzk(total, issueDate);
+        if (conversion) {
+          exchangeRate = conversion.rate;
+          totalCzk = conversion.czkAmount;
+        }
+      }
+
       // Retry loop to handle race conditions with expense number generation
       const MAX_RETRIES = 3;
       let row;
@@ -204,14 +221,16 @@ expenseRouter.post('/',
             `INSERT INTO expenses (user_id, client_id, expense_number, supplier_invoice_number,
              status, currency, issue_date, due_date, delivery_date,
              amount, vat_rate, vat_amount, total,
-             description, notes, file_data, file_name, file_mime_type)
-             VALUES ($1, $2, $3, $4, 'unpaid', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+             description, notes, file_data, file_name, file_mime_type,
+             exchange_rate, total_czk)
+             VALUES ($1, $2, $3, $4, 'unpaid', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
              RETURNING *`,
             [req.userId, clientId || null, expenseNumber, supplierInvoiceNumber || null,
              currency, issueDate, dueDate, deliveryDate || null,
              amount, vatRate, vatAmount, total,
              description || null, notes || null,
-             fileData || null, fileName || null, fileMimeType || null]
+             fileData || null, fileName || null, fileMimeType || null,
+             exchangeRate, totalCzk]
           );
 
           row = result.rows[0];
@@ -264,7 +283,7 @@ expenseRouter.put('/:id',
     try {
       // Check expense exists and is unpaid
       const expenseCheck = await query(
-        'SELECT status FROM expenses WHERE id = $1 AND user_id = $2',
+        'SELECT status, currency, issue_date, total FROM expenses WHERE id = $1 AND user_id = $2',
         [req.params.id, req.userId]
       );
 
@@ -308,6 +327,29 @@ expenseRouter.put('/:id',
         total = currentAmount + vatAmount;
       }
 
+      // Re-derive the CZK equivalent whenever the total, currency or issue date
+      // moves — any of the three changes what the conversion should be. Switching
+      // back to CZK clears the stored rate instead of leaving a stale one behind.
+      const existing = expenseCheck.rows[0];
+      const recalcCzk = total !== null || currency !== undefined || issueDate !== undefined;
+      let exchangeRate: number | null = null;
+      let totalCzk: number | null = null;
+      if (recalcCzk) {
+        const effectiveCurrency = currency ?? existing.currency;
+        if (effectiveCurrency === 'EUR') {
+          const effectiveTotal = total ?? parseFloat(existing.total);
+          const rawIssueDate = issueDate ?? existing.issue_date;
+          const effectiveIssueDate = typeof rawIssueDate === 'string'
+            ? rawIssueDate
+            : new Date(rawIssueDate).toISOString().split('T')[0];
+          const conversion = await convertEurToCzk(effectiveTotal, effectiveIssueDate);
+          if (conversion) {
+            exchangeRate = conversion.rate;
+            totalCzk = conversion.czkAmount;
+          }
+        }
+      }
+
       const result = await query(
         `UPDATE expenses SET
           client_id = COALESCE($1, client_id),
@@ -325,8 +367,10 @@ expenseRouter.put('/:id',
           file_data = COALESCE($13, file_data),
           file_name = COALESCE($14, file_name),
           file_mime_type = COALESCE($15, file_mime_type),
+          exchange_rate = CASE WHEN $16::boolean THEN $17::decimal ELSE exchange_rate END,
+          total_czk = CASE WHEN $16::boolean THEN $18::decimal ELSE total_czk END,
           updated_at = CURRENT_TIMESTAMP
-         WHERE id = $16 AND user_id = $17
+         WHERE id = $19 AND user_id = $20
          RETURNING *`,
         [
           clientId !== undefined ? (clientId || null) : undefined,
@@ -334,6 +378,7 @@ expenseRouter.put('/:id',
           amount, vatRate, vatAmount, total,
           description, notes,
           fileData, fileName, fileMimeType,
+          recalcCzk, exchangeRate, totalCzk,
           req.params.id, req.userId
         ]
       );

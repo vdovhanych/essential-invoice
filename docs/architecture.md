@@ -14,7 +14,7 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
   - `emailPoller.ts` - IMAP polling for bank payment notifications
   - `recurringInvoiceGenerator.ts` - In-process scheduler (setInterval) that auto-generates invoices from recurring templates, with optional auto-send via SMTP
   - `aiProvider.ts` - AI features via OpenRouter (default: openai/gpt-5.6-luna) or any OpenAI-compatible API: personalized Czech tax advisor, expense extraction from documents, payment reminder drafting
-  - `cnbExchangeRate.ts` - CNB (Czech National Bank) exchange rate fetching with DB caching and weekend/holiday fallback. Used to convert EUR invoices to CZK equivalents for dashboard totals and paušální daň tracking
+  - `cnbExchangeRate.ts` - CNB (Czech National Bank) exchange rate fetching with DB caching and weekend/holiday fallback. Used to convert EUR invoices and expenses to CZK equivalents for dashboard totals and paušální daň tracking
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
 - **i18n**: `i18n/translations.ts` - Plain TypeScript translation maps (cs/en) for PDF labels and email templates. Services look up translations by the user's `language` column. Backend error messages use language-neutral error codes (e.g., `TOO_MANY_LOGIN_ATTEMPTS`) that the frontend maps to localized strings
 - **Utils**: `utils/` - Utility functions:
@@ -24,7 +24,7 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
 - **Scripts**: `scripts/delete-user.ts` - Admin CLI script to delete a user by email
 - **Seed**: `db/seed.ts` - Seeds test data (user, clients, invoices, expenses, payments) for development. Run with `bun run seed [email] [password]`
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
-- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, `language` (VARCHAR(5), default 'cs') for locale preference, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow. Invoices table includes `exchange_rate` (DECIMAL) and `total_czk` (DECIMAL) for EUR→CZK conversion. `exchange_rates` table caches fetched CNB rates by date and currency.
+- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, `language` (VARCHAR(5), default 'cs') for locale preference, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow. Invoices and expenses tables both include `exchange_rate` (DECIMAL) and `total_czk` (DECIMAL) for EUR→CZK conversion. `exchange_rates` table caches fetched CNB rates by date and currency.
 
 ## Frontend (`frontend/src/`)
 
@@ -44,6 +44,7 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
   - `ErrorBoundary.tsx` - Render-error boundary showing the app's own failure state with a reference code; wraps the routed outlet (reset on navigation) and the whole route tree
   - `ReminderComposer.tsx` - Payment-reminder modal with an AI draft and a Friendly/Neutral/Firm tone control; drafts are editable and only sent on an explicit user action
 - **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, RecurringInvoices, RecurringInvoiceCreate, RecurringInvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
+  - `Dashboard.tsx` revenue chart: hand-rolled bar pairs (no chart library), hover-only. The tooltip carries the month's Income, Expenses and Net and is anchored in pixels off a measured wrapper so the edge months stay inside the card; it uses `bg-text`/`text-canvas`, which invert together, so it reads in both themes. The year picker runs oldest→newest with the latest on the right and shows three years at a time, chevrons page further back. The flat-rate tax footnote follows the selected year — a pace projection for the running year, a final in/over verdict for a year that has closed
 - **Utils**:
   - `utils/format.ts` - Date/currency formatting helpers
   - `utils/api.ts` - API client and request utilities

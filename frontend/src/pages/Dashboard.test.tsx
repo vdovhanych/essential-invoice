@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Dashboard from './Dashboard';
 
@@ -16,6 +16,8 @@ vi.mock('lucide-react', () => ({
   Plus: () => <span data-testid="plus-icon" />,
   FilePlus: () => <span data-testid="fileplus-icon" />,
   CheckCircle: () => <span data-testid="checkcircle-icon" />,
+  ChevronLeft: () => <span data-testid="chevronleft-icon" />,
+  ChevronRight: () => <span data-testid="chevronright-icon" />,
 }));
 
 vi.mock('../context/AuthContext', () => ({
@@ -104,7 +106,10 @@ describe('Dashboard', () => {
   it('switches the pace caption and marker to danger when projection crosses the limit', async () => {
     mockGet.mockResolvedValue({
       ...baseData,
-      pausalniDan: { ...baseData.pausalniDan, limit: 900000, remaining: 57700 },
+      // The footnote follows the chart's selected year, so the crossing has to come
+      // from the monthly series — 2 000 000 outruns the 900 000 limit in any month
+      monthlyRevenue: [{ month: `${year}-01-01`, revenue: 2000000, invoiceCount: 1 }],
+      pausalniDan: { ...baseData.pausalniDan, limit: 900000, remaining: 0 },
     });
     renderPage();
     await screen.findByText(/255\s?000/);
@@ -168,6 +173,109 @@ describe('Dashboard', () => {
     expect(openItem.className).not.toContain('line-through');
     // Open items carry an action link
     expect(screen.getAllByText('Doplnit').length).toBe(2);
+  });
+
+  describe('revenue chart', () => {
+    // The mock data puts 120 000 income and 9 600 expenses in July (index 6)
+    const JULY = 6;
+
+    it('shows income, expenses and net in the tooltip on hover', async () => {
+      renderPage();
+      await screen.findByText(/255\s?000/);
+      expect(screen.queryByTestId('month-tooltip')).not.toBeInTheDocument();
+
+      fireEvent.pointerEnter(screen.getByTestId(`month-column-${JULY}`));
+
+      const tooltip = within(screen.getByTestId('month-tooltip'));
+      expect(tooltip.getByText('Příjmy')).toBeInTheDocument();
+      expect(tooltip.getByText(/120\s?000/)).toBeInTheDocument();
+      expect(tooltip.getByText('Výdaje')).toBeInTheDocument();
+      expect(tooltip.getByText(/9\s?600/)).toBeInTheDocument();
+      // Net = 120 000 − 9 600
+      expect(tooltip.getByText(/110\s?400/)).toBeInTheDocument();
+
+      fireEvent.pointerLeave(screen.getByTestId(`month-column-${JULY}`));
+      expect(screen.queryByTestId('month-tooltip')).not.toBeInTheDocument();
+    });
+
+    it('uses inverting tokens for the tooltip so it works in both themes', async () => {
+      renderPage();
+      await screen.findByText(/255\s?000/);
+      fireEvent.pointerEnter(screen.getByTestId(`month-column-${JULY}`));
+
+      const className = screen.getByTestId('month-tooltip').className;
+      expect(className).toContain('bg-text');
+      expect(className).toContain('text-canvas');
+      expect(className).not.toContain('text-white');
+    });
+
+    it('orders the year picker oldest to newest so the latest year sits on the right', async () => {
+      mockGet.mockResolvedValue({
+        ...baseData,
+        monthlyRevenue: [
+          { month: `${year - 1}-03-01`, revenue: 50000, invoiceCount: 1 },
+          { month: `${year}-07-01`, revenue: 120000, invoiceCount: 3 },
+        ],
+      });
+      renderPage();
+      await screen.findByText(/255\s?000/);
+
+      const years = screen.getAllByRole('button').filter(b => /^\d{4}$/.test(b.textContent ?? ''));
+      expect(years.map(b => b.textContent)).toEqual([String(year - 1), String(year)]);
+      // The current year is the selected one
+      expect(years[1].className).toContain('bg-surface-sunken');
+    });
+
+    it('pages further back through history than the three visible years', async () => {
+      mockGet.mockResolvedValue({
+        ...baseData,
+        monthlyRevenue: [year - 3, year - 2, year - 1, year].map(y => ({
+          month: `${y}-03-01`,
+          revenue: 50000,
+          invoiceCount: 1,
+        })),
+      });
+      renderPage();
+      await screen.findByText(/255\s?000/);
+
+      const visibleYears = () =>
+        screen
+          .getAllByRole('button')
+          .filter(b => /^\d{4}$/.test(b.textContent ?? ''))
+          .map(b => b.textContent);
+
+      // Only the newest three fit; the oldest is reachable via the chevron
+      expect(visibleYears()).toEqual([String(year - 2), String(year - 1), String(year)]);
+
+      fireEvent.click(screen.getByLabelText('Starší roky'));
+      expect(visibleYears()).toEqual([String(year - 3), String(year - 2), String(year - 1)]);
+
+      fireEvent.click(screen.getByLabelText('Novější roky'));
+      expect(visibleYears()).toEqual([String(year - 2), String(year - 1), String(year)]);
+    });
+
+    it('reports the final outcome instead of a pace projection for a closed year', async () => {
+      mockGet.mockResolvedValue({
+        ...baseData,
+        monthlyRevenue: [{ month: `${year - 1}-03-01`, revenue: 1800000, invoiceCount: 1 }],
+        monthlyExpenses: [],
+      });
+      renderPage();
+      await screen.findByText(/255\s?000/);
+
+      // Current year still projects
+      expect(screen.getByTestId('pace-marker')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: String(year - 1) }));
+
+      // 1 800 000 against the 1 500 000 limit — the year is over, so no pace marker
+      expect(screen.queryByTestId('pace-marker')).not.toBeInTheDocument();
+      expect(screen.getByText(new RegExp(`Rok ${year - 1} uzavřen`))).toBeInTheDocument();
+      expect(screen.getByText(/pásmo 1 překročeno/)).toBeInTheDocument();
+      expect(screen.getByText(/překročeno o 300\s?000/)).toBeInTheDocument();
+      // The limit line tracks the selected year, not the current one
+      expect(screen.getByText(/1\s?800\s?000.*z.*1\s?500\s?000/)).toBeInTheDocument();
+    });
   });
 
   it('renders recent invoices with initials avatar and due date', async () => {

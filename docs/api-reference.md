@@ -56,7 +56,7 @@ EUR invoices include `exchangeRate` (CNB rate at issue date) and `totalCzk` (con
 - `GET /api/expenses` - List expenses (filters: status, clientId, from, to)
 - `GET /api/expenses/:id` - Get expense details
 - `GET /api/expenses/:id/file` - Download attached file
-- `POST /api/expenses` - Create expense with optional file upload
+- `POST /api/expenses` - Create expense with optional file upload (EUR expenses store `exchangeRate`/`totalCzk` from the CNB rate on the issue date)
 - `PUT /api/expenses/:id` - Update expense
 - `DELETE /api/expenses/:id` - Delete expense
 - `POST /api/expenses/:id/mark-paid` - Mark as paid
@@ -80,7 +80,7 @@ EUR invoices include `exchangeRate` (CNB rate at issue date) and `totalCzk` (con
 
 ## Dashboard
 
-- `GET /api/dashboard` - Get dashboard statistics (`stats` includes `outstandingAmount` and `overdueAmount`, both CZK-normalised)
+- `GET /api/dashboard` - Get dashboard statistics (`stats` includes `outstandingAmount` and `overdueAmount`, both CZK-normalised). `monthlyRevenue` and `monthlyExpenses` cover every month the user has data for (not a rolling window) so the chart's year picker can show whole calendar years; both series are bucketed by payment date and normalised to CZK
 - `GET /api/dashboard/quick-stats` - Get quick stats for header
 
 ## Settings

@@ -27,7 +27,10 @@
     "income": "Income",
     "expenses": "Expenses",
     "noData": "No data yet",
-    "net": "Net {{year}}"
+    "net": "Net {{year}}",
+    "netLabel": "Net",
+    "olderYears": "Older years",
+    "newerYears": "Newer years"
   },
   "pausalniDan": {
     "label": "Flat-rate tax (tier {{tier}})",
@@ -38,7 +41,10 @@
     "pace": "Pace: {{amount}} by December",
     "inside": "— inside tier {{tier}}",
     "crosses": "— crosses tier {{tier}}",
-    "headroom": "{{amount}} headroom"
+    "headroom": "{{amount}} headroom",
+    "closedInside": "{{year}} closed — inside tier {{tier}}",
+    "closedCrossed": "{{year}} closed — tier {{tier}} exceeded",
+    "exceededBy": "{{amount}} over"
   },
   "recentInvoices": {
     "title": "Recent invoices",

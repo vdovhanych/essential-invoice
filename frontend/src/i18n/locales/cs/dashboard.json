@@ -29,7 +29,10 @@
     "income": "Příjmy",
     "expenses": "Výdaje",
     "noData": "Zatím žádná data",
-    "net": "Čistý příjem {{year}}"
+    "net": "Čistý příjem {{year}}",
+    "netLabel": "Čistý příjem",
+    "olderYears": "Starší roky",
+    "newerYears": "Novější roky"
   },
   "pausalniDan": {
     "label": "Paušální daň ({{tier}}. pásmo)",
@@ -40,7 +43,10 @@
     "pace": "Tempo: {{amount}} do prosince",
     "inside": "— v pásmu {{tier}}",
     "crosses": "— překročí pásmo {{tier}}",
-    "headroom": "{{amount}} rezerva"
+    "headroom": "{{amount}} rezerva",
+    "closedInside": "Rok {{year}} uzavřen — v pásmu {{tier}}",
+    "closedCrossed": "Rok {{year}} uzavřen — pásmo {{tier}} překročeno",
+    "exceededBy": "překročeno o {{amount}}"
   },
   "recentInvoices": {
     "title": "Poslední faktury",

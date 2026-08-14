@@ -36,7 +36,8 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
       LIMIT 10
     `, [req.userId]);
 
-    // Get monthly revenue for last 12 months
+    // Monthly revenue across every year the user has data for — the dashboard
+    // chart's year picker needs full calendar years, not a rolling 12-month window.
     const revenueResult = await query(`
       SELECT
         date_trunc('month', paid_at) as month,
@@ -45,32 +46,33 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
       FROM invoices
       WHERE user_id = $1
         AND status = 'paid'
-        AND paid_at >= date_trunc('month', CURRENT_DATE - INTERVAL '11 months')
+        AND paid_at IS NOT NULL
       GROUP BY date_trunc('month', paid_at)
       ORDER BY month ASC
     `, [req.userId]);
 
-    // Get monthly expenses for last 12 months
+    // Monthly expenses, bucketed by payment date and converted to CZK so the
+    // series sits on the same timeline and in the same unit as revenue above.
+    // paid_at falls back to issue_date for rows marked paid before it was tracked.
     const expensesResult = await query(`
       SELECT
-        date_trunc('month', issue_date) as month,
-        SUM(total) as expenses,
+        date_trunc('month', COALESCE(paid_at, issue_date)) as month,
+        SUM(CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END) as expenses,
         COUNT(*) as expense_count
       FROM expenses
       WHERE user_id = $1
         AND status = 'paid'
-        AND issue_date >= date_trunc('month', CURRENT_DATE - INTERVAL '11 months')
-      GROUP BY date_trunc('month', issue_date)
+      GROUP BY date_trunc('month', COALESCE(paid_at, issue_date))
       ORDER BY month ASC
     `, [req.userId]);
 
     // Get total expenses this year
     const yearlyExpensesResult = await query(`
-      SELECT COALESCE(SUM(total), 0) as total_expenses
+      SELECT COALESCE(SUM(CASE WHEN currency = 'CZK' THEN total ELSE COALESCE(total_czk, 0) END), 0) as total_expenses
       FROM expenses
       WHERE user_id = $1
         AND status = 'paid'
-        AND issue_date >= date_trunc('year', CURRENT_DATE)
+        AND COALESCE(paid_at, issue_date) >= date_trunc('year', CURRENT_DATE)
     `, [req.userId]);
 
     // Check for overdue invoices and update status
