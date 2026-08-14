@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getStatusLabel, getStatusColor, getInitials } from '../utils/format';
-import { Plus, FilePlus, CheckCircle } from 'lucide-react';
+import { Plus, FilePlus, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageLoader } from '../components/Spinner';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
@@ -58,6 +58,14 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [hoveredMonth, setHoveredMonth] = useState<number | null>(null);
+  // Index of the newest year in the visible slice of the year picker; null tracks
+  // the latest year, so it only becomes a number once you page back through history
+  const [yearWindowEnd, setYearWindowEnd] = useState<number | null>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [chartWidth, setChartWidth] = useState(0);
+  const [tooltipWidth, setTooltipWidth] = useState(0);
 
   useEffect(() => {
     loadDashboard();
@@ -80,8 +88,9 @@ export default function Dashboard() {
     const years = new Set<number>();
     data.monthlyRevenue.forEach(item => years.add(new Date(item.month).getFullYear()));
     data.monthlyExpenses.forEach(item => years.add(new Date(item.month).getFullYear()));
-    if (years.size === 0) years.add(new Date().getFullYear());
-    return Array.from(years).sort((a, b) => b - a);
+    years.add(new Date().getFullYear());
+    // Oldest first so the picker reads left-to-right into the present
+    return Array.from(years).sort((a, b) => a - b);
   }, [data]);
 
   const chartData = useMemo(() => {
@@ -122,19 +131,51 @@ export default function Dashboard() {
     [chartData]
   );
 
-  // Pace projection: invoiced-to-date ÷ elapsed months × 12 (current year run rate)
+  // The tooltip is anchored in pixels so it can be clamped inside the card
+  useEffect(() => {
+    const element = chartRef.current;
+    if (!element || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(entries => setChartWidth(entries[0].contentRect.width));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [maxMonth]);
+
+  // Tooltip width varies with the amounts in it, so re-measure per month
+  useLayoutEffect(() => {
+    setTooltipWidth(tooltipRef.current?.offsetWidth ?? 0);
+  }, [hoveredMonth, chartData]);
+
+  // The flat-rate tax footnote follows the year picker. For the running year that
+  // means a pace projection (invoiced-to-date ÷ elapsed months × 12); for a year
+  // that has already closed the total is final, so it just reports the outcome.
+  // Note the tier limit is the user's current setting applied to every year.
   const projection = useMemo(() => {
     if (!data?.pausalniDan?.enabled) return null;
-    const elapsedMonths = new Date().getMonth() + 1;
-    const projected = (data.pausalniDan.invoicedThisYear / elapsedMonths) * 12;
+    const limit = data.pausalniDan.limit;
+    const now = new Date();
+    const fillPct = Math.min(100, (yearlyIncome / limit) * 100);
+
+    if (selectedYear < now.getFullYear()) {
+      return {
+        closed: true,
+        crosses: yearlyIncome > limit,
+        fillPct,
+        headroom: Math.max(0, limit - yearlyIncome),
+        overage: Math.max(0, yearlyIncome - limit),
+      };
+    }
+
+    const elapsedMonths = now.getMonth() + 1;
+    const projected = (yearlyIncome / elapsedMonths) * 12;
     return {
+      closed: false,
       projected,
-      crosses: projected > data.pausalniDan.limit,
-      fillPct: Math.min(100, (data.pausalniDan.invoicedThisYear / data.pausalniDan.limit) * 100),
-      pacePct: Math.min(100, (projected / data.pausalniDan.limit) * 100),
-      headroom: Math.max(0, data.pausalniDan.remaining),
+      crosses: projected > limit,
+      fillPct,
+      pacePct: Math.min(100, (projected / limit) * 100),
+      headroom: Math.max(0, limit - yearlyIncome),
     };
-  }, [data]);
+  }, [data, selectedYear, yearlyIncome]);
 
   if (loading) {
     return <PageLoader />;
@@ -209,6 +250,31 @@ export default function Dashboard() {
     );
   }
 
+  // Centre the tooltip on a month's bar pair, then pull it back inside the plot if
+  // it would hang off the card — it is far wider than the ~2% column, so January's
+  // and December's would otherwise overflow. Falls back to a percentage anchor
+  // until the plot and the tooltip have been measured.
+  function anchorMonth(index: number, width: number): CSSProperties {
+    const centerPct = ((index + 0.5) / 12) * 100;
+    if (!chartWidth || !width) {
+      return { left: `${centerPct}%`, transform: 'translateX(-50%)' };
+    }
+    const center = (chartWidth * centerPct) / 100;
+    return { left: `${Math.min(Math.max(center - width / 2, 0), Math.max(chartWidth - width, 0))}px` };
+  }
+
+  const tooltipMonth = hoveredMonth === null ? null : chartData[hoveredMonth];
+
+  // Year picker: show the newest few years as pills and page further back with the
+  // chevrons, so a long history stays reachable without widening the card header
+  const YEAR_WINDOW = 3;
+  const windowEnd = Math.min(
+    yearWindowEnd ?? availableYears.length - 1,
+    availableYears.length - 1
+  );
+  const windowStart = Math.max(0, windowEnd - (YEAR_WINDOW - 1));
+  const visibleYears = availableYears.slice(windowStart, windowEnd + 1);
+
   const tierFootnote = data.pausalniDan?.enabled && projection && (
     <div className="mt-4 pt-3.5 border-t border-hairline">
       <div className="flex items-center justify-between">
@@ -217,7 +283,7 @@ export default function Dashboard() {
         </span>
         <span className="text-xs text-text-faint tabular-nums">
           {t('pausalniDan.ofLimit', {
-            invoiced: formatCurrency(data.pausalniDan.invoicedThisYear),
+            invoiced: formatCurrency(yearlyIncome),
             limit: formatCurrency(data.pausalniDan.limit),
           })}
         </span>
@@ -225,16 +291,19 @@ export default function Dashboard() {
       <div className="relative mt-2">
         <div className="h-[6px] rounded-[3px] bg-hairline overflow-hidden">
           <div
-            className="h-full rounded-[3px] bg-accent-quiet"
+            className={`h-full rounded-[3px] ${projection.closed && projection.crosses ? 'bg-danger' : 'bg-accent-quiet'}`}
             style={{ width: `${projection.fillPct}%` }}
           />
         </div>
-        {/* Pace marker: projected year-end at the current run rate */}
-        <div
-          className={`absolute -top-[3px] w-[1.5px] h-3 ${projection.crosses ? 'bg-danger' : 'bg-text-faint'}`}
-          style={{ left: `${projection.pacePct}%` }}
-          data-testid="pace-marker"
-        />
+        {/* Pace marker: projected year-end at the current run rate. A closed year
+            has no pace left to project — its bar is the final figure. */}
+        {!projection.closed && (
+          <div
+            className={`absolute -top-[3px] w-[1.5px] h-3 ${projection.crosses ? 'bg-danger' : 'bg-text-faint'}`}
+            style={{ left: `${projection.pacePct}%` }}
+            data-testid="pace-marker"
+          />
+        )}
       </div>
       <div
         className={`flex items-center justify-between mt-2 text-[11px] ${
@@ -242,13 +311,21 @@ export default function Dashboard() {
         }`}
       >
         <span className="tabular-nums">
-          {t('pausalniDan.pace', { amount: formatCurrency(projection.projected) })}{' '}
-          {projection.crosses
-            ? t('pausalniDan.crosses', { tier: data.pausalniDan.tier })
-            : t('pausalniDan.inside', { tier: data.pausalniDan.tier })}
+          {projection.closed
+            ? t(projection.crosses ? 'pausalniDan.closedCrossed' : 'pausalniDan.closedInside', {
+                year: selectedYear,
+                tier: data.pausalniDan.tier,
+              })
+            : `${t('pausalniDan.pace', { amount: formatCurrency(projection.projected!) })} ${
+                projection.crosses
+                  ? t('pausalniDan.crosses', { tier: data.pausalniDan.tier })
+                  : t('pausalniDan.inside', { tier: data.pausalniDan.tier })
+              }`}
         </span>
         <span className="tabular-nums">
-          {t('pausalniDan.headroom', { amount: formatCurrency(projection.headroom) })}
+          {projection.closed && projection.crosses
+            ? t('pausalniDan.exceededBy', { amount: formatCurrency(projection.overage!) })
+            : t('pausalniDan.headroom', { amount: formatCurrency(projection.headroom) })}
         </span>
       </div>
     </div>
@@ -331,8 +408,17 @@ export default function Dashboard() {
                 </span>
               </div>
               {availableYears.length > 1 && (
-                <div className="flex bg-surface border border-border rounded-[10px] p-[3px]">
-                  {availableYears.map(year => (
+                <div className="flex items-center bg-surface border border-border rounded-[10px] p-[3px]">
+                  {windowStart > 0 && (
+                    <button
+                      onClick={() => setYearWindowEnd(windowEnd - 1)}
+                      aria-label={t('chart.olderYears')}
+                      className="flex items-center justify-center h-[22px] w-[22px] rounded-lg text-text-faint transition-colors hover:bg-surface-sunken hover:text-text"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                  {visibleYears.map(year => (
                     <button
                       key={year}
                       onClick={() => setSelectedYear(year)}
@@ -345,37 +431,101 @@ export default function Dashboard() {
                       {year}
                     </button>
                   ))}
+                  {windowEnd < availableYears.length - 1 && (
+                    <button
+                      onClick={() => setYearWindowEnd(windowEnd + 1)}
+                      aria-label={t('chart.newerYears')}
+                      className="flex items-center justify-center h-[22px] w-[22px] rounded-lg text-text-faint transition-colors hover:bg-surface-sunken hover:text-text"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           </div>
 
           {maxMonth > 0 ? (
-            <>
-              <div className="mt-5 flex items-end h-[190px]">
-                {chartData.map(month => (
-                  <div key={month.key} className="flex-1 flex items-end justify-center gap-[3px] h-full">
-                    <div
+            <div className="relative mt-5" ref={chartRef}>
+              <div className="flex items-end h-[190px]">
+                {chartData.map((month, index) => (
+                  <div
+                    key={month.key}
+                    role="img"
+                    aria-label={`${month.name} ${selectedYear} — ${t('chart.income')} ${formatCurrency(month.income)}, ${t('chart.expenses')} ${formatCurrency(month.expenses)}`}
+                    onPointerEnter={() => setHoveredMonth(index)}
+                    onPointerLeave={() => setHoveredMonth(current => (current === index ? null : current))}
+                    data-testid={`month-column-${index}`}
+                    className={`flex-1 flex items-end justify-center gap-[3px] h-full rounded-[8px] transition-colors duration-150 ${
+                      hoveredMonth === index ? 'bg-row-hover' : ''
+                    }`}
+                  >
+                    <span
                       className="w-[10px] rounded-[4px] bg-accent"
-                      style={{ height: `${maxMonth > 0 ? (month.income / maxMonth) * 100 : 0}%` }}
-                      title={`${month.name}: ${formatCurrency(month.income)}`}
+                      style={{ height: `${(month.income / maxMonth) * 100}%`, transition: 'height .2s' }}
                     />
-                    <div
+                    <span
                       className="w-[10px] rounded-[4px] bg-chart-secondary"
-                      style={{ height: `${maxMonth > 0 ? (month.expenses / maxMonth) * 100 : 0}%` }}
-                      title={`${month.name}: ${formatCurrency(month.expenses)}`}
+                      style={{ height: `${(month.expenses / maxMonth) * 100}%`, transition: 'height .2s' }}
                     />
                   </div>
                 ))}
               </div>
               <div className="mt-2 flex">
-                {chartData.map(month => (
-                  <span key={month.key} className="flex-1 text-center text-[11px] text-text-faint">
+                {chartData.map((month, index) => (
+                  <span
+                    key={month.key}
+                    className={`flex-1 text-center text-[11px] transition-colors duration-150 ${
+                      hoveredMonth === index ? 'font-semibold text-text' : 'text-text-faint'
+                    }`}
+                  >
                     {month.name}
                   </span>
                 ))}
               </div>
-            </>
+
+              {tooltipMonth && hoveredMonth !== null && (
+                <div
+                  ref={tooltipRef}
+                  role="tooltip"
+                  data-testid="month-tooltip"
+                  // bg-text / text-canvas invert together, so the tooltip stays a
+                  // high-contrast slab in both themes without any dark: variants
+                  className="absolute bottom-[214px] z-10 pointer-events-none w-max rounded-[10px] bg-text px-2.5 py-[7px] text-canvas whitespace-nowrap shadow-[0_8px_20px_-8px_rgba(27,29,41,.5)]"
+                  style={anchorMonth(hoveredMonth, tooltipWidth)}
+                >
+                  <p className="text-[11px] font-semibold tracking-[.02em] opacity-[.65]">
+                    {tooltipMonth.name} {selectedYear}
+                  </p>
+                  <div className="mt-0.5 flex flex-col gap-[3px]">
+                    {([
+                      { key: 'income', label: t('chart.income'), swatch: '#6d63f7', value: tooltipMonth.income },
+                      { key: 'expenses', label: t('chart.expenses'), swatch: '#8b90a8', value: tooltipMonth.expenses },
+                    ] as const).map(row => (
+                      <div key={row.key} className="flex items-center justify-between gap-[14px]">
+                        <span className="flex items-center gap-1.5 text-[11px] opacity-80">
+                          <span
+                            className="h-[7px] w-[7px] rounded-[2px]"
+                            style={{ backgroundColor: row.swatch }}
+                          />
+                          {row.label}
+                        </span>
+                        <span className="text-[12px] font-semibold tabular-nums">
+                          {formatCurrency(row.value)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <span className="block h-px mt-[7px] bg-current opacity-20" />
+                  <div className="mt-[7px] flex items-center justify-between gap-[14px]">
+                    <span className="text-[11px] opacity-80">{t('chart.netLabel')}</span>
+                    <span className="text-[12px] font-bold tabular-nums">
+                      {formatCurrency(tooltipMonth.income - tooltipMonth.expenses)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="h-[190px] mt-5 flex items-center justify-center text-sm text-text-muted">
               {t('chart.noData')}

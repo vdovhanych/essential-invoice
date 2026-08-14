@@ -6,6 +6,11 @@ vi.mock('../db/init.js', () => ({
   query: (...args: unknown[]) => mockQuery(...args)
 }));
 
+const mockConvertEurToCzk = vi.fn();
+vi.mock('../services/cnbExchangeRate', () => ({
+  convertEurToCzk: (...args: unknown[]) => mockConvertEurToCzk(...args)
+}));
+
 // Import after mocking
 import { expenseRouter } from './expenses';
 import express from 'express';
@@ -231,6 +236,46 @@ describe('Expenses Routes', () => {
       expect(params).toContain(210);
       // total should be 1210 (1000 + 210)
       expect(params).toContain(1210);
+    });
+
+    it('stores a CZK equivalent for EUR expenses so dashboard totals stay in one currency', async () => {
+      mockConvertEurToCzk.mockResolvedValueOnce({ czkAmount: 30250, rate: 25, rateDate: '2026-02-01' });
+      mockQuery.mockResolvedValueOnce({ rows: [{ count: '0' }] });
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ id: 'new-exp', expense_number: 'N20260201', status: 'unpaid', total: '1210.00' }]
+      });
+
+      const response = await request(app)
+        .post('/expenses')
+        .send({
+          issueDate: '2026-02-01',
+          dueDate: '2026-02-15',
+          amount: 1000,
+          vatRate: 21,
+          currency: 'EUR',
+        });
+
+      expect(response.status).toBe(201);
+      expect(mockConvertEurToCzk).toHaveBeenCalledWith(1210, '2026-02-01');
+      const params = mockQuery.mock.calls[1][1];
+      expect(params).toContain(25);
+      expect(params).toContain(30250);
+    });
+
+    it('leaves the CZK equivalent unset for CZK expenses', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [{ count: '0' }] });
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ id: 'new-exp', expense_number: 'N20260201', status: 'unpaid', total: '1210.00' }]
+      });
+
+      await request(app)
+        .post('/expenses')
+        .send({ issueDate: '2026-02-01', dueDate: '2026-02-15', amount: 1000, currency: 'CZK' });
+
+      expect(mockConvertEurToCzk).not.toHaveBeenCalled();
+      const params = mockQuery.mock.calls[1][1];
+      // exchange_rate and total_czk are the last two values before nothing else
+      expect(params.slice(-2)).toEqual([null, null]);
     });
   });
 

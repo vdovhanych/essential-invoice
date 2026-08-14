@@ -192,6 +192,8 @@ export async function initializeDatabase() {
         file_data TEXT,
         file_name VARCHAR(255),
         file_mime_type VARCHAR(100),
+        exchange_rate DECIMAL(10, 4),
+        total_czk DECIMAL(12, 2),
         paid_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -285,6 +287,23 @@ export async function initializeDatabase() {
           WHERE table_name = 'invoices' AND column_name = 'total_czk'
         ) THEN
           ALTER TABLE invoices ADD COLUMN total_czk DECIMAL(12, 2);
+        END IF;
+      END $$;
+
+      -- Add exchange rate columns to expenses table
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'expenses' AND column_name = 'exchange_rate'
+        ) THEN
+          ALTER TABLE expenses ADD COLUMN exchange_rate DECIMAL(10, 4);
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'expenses' AND column_name = 'total_czk'
+        ) THEN
+          ALTER TABLE expenses ADD COLUMN total_czk DECIMAL(12, 2);
         END IF;
       END $$;
 

@@ -119,5 +119,38 @@ describe('Dashboard Routes', () => {
       expect(response.body.pausalniDan.enabled).toBe(false);
       expect(response.body.pausalniDan.remaining).toBe(1000000);
     });
+
+    it('buckets expenses by payment date in CZK, matching how revenue is aggregated', async () => {
+      mockQuery.mockResolvedValueOnce({
+        rows: [{
+          draft_count: '0', sent_count: '0', paid_count: '0',
+          overdue_count: '0', cancelled_count: '0',
+          outstanding_amount: '0', paid_amount: '0', paid_this_month: '0'
+        }]
+      });
+      mockQuery.mockResolvedValueOnce({ rows: [] }); // Recent invoices
+      mockQuery.mockResolvedValueOnce({ rows: [] }); // Monthly revenue
+      mockQuery.mockResolvedValueOnce({ rows: [] }); // Monthly expenses
+      mockQuery.mockResolvedValueOnce({ rows: [{ total_expenses: '0' }] });
+      mockQuery.mockResolvedValueOnce({ rows: [] }); // Update overdue
+      mockQuery.mockResolvedValueOnce({ rows: [{ count: '0' }] });
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ pausalni_dan_enabled: false, pausalni_dan_tier: 1, pausalni_dan_limit: 1000000 }]
+      });
+      mockQuery.mockResolvedValueOnce({ rows: [{ total_invoiced: '0' }] });
+
+      const response = await request(app).get('/dashboard');
+      expect(response.status).toBe(200);
+
+      const monthlyExpensesQuery = mockQuery.mock.calls[3][0];
+      // Same date basis as revenue, so the two series sit on one timeline
+      expect(monthlyExpensesQuery).toContain("date_trunc('month', COALESCE(paid_at, issue_date))");
+      // EUR expenses are converted, like EUR invoices are
+      expect(monthlyExpensesQuery).toContain('total_czk');
+
+      // No rolling window on either series — the chart's year picker needs whole years
+      expect(mockQuery.mock.calls[2][0]).not.toContain('INTERVAL');
+      expect(monthlyExpensesQuery).not.toContain('INTERVAL');
+    });
   });
 });
