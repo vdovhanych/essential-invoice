@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { formatCurrency, formatDate, getExpenseStatusLabel, getExpenseStatusColor } from '../utils/format';
 import { PageLoader } from '../components/Spinner';
-import { useObjectUrl, toPreviewMimeType } from '../hooks/useObjectUrl';
+import { useObjectUrl, toPreviewMimeType, PDF_PREVIEW_PARAMS } from '../hooks/useObjectUrl';
 import {
   ArrowLeft,
   Edit,
@@ -268,7 +268,11 @@ export default function ExpenseDetail() {
                     {t('detail.attachment.previewUnavailable')}
                   </p>
                 ) : previewMimeType === 'application/pdf' ? (
-                  <object data={previewUrl} type="application/pdf" className="w-full h-[400px] rounded">
+                  <object
+                    data={previewUrl + PDF_PREVIEW_PARAMS}
+                    type="application/pdf"
+                    className="w-full h-[400px] rounded"
+                  >
                     <p className="p-4 text-text-muted text-center text-sm">
                       {t('detail.attachment.pdfNotSupported')}
                     </p>
