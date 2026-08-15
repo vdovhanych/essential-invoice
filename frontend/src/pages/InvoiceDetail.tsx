@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useAI } from '../context/AIContext';
 import ReminderComposer from '../components/ReminderComposer';
-import { useObjectUrl } from '../hooks/useObjectUrl';
+import { useObjectUrl, PDF_PREVIEW_PARAMS } from '../hooks/useObjectUrl';
 
 interface InvoiceItem {
   id: string;
@@ -618,7 +618,7 @@ export default function InvoiceDetail() {
                 <div className="lg:w-1/2 p-[22px] border-b lg:border-b-0 lg:border-r border-hairline overflow-auto">
                   <h3 className="text-[11px] uppercase font-semibold tracking-[.04em] text-text-faint mb-2">{t('detail.sendModal.pdfPreview')}</h3>
                   <object
-                    data={pdfPreviewUrl ?? undefined}
+                    data={pdfPreviewUrl ? pdfPreviewUrl + PDF_PREVIEW_PARAMS : undefined}
                     type="application/pdf"
                     className="w-full h-[400px] lg:h-[calc(100%-2rem)] rounded border border-border"
                   >

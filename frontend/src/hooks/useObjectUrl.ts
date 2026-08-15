@@ -21,6 +21,16 @@ export function toPreviewMimeType(mimeType: string | null | undefined): PreviewM
 }
 
 /**
+ * PDF open parameters to append to a preview URL when embedding it.
+ *
+ * Chrome renders embedded PDFs with its full viewer chrome — dark toolbar plus
+ * thumbnail sidebar — which swamps a small inline preview. `toolbar=0` drops it,
+ * and `view=FitH` fits the page to the frame width so it lands like Safari's
+ * bare rendering. Safari and Firefox ignore the ones they don't implement.
+ */
+export const PDF_PREVIEW_PARAMS = '#toolbar=0&navpanes=0&scrollbar=0&view=FitH';
+
+/**
  * Turns a base64 payload into an object URL for previewing.
  *
  * Preferred over a `data:` URL: the payload stays out of the markup (a data URL
