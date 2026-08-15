@@ -21,6 +21,28 @@ interface InvoiceItemsEditorProps {
 
 const columnHeader = 'text-[11px] uppercase font-semibold tracking-[.04em] text-text-faint';
 
+/**
+ * Wraps a field so it carries its own label below `md`, where the shared column
+ * headers are hidden: a bare grid of unlabelled boxes gives no clue which one is
+ * the quantity and which the price.
+ */
+function ItemField({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={className}>
+      <span className={`${columnHeader} md:hidden block mb-1`}>{label}</span>
+      {children}
+    </div>
+  );
+}
+
 export default function InvoiceItemsEditor({
   items,
   onItemChange,
@@ -58,63 +80,92 @@ export default function InvoiceItemsEditor({
         <span />
       </div>
 
-      <div className="divide-y divide-hairline-soft md:divide-y-0">
+      {/* Below `md` each item is its own labelled card and the fields are
+          re-ordered (title + remove, description, quantity/unit, price, total);
+          from `md` up they collapse back into one row under the headers. */}
+      <div className="space-y-3 md:space-y-0">
         {items.map((item, index) => (
           <div
             key={index}
-            className="grid grid-cols-2 md:grid-cols-[2.4fr_0.8fr_0.6fr_1fr_1fr_28px] gap-3 py-3 md:py-2 items-center"
+            className="grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-[14px] border border-hairline bg-surface-sunken p-3 md:grid-cols-[2.4fr_0.8fr_0.6fr_1fr_1fr_28px] md:gap-y-0 md:items-center md:rounded-none md:border-0 md:bg-transparent md:p-0 md:py-2"
           >
-            <input
-              type="text"
-              value={item.description}
-              onChange={(e) => onItemChange(index, 'description', e.target.value)}
-              className="input col-span-2 md:col-span-1"
-              placeholder={t('itemDescriptionPlaceholder')}
-              aria-label={t('itemDescription')}
-              maxLength={150}
-              required
-            />
-            <input
-              type="number"
-              value={item.quantity}
-              onChange={(e) =>
-                onItemChange(index, 'quantity', e.target.value === '' ? ('' as unknown as number) : parseFloat(e.target.value))
-              }
-              className="input text-right tabular-nums"
-              aria-label={t('itemQuantity')}
-              min="0.01"
-              step="0.01"
-              required
-            />
-            <input
-              type="text"
-              value={item.unit}
-              onChange={(e) => onItemChange(index, 'unit', e.target.value)}
-              className="input"
-              placeholder={t('itemUnitPlaceholder')}
-              aria-label={t('itemUnit')}
-            />
-            <input
-              type="number"
-              value={item.unitPrice}
-              onChange={(e) =>
-                onItemChange(index, 'unitPrice', e.target.value === '' ? ('' as unknown as number) : parseFloat(e.target.value))
-              }
-              onKeyDown={(e) => handlePriceKeyDown(e, index)}
-              className="input text-right tabular-nums"
-              aria-label={t('itemUnitPrice')}
-              min="0"
-              step="0.01"
-              required
-            />
-            <span className="hidden md:block text-sm font-semibold text-text text-right tabular-nums">
-              {formatCurrency((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}
+            <span className={`${columnHeader} order-1 self-center md:hidden`}>
+              {t('itemNumber', { number: index + 1 })}
             </span>
+
+            <ItemField
+              label={t('itemDescription')}
+              className="order-3 col-span-2 md:order-none md:col-span-1"
+            >
+              <input
+                type="text"
+                value={item.description}
+                onChange={(e) => onItemChange(index, 'description', e.target.value)}
+                className="input"
+                placeholder={t('itemDescriptionPlaceholder')}
+                aria-label={t('itemDescription')}
+                maxLength={150}
+                required
+              />
+            </ItemField>
+
+            <ItemField label={t('itemQuantity')} className="order-4 md:order-none">
+              <input
+                type="number"
+                value={item.quantity}
+                onChange={(e) =>
+                  onItemChange(index, 'quantity', e.target.value === '' ? ('' as unknown as number) : parseFloat(e.target.value))
+                }
+                className="input text-right tabular-nums"
+                aria-label={t('itemQuantity')}
+                min="0.01"
+                step="0.01"
+                required
+              />
+            </ItemField>
+
+            <ItemField label={t('itemUnit')} className="order-5 md:order-none">
+              <input
+                type="text"
+                value={item.unit}
+                onChange={(e) => onItemChange(index, 'unit', e.target.value)}
+                className="input"
+                placeholder={t('itemUnitPlaceholder')}
+                aria-label={t('itemUnit')}
+              />
+            </ItemField>
+
+            <ItemField
+              label={t('itemUnitPrice')}
+              className="order-6 col-span-2 md:order-none md:col-span-1"
+            >
+              <input
+                type="number"
+                value={item.unitPrice}
+                onChange={(e) =>
+                  onItemChange(index, 'unitPrice', e.target.value === '' ? ('' as unknown as number) : parseFloat(e.target.value))
+                }
+                onKeyDown={(e) => handlePriceKeyDown(e, index)}
+                className="input text-right tabular-nums"
+                aria-label={t('itemUnitPrice')}
+                min="0"
+                step="0.01"
+                required
+              />
+            </ItemField>
+
+            <div className="order-7 col-span-2 flex items-center justify-between border-t border-hairline pt-2.5 md:order-none md:col-span-1 md:block md:border-0 md:pt-0 md:text-right">
+              <span className={`${columnHeader} md:hidden`}>{t('itemTotal')}</span>
+              <span className="text-sm font-semibold text-text tabular-nums">
+                {formatCurrency((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}
+              </span>
+            </div>
+
             <button
               type="button"
               onClick={() => onRemoveItem(index)}
               disabled={items.length === 1}
-              className="justify-self-end p-1.5 rounded-lg text-text-faint hover:text-danger hover:bg-nav-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="order-2 justify-self-end self-center p-1.5 rounded-lg text-text-faint hover:text-danger hover:bg-nav-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed md:order-none"
               aria-label={t('removeItem')}
             >
               <X className="h-4 w-4" />
