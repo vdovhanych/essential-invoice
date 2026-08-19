@@ -68,6 +68,21 @@
   --nav-hover: #1e2130;
 }
 
+html {
+  /* Safari inflates text on its own judgement, which renders the app a notch
+     larger than designed. Opt out and keep our own sizes. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Layout's content wrapper clips its own overflow, but auth pages, modals and
+   fixed elements sit outside it — without this a single wide row lets the whole
+   document pan sideways. */
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Inter Variable', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
@@ -183,6 +198,19 @@ input[type="checkbox"] {
 .input-auth[type="date"]::-webkit-date-and-time-value {
   min-height: 1.5em;
   text-align: left;
+}
+
+/* iOS zooms the viewport whenever a text field under 16px takes focus, and in a
+   standalone home-screen app there is no address bar to zoom back out again —
+   the app just stays scaled and pans sideways. Holding every text entry at 16px
+   on touch devices removes the trigger entirely; pointer devices keep the
+   designed sizes. Selects are left alone: they open a picker rather than zoom,
+   and some (the VAT rate in the totals row) are sized to sit inline. */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  textarea {
+    font-size: 16px;
+  }
 }
 
 /* Hide scrollbars for app-like feel */

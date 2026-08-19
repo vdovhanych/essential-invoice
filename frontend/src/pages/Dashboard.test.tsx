@@ -209,6 +209,78 @@ describe('Dashboard', () => {
       expect(className).not.toContain('text-white');
     });
 
+    it('blocks text selection on the plot so a resting finger is not a long-press', async () => {
+      renderPage();
+      await screen.findByText(/255\s?000/);
+
+      // The plot is the column's grandparent: column -> bar row -> plot
+      const plot = screen.getByTestId(`month-column-${JULY}`).parentElement?.parentElement;
+      expect(plot?.className).toContain('select-none');
+      expect(plot?.className).toContain('[-webkit-touch-callout:none]');
+    });
+
+    it('pins the tooltip open on tap and releases it on a second tap', async () => {
+      renderPage();
+      await screen.findByText(/255\s?000/);
+      const july = screen.getByTestId(`month-column-${JULY}`);
+
+      fireEvent.click(july);
+      expect(screen.getByTestId('month-tooltip')).toBeInTheDocument();
+      expect(july).toHaveAttribute('aria-pressed', 'true');
+
+      // The pointer leaving must not take a pinned tooltip with it — on touch the
+      // finger is gone the moment the tap lands
+      fireEvent.pointerLeave(july);
+      expect(screen.getByTestId('month-tooltip')).toBeInTheDocument();
+
+      fireEvent.click(july);
+      expect(screen.queryByTestId('month-tooltip')).not.toBeInTheDocument();
+    });
+
+    it('keeps a pinned month while the pointer wanders over other months', async () => {
+      renderPage();
+      await screen.findByText(/255\s?000/);
+
+      fireEvent.click(screen.getByTestId(`month-column-${JULY}`));
+      fireEvent.pointerEnter(screen.getByTestId('month-column-0'));
+
+      // Still July's numbers, not January's
+      const tooltip = within(screen.getByTestId('month-tooltip'));
+      expect(tooltip.getByText(/120\s?000/)).toBeInTheDocument();
+    });
+
+    it('moves the pin to another month when that month is tapped', async () => {
+      renderPage();
+      await screen.findByText(/255\s?000/);
+
+      fireEvent.click(screen.getByTestId(`month-column-${JULY}`));
+      fireEvent.click(screen.getByTestId('month-column-0'));
+
+      expect(screen.getByTestId(`month-column-${JULY}`)).toHaveAttribute('aria-pressed', 'false');
+      expect(screen.getByTestId('month-column-0')).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('unpins when tapping away from the chart', async () => {
+      renderPage();
+      await screen.findByText(/255\s?000/);
+
+      fireEvent.click(screen.getByTestId(`month-column-${JULY}`));
+      expect(screen.getByTestId('month-tooltip')).toBeInTheDocument();
+
+      fireEvent.pointerDown(document.body);
+      expect(screen.queryByTestId('month-tooltip')).not.toBeInTheDocument();
+    });
+
+    it('unpins on Escape', async () => {
+      renderPage();
+      await screen.findByText(/255\s?000/);
+
+      fireEvent.click(screen.getByTestId(`month-column-${JULY}`));
+      fireEvent.keyDown(document, { key: 'Escape' });
+
+      expect(screen.queryByTestId('month-tooltip')).not.toBeInTheDocument();
+    });
+
     it('orders the year picker oldest to newest so the latest year sits on the right', async () => {
       mockGet.mockResolvedValue({
         ...baseData,

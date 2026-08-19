@@ -147,6 +147,110 @@ describe('MobileBottomNav', () => {
     expect(mockLogout).toHaveBeenCalled();
   });
 
+  describe('More sheet drag-to-dismiss', () => {
+    // The sheet is the grabber's parent's parent: grabber span -> button -> sheet
+    const openSheet = () => {
+      fireEvent.click(screen.getByText('Více'));
+      const grabber = screen.getByLabelText('Zavřít');
+      return grabber.parentElement as HTMLElement;
+    };
+
+    const drag = (sheet: HTMLElement, from: number, to: number) => {
+      fireEvent.touchStart(sheet, { touches: [{ clientY: from }] });
+      fireEvent.touchMove(sheet, { touches: [{ clientY: to }] });
+      fireEvent.touchEnd(sheet);
+    };
+
+    it('closes the sheet when the grabber is tapped', () => {
+      renderNav();
+      openSheet();
+
+      fireEvent.click(screen.getByLabelText('Zavřít'));
+
+      expect(screen.queryByText('Odhlásit se')).not.toBeInTheDocument();
+    });
+
+    it('follows the finger while dragging down', () => {
+      renderNav();
+      const sheet = openSheet();
+
+      fireEvent.touchStart(sheet, { touches: [{ clientY: 100 }] });
+      fireEvent.touchMove(sheet, { touches: [{ clientY: 160 }] });
+
+      expect(sheet.style.transform).toBe('translateY(60px)');
+      // No transition while the finger is down, or the sheet lags behind it
+      expect(sheet.style.transition).toBe('none');
+    });
+
+    it('does not follow upward drags past its resting position', () => {
+      renderNav();
+      const sheet = openSheet();
+
+      fireEvent.touchStart(sheet, { touches: [{ clientY: 100 }] });
+      fireEvent.touchMove(sheet, { touches: [{ clientY: 40 }] });
+
+      expect(sheet.style.transform).toBe('translateY(0px)');
+    });
+
+    it('closes on a long pull down', () => {
+      renderNav();
+      const sheet = openSheet();
+
+      drag(sheet, 100, 250); // 150px, past the 88px threshold
+
+      expect(screen.queryByText('Odhlásit se')).not.toBeInTheDocument();
+    });
+
+    it('springs back when the pull is too short', () => {
+      renderNav();
+      const sheet = openSheet();
+
+      drag(sheet, 100, 120); // 20px, under both thresholds
+
+      expect(screen.getByText('Odhlásit se')).toBeInTheDocument();
+      expect(sheet.style.transform).toBe('translateY(0px)');
+    });
+
+    it('closes on a short but fast flick', () => {
+      renderNav();
+      const sheet = openSheet();
+
+      // 50px covered instantly: under the distance threshold, over the velocity one
+      const now = vi.spyOn(Date, 'now');
+      now.mockReturnValue(1000);
+      fireEvent.touchStart(sheet, { touches: [{ clientY: 100 }] });
+      fireEvent.touchMove(sheet, { touches: [{ clientY: 150 }] });
+      now.mockReturnValue(1020); // 50px / 20ms = 2.5 px/ms
+      fireEvent.touchEnd(sheet);
+      now.mockRestore();
+
+      expect(screen.queryByText('Odhlásit se')).not.toBeInTheDocument();
+    });
+
+    it('reopens at rest after being dragged closed', () => {
+      renderNav();
+      const sheet = openSheet();
+      drag(sheet, 100, 250);
+
+      const reopened = openSheet();
+
+      expect(reopened.style.transform).toBe('translateY(0px)');
+    });
+
+    it('leaves a tap on a sheet link working', () => {
+      renderNav();
+      const sheet = openSheet();
+
+      // A tap is a touch sequence with no movement — it must not be read as a drag
+      fireEvent.touchStart(sheet, { touches: [{ clientY: 100 }] });
+      fireEvent.touchEnd(sheet);
+
+      expect(screen.getByText('Náklady')).toBeInTheDocument();
+      fireEvent.click(screen.getByText('Náklady'));
+      expect(screen.queryByText('Odhlásit se')).not.toBeInTheDocument();
+    });
+  });
+
   it('highlights the active tab based on the current path', () => {
     renderNav({}, '/invoices');
 
