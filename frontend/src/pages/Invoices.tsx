@@ -174,7 +174,7 @@ export default function Invoices() {
     <div className="space-y-5">
       {/* Header row */}
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-[-0.02em] text-text">{t('title')}</h1>
           {activeTab === 'invoices' && !loading && (
             <p className="mt-1 text-[13px] text-text-muted">
@@ -185,9 +185,9 @@ export default function Invoices() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0 sm:gap-3">
           {/* One-off / Recurring segmented control */}
-          <div className="flex bg-surface border border-border rounded-[10px] p-[3px]">
+          <div className="flex shrink-0 bg-surface border border-border rounded-[10px] p-[3px]">
             <button
               onClick={() => setTab('invoices')}
               className={`px-3.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${
@@ -209,14 +209,21 @@ export default function Invoices() {
               {t('tabs.recurring')}
             </button>
           </div>
+          {/* Below lg this is icon-only: the title, the segmented control and a
+              full Czech label ("Nová opakovaná") do not fit on a 390px row, and
+              the label is the part that gets squeezed. One-off invoices are
+              created from the bottom nav instead, so their button stays hidden. */}
           <Link
             to={activeTab === 'recurring' ? '/recurring/new' : '/invoices/new'}
-            className={`btn btn-primary items-center space-x-2 ${
+            aria-label={activeTab === 'recurring' ? t('newRecurring') : t('newInvoice')}
+            className={`btn btn-primary shrink-0 items-center gap-2 ${
               activeTab === 'recurring' ? 'flex' : 'hidden lg:flex'
             }`}
           >
-            <Plus className="h-4 w-4" />
-            <span>{activeTab === 'recurring' ? t('newRecurring') : t('newInvoice')}</span>
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className="hidden lg:inline whitespace-nowrap">
+              {activeTab === 'recurring' ? t('newRecurring') : t('newInvoice')}
+            </span>
           </Link>
         </div>
       </div>

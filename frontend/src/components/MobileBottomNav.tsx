@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
@@ -31,6 +31,54 @@ export default function MobileBottomNav({ calculatorEnabled }: MobileBottomNavPr
   const { t } = useTranslation('common');
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
+
+  /* Drag-to-dismiss for the More sheet. The grabber promises the gesture, so the
+     sheet has to follow the finger and close on a deliberate pull. Downward only
+     — dragging up would leave a gap above the sheet. */
+  const [dragY, setDragY] = useState(0);
+  const dragStart = useRef<{ y: number; t: number } | null>(null);
+
+  /* A pull past this closes outright; a shorter one still closes if it was
+     flicked rather than crept, which is how the platform sheets behave. */
+  const DISMISS_DISTANCE = 88;
+  const FLICK_DISTANCE = 32;
+  const FLICK_VELOCITY = 0.5; // px per ms
+
+  function openMore() {
+    setDragY(0);
+    dragStart.current = null;
+    setMoreOpen(true);
+  }
+
+  function closeMore() {
+    setDragY(0);
+    dragStart.current = null;
+    setMoreOpen(false);
+  }
+
+  function handleDragStart(e: React.TouchEvent) {
+    dragStart.current = { y: e.touches[0].clientY, t: Date.now() };
+  }
+
+  function handleDragMove(e: React.TouchEvent) {
+    if (!dragStart.current) return;
+    setDragY(Math.max(0, e.touches[0].clientY - dragStart.current.y));
+  }
+
+  function handleDragEnd() {
+    const start = dragStart.current;
+    dragStart.current = null;
+    if (!start) return;
+    const elapsed = Math.max(1, Date.now() - start.t);
+    const velocity = dragY / elapsed;
+    if (dragY > DISMISS_DISTANCE || (dragY > FLICK_DISTANCE && velocity > FLICK_VELOCITY)) {
+      closeMore();
+    } else {
+      setDragY(0);
+    }
+  }
+
+  const dragging = dragStart.current !== null;
 
   const isActive = (path: string) =>
     location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
@@ -66,17 +114,43 @@ export default function MobileBottomNav({ calculatorEnabled }: MobileBottomNavPr
       {moreOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-            onClick={() => setMoreOpen(false)}
+            className="fixed inset-0 bg-black z-40 lg:hidden"
+            /* The scrim lightens as the sheet is pulled away, so the gesture
+               reads as dismissing rather than just moving something. */
+            style={{
+              opacity: Math.max(0, 0.5 - dragY / 600),
+              transition: dragging ? 'none' : 'opacity 200ms ease-out',
+            }}
+            onClick={closeMore}
           />
-          <div className="fixed bottom-0 inset-x-0 z-50 lg:hidden bg-surface rounded-t-2xl border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border-strong" />
+          <div
+            className="fixed bottom-0 inset-x-0 z-50 lg:hidden bg-surface rounded-t-2xl border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+            onTouchStart={handleDragStart}
+            onTouchMove={handleDragMove}
+            onTouchEnd={handleDragEnd}
+            onTouchCancel={handleDragEnd}
+            style={{
+              transform: `translateY(${dragY}px)`,
+              transition: dragging ? 'none' : 'transform 200ms ease-out',
+              /* Without this the drag scrolls the page behind the sheet. Nothing
+                 inside the sheet scrolls, so there is no gesture to give up. */
+              touchAction: 'none',
+            }}
+          >
+            <button
+              type="button"
+              onClick={closeMore}
+              aria-label={t('buttons.close')}
+              className="block mx-auto mb-3 py-2 -mt-2 px-6"
+            >
+              <span className="block h-1 w-10 rounded-full bg-border-strong" />
+            </button>
             <div className="space-y-1">
               {moreItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setMoreOpen(false)}
+                  onClick={closeMore}
                   className={`flex items-center space-x-3 px-3 py-2.5 rounded-[10px] text-sm transition-colors ${
                     isActive(item.path)
                       ? 'bg-accent text-white'
@@ -90,7 +164,7 @@ export default function MobileBottomNav({ calculatorEnabled }: MobileBottomNavPr
               {aiStatus?.available && (
                 <button
                   onClick={() => {
-                    setMoreOpen(false);
+                    closeMore();
                     openAssistant();
                   }}
                   className="flex items-center space-x-3 px-3 py-2.5 rounded-[10px] text-sm text-text-secondary hover:bg-nav-hover hover:text-text w-full"
@@ -104,7 +178,7 @@ export default function MobileBottomNav({ calculatorEnabled }: MobileBottomNavPr
               <button
                 onClick={() => {
                   setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
-                  setMoreOpen(false);
+                  closeMore();
                 }}
                 className="flex items-center space-x-3 px-3 py-2.5 rounded-[10px] text-sm text-text-secondary hover:bg-nav-hover hover:text-text w-full"
               >
@@ -116,7 +190,7 @@ export default function MobileBottomNav({ calculatorEnabled }: MobileBottomNavPr
               <hr className="my-1 border-hairline" />
               <button
                 onClick={() => {
-                  setMoreOpen(false);
+                  closeMore();
                   logout();
                 }}
                 className="flex items-center space-x-3 px-3 py-2.5 rounded-[10px] text-sm text-danger hover:bg-nav-hover w-full"
@@ -153,7 +227,7 @@ export default function MobileBottomNav({ calculatorEnabled }: MobileBottomNavPr
               <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
           ))}
-          <button onClick={() => setMoreOpen(true)} className={tabClass(moreActive)}>
+          <button onClick={openMore} className={tabClass(moreActive)}>
             <MoreHorizontal className="h-5 w-5" />
             <span className="text-[10px] font-medium">{t('nav.more')}</span>
           </button>

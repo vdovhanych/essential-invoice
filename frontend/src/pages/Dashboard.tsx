@@ -59,6 +59,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [hoveredMonth, setHoveredMonth] = useState<number | null>(null);
+  // Tapping a month pins its tooltip open — on touch there is no hover to hold it
+  // there. A pin outranks the pointer, so moving across the chart afterwards does
+  // not steal the tooltip away from the month you asked about.
+  const [pinnedMonth, setPinnedMonth] = useState<number | null>(null);
   // Index of the newest year in the visible slice of the year picker; null tracks
   // the latest year, so it only becomes a number once you page back through history
   const [yearWindowEnd, setYearWindowEnd] = useState<number | null>(null);
@@ -140,10 +144,42 @@ export default function Dashboard() {
     return () => observer.disconnect();
   }, [maxMonth]);
 
+  // A pinned month wins over whatever the pointer is currently over
+  const activeMonth = pinnedMonth ?? hoveredMonth;
+
   // Tooltip width varies with the amounts in it, so re-measure per month
   useLayoutEffect(() => {
     setTooltipWidth(tooltipRef.current?.offsetWidth ?? 0);
-  }, [hoveredMonth, chartData]);
+  }, [activeMonth, chartData]);
+
+  // A pinned tooltip is dismissed by tapping away from the chart or pressing
+  // Escape. Taps landing inside the chart are left alone — the column's own
+  // handler toggles the pin, and unpinning here first would just undo it.
+  useEffect(() => {
+    if (pinnedMonth === null) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (chartRef.current?.contains(e.target as Node)) return;
+      setPinnedMonth(null);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPinnedMonth(null);
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [pinnedMonth]);
+
+  // Switching years would otherwise leave a tooltip pinned to a month of the
+  // year you just navigated away from
+  useEffect(() => {
+    setPinnedMonth(null);
+    setHoveredMonth(null);
+  }, [selectedYear]);
 
   // The flat-rate tax footnote follows the year picker. For the running year that
   // means a pace projection (invoiced-to-date ÷ elapsed months × 12); for a year
@@ -263,7 +299,7 @@ export default function Dashboard() {
     return { left: `${Math.min(Math.max(center - width / 2, 0), Math.max(chartWidth - width, 0))}px` };
   }
 
-  const tooltipMonth = hoveredMonth === null ? null : chartData[hoveredMonth];
+  const tooltipMonth = activeMonth === null ? null : chartData[activeMonth];
 
   // Year picker: show the newest few years as pills and page further back with the
   // chevrons, so a long history stays reachable without widening the card header
@@ -445,19 +481,27 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* select-none / touch-callout on the plot: reading a month means resting
+              a finger on it, which iOS otherwise takes as a long-press and answers
+              with a text selection and the Copy/Look Up callout over the chart */}
           {maxMonth > 0 ? (
-            <div className="relative mt-5" ref={chartRef}>
+            <div
+              className="relative mt-5 select-none [-webkit-touch-callout:none]"
+              ref={chartRef}
+            >
               <div className="flex items-end h-[190px]">
                 {chartData.map((month, index) => (
-                  <div
+                  <button
                     key={month.key}
-                    role="img"
+                    type="button"
                     aria-label={`${month.name} ${selectedYear} — ${t('chart.income')} ${formatCurrency(month.income)}, ${t('chart.expenses')} ${formatCurrency(month.expenses)}`}
+                    aria-pressed={pinnedMonth === index}
                     onPointerEnter={() => setHoveredMonth(index)}
                     onPointerLeave={() => setHoveredMonth(current => (current === index ? null : current))}
+                    onClick={() => setPinnedMonth(current => (current === index ? null : index))}
                     data-testid={`month-column-${index}`}
                     className={`flex-1 flex items-end justify-center gap-[3px] h-full rounded-[8px] transition-colors duration-150 ${
-                      hoveredMonth === index ? 'bg-row-hover' : ''
+                      activeMonth === index ? 'bg-row-hover' : ''
                     }`}
                   >
                     <span
@@ -468,7 +512,7 @@ export default function Dashboard() {
                       className="w-[10px] rounded-[4px] bg-chart-secondary"
                       style={{ height: `${(month.expenses / maxMonth) * 100}%`, transition: 'height .2s' }}
                     />
-                  </div>
+                  </button>
                 ))}
               </div>
               <div className="mt-2 flex">
@@ -476,7 +520,7 @@ export default function Dashboard() {
                   <span
                     key={month.key}
                     className={`flex-1 text-center text-[11px] transition-colors duration-150 ${
-                      hoveredMonth === index ? 'font-semibold text-text' : 'text-text-faint'
+                      activeMonth === index ? 'font-semibold text-text' : 'text-text-faint'
                     }`}
                   >
                     {month.name}
@@ -484,7 +528,7 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {tooltipMonth && hoveredMonth !== null && (
+              {tooltipMonth && activeMonth !== null && (
                 <div
                   ref={tooltipRef}
                   role="tooltip"
@@ -492,7 +536,7 @@ export default function Dashboard() {
                   // bg-text / text-canvas invert together, so the tooltip stays a
                   // high-contrast slab in both themes without any dark: variants
                   className="absolute bottom-[214px] z-10 pointer-events-none w-max rounded-[10px] bg-text px-2.5 py-[7px] text-canvas whitespace-nowrap shadow-[0_8px_20px_-8px_rgba(27,29,41,.5)]"
-                  style={anchorMonth(hoveredMonth, tooltipWidth)}
+                  style={anchorMonth(activeMonth, tooltipWidth)}
                 >
                   <p className="text-[11px] font-semibold tracking-[.02em] opacity-[.65]">
                     {tooltipMonth.name} {selectedYear}
