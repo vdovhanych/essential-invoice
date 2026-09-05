@@ -1,169 +1,118 @@
-# CLAUDE.md
+# Repository agent instructions
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This is the shared instruction source for agents working in this repository. `CLAUDE.md` points here; maintain guidance here instead of duplicating it. Detailed architecture and setup belong in `docs/`.
 
-## Build and Development Commands
+## Repository map
 
-### Backend (Express/TypeScript)
+Essential Invoice is a self-hosted invoicing application for Czech freelancers.
+
+- `backend/`: Express API and TypeScript, run directly with Bun. `src/index.ts` mounts routes, validates secrets, initializes the database, and starts email polling and recurring invoice generation.
+- `backend/src/db/init.ts`: PostgreSQL pool, query helper, schema, and idempotent inline migrations. `src/db/migrate.ts` runs the same initialization explicitly; there is no separate migrations directory.
+- `backend/src/routes/`: API endpoints. `src/services/`: PDF generation (pdfmake), SMTP delivery, IMAP bank matching, recurring invoices, AI provider, and CNB exchange rates.
+- `frontend/`: React, TypeScript, Vite, and Tailwind CSS. `src/App.tsx` defines routes; `src/pages/`, `src/components/`, and `src/context/` contain the UI. The `@/*` alias maps to `src/*` in the app's TypeScript and Vite configuration.
+- `helm-chart/`: application chart with a built-in PostgreSQL StatefulSet and optional external database. Docker Compose files support local and production deployments.
+- `.github/workflows/test.yml`: path-filtered frontend/backend Vitest jobs with a combined `Tests` check. It does not run the frontend production build.
+
+Use each package's `package.json` and configuration files for current dependency versions and commands.
+
+## Commands and local setup
+
+There is no root package workspace. Run package commands in `backend/` or `frontend/`; the examples below use subshells so they can all be copied from the repository root.
+
 ```bash
-cd backend
-bun install             # Install dependencies
-bun run dev             # Start dev server with hot reload (bun --watch)
-bun run start           # Run production server (runs .ts directly via Bun)
-bun run test            # Run tests (use 'bun run test', not 'bun test')
-bun run test:watch      # Run tests in watch mode
-bun run test:coverage   # Run tests with coverage
+(cd backend && bun install --frozen-lockfile)
+(cd frontend && bun install --frozen-lockfile)
+
+docker compose up -d db
+(cd backend && bun run dev)    # API: http://localhost:3001
+(cd frontend && bun run dev)   # Vite: http://localhost:5173; use a second terminal
 ```
 
-### Frontend (React/Vite/TypeScript)
+- For Docker Compose, create a root `.env` from `.env.example` if it does not exist. For direct Bun development from `backend/`, create `backend/.env` from the same example; do not assume Bun loads the parent `.env` or overwrite existing configuration.
+- In `backend/.env`, use `DB_HOST=localhost`, match the database credentials and published port, and set `CORS_ORIGIN=http://localhost:5173` and `FRONTEND_URL=http://localhost:5173`. The example's `DB_HOST=db` is for container networking. The API reads `PORT` (default `3001`); `BACKEND_PORT` is a Compose variable. Vite proxies `/api` to port `3001`.
+- Startup requires `JWT_SECRET` (at least 16 characters) and `ENCRYPTION_KEY` (64 hexadecimal characters). Generate local values with `openssl rand -hex 32`. Keep credentials out of tracked files and logs.
+- Global SMTP is for system emails; per-user SMTP/IMAP and AI settings are configured in the app. See [configuration](docs/configuration.md) for details.
+- Commit the corresponding `bun.lock` when intentionally changing dependencies. Use `bun install` without `--frozen-lockfile` for those updates.
+
+Other commands, from the repository root:
+
 ```bash
-cd frontend
-bun install             # Install dependencies
-bun run dev             # Start Vite dev server
-bun run build           # TypeScript check + Vite build
-bun run test            # Run tests (use 'bun run test', not 'bun test')
-bun run test:watch      # Run tests in watch mode
-bun run test:coverage   # Run tests with coverage
+(cd backend && bun run start)           # Run TypeScript directly; no backend build script
+(cd backend && bun run migrate)         # Apply schema initialization/migrations
+(cd backend && bun run seed)            # Development data: test@test.com / password123
+
+docker compose up -d                    # Full stack; frontend defaults to port 8080
+docker compose logs backend
 ```
 
-### Docker
+Custom seed credentials and the destructive `delete-user` admin command are documented in [development](docs/development.md). Deployment commands belong in [deployment](docs/deployment.md) and the [chart README](helm-chart/README.md).
+
+## Implementation conventions
+
+### Backend and invoice data
+
+- Scope reads and writes of user-owned data to the authenticated `req.userId`, including referenced clients, invoices, payments, and attachments. Use parameterized SQL and preserve existing transaction boundaries for multi-table changes.
+- Add schema changes to `backend/src/db/init.ts` so initialization works for both fresh databases and existing installations, and remains safe to run repeatedly at startup.
+- Reuse `backend/src/utils/money.ts` for monetary rounding and invoice totals, and `utils/validation.ts` for Czech IČO, IBAN, and SPAYD logic. Preserve VAT/non-VAT PDF behavior.
+- Reuse `services/cnbExchangeRate.ts` for EUR-to-CZK conversion. Both invoices and expenses store `exchange_rate` and `total_czk`; keep these consistent when amounts, currencies, or relevant dates change.
+- Reuse `utils/encryption.ts` for sensitive settings and `utils/jwt.ts` for JWT secrets; preserve startup validation.
+- `PUT /auth/me` replaces company fields. Follow the existing full-profile update pattern when changing only language or another preference, so unrelated fields are not cleared.
+- The application starts email polling and recurring invoice generation in-process. Account for those side effects when running the server or changing scheduled behavior.
+
+### Frontend, localization, and interaction
+
+- Use the existing API client in `frontend/src/utils/api.ts` for standard authenticated requests, uploads, and downloads.
+- The “Calm Indigo” design tokens and shared component classes live in `frontend/src/index.css`. Tailwind exposes the tokens through its CSS `@theme` block; there is no `tailwind.config.js`.
+- Use semantic colors (`canvas`, `surface`, `text`, `accent`, `border`, `success`, `danger`, and their variants), not raw palette utilities. Light/dark colors swap through `:root` and `.dark`, so color-specific `dark:` overrides are unnecessary. Reuse `card`, `btn*`, `badge*`, `input`, `input-auth`, and `label`; use `tabular-nums` for numeric values.
+- Add UI text to both `frontend/src/i18n/locales/cs/` and `en/`. Register new namespaces in `frontend/src/i18n/i18n.ts`. PDF/email text belongs in both language maps in `backend/src/i18n/translations.ts`. Use locale-aware `frontend/src/utils/format.ts` for display values.
+- Preserve desktop sidebar and mobile bottom navigation behavior. Settings/Profile sections are URL routes (`/settings/:section`, `/profile/:section`) so browser Back works. The mobile Settings index also provides access to Profile.
+- Reuse `SettingsList.tsx` and `StickySaveBar.tsx` for settings forms. The save bar is fixed above the mobile navigation and appears only for unsaved changes; its positioning accounts for Layout's overflow clipping. Appearance and language apply immediately.
+- Keep interactions usable by keyboard and touch as well as mouse, including dialogs, the command palette, and chart tooltips. Verify changed UI in light/dark themes and at mobile/desktop sizes.
+- Payment reminders use `ReminderComposer.tsx`: AI drafts stay editable and are sent only when the user presses Send.
+
+## Verification
+
+Both packages use **Vitest**. Run `bun run test`, not Bun's built-in `bun test`.
+
 ```bash
-docker compose up -d           # Start all services (dev)
-docker compose up -d db        # Start only database (for local dev)
-docker compose logs backend    # View backend logs
-# Production: docker compose -f docker-compose.production.yml up -d
+# Full suites — run both before submitting code changes
+(cd backend && bun run test)
+(cd frontend && bun run test)
+
+# Focused tests while iterating
+(cd backend && bun run test src/utils/validation.test.ts)
+(cd frontend && bun run test src/utils/format.test.ts)
+
+# TypeScript check and production bundle for frontend changes
+(cd frontend && bun run build)
 ```
 
-### Helm (Kubernetes)
-```bash
-cd helm-chart
-helm lint .                                     # Validate chart
-helm template essential-invoice .               # Dry-run render
-helm install essential-invoice . \              # Install
-  --namespace essential-invoice --create-namespace \
-  --set jwtSecret=<secret> --set encryptionKey=$(openssl rand -hex 32) \
-  --set postgresql.auth.password=<password>
-```
+- Add behavior-focused tests for new functionality and regression tests for bug fixes, including relevant validation, authorization, and money edge cases. Follow neighboring tests instead of introducing another test framework.
+- Backend tests are `src/**/*.test.ts` in a Node environment; route tests use Supertest with mocked database/services. Frontend tests are `src/**/*.test.{ts,tsx}` with jsdom and React Testing Library; shared setup is `frontend/src/test/setup.ts`. Keep tests independent of live databases, email delivery, and paid external APIs.
+- Both packages also provide `test:watch` and `test:coverage` scripts.
+- For Helm changes, lint and render with required placeholder secrets (validation only):
 
-### Database
-```bash
-cd backend
-bun run migrate         # Run database migrations
-bun run seed            # Seed test data (default: test@test.com / password123)
-bun run seed <email> <password>  # Seed with custom credentials
-bun run delete-user <email>  # Delete a user account by email (admin CLI)
-```
+  ```bash
+  helm lint ./helm-chart --set existingSecret=agent-validation --set postgresql.auth.password=agent-validation-only
+  helm template essential-invoice ./helm-chart --set existingSecret=agent-validation --set postgresql.auth.password=agent-validation-only > /tmp/essential-invoice-helm.yaml
+  ```
 
-## Architecture
+  Use additional values for any changed optional configuration; `existingSecret` skips rendering the application Secret, so test that template separately with dummy `jwtSecret` and `encryptionKey` values when changing it.
 
-This is a self-hosted invoicing application for Czech freelancers with frontend/backend separation. See [docs/architecture.md](docs/architecture.md) for full details.
+- Documentation-only changes need link/path/command checks and `git diff --check`; application tests are not required unless code or runtime configuration also changes.
+- Report the checks actually run and any failures or checks that could not run.
 
-### Backend (`backend/src/`)
-- **Express API** with JWT authentication and rate limiting
-- **Entry point**: `index.ts` - Express app setup, middleware, route mounting
-- **Routes**: `routes/` - REST endpoints for auth (register, login, forgot-password, reset-password, delete account), clients, invoices, recurring invoices, expenses, payments, settings, ARES lookup, dashboard, AI
-- **Services**: `services/` - Business logic:
-  - `pdfGenerator.ts` - Invoice PDF generation using **pdfmake** library with Czech formatting, QR payment codes (SPAYD), and VAT/non-VAT payer support (hides DIČ and shows "Neplátce DPH" for non-VAT payers, hides DPH line when rate is 0%)
-  - `emailSender.ts` - Per-user SMTP email sending for invoice delivery
-  - `globalEmailSender.ts` - Global SMTP email sending for system emails (welcome, password reset), configured via env vars
-  - `emailPoller.ts` - IMAP polling for bank payment notifications
-  - `recurringInvoiceGenerator.ts` - In-process scheduler for auto-generating invoices from recurring templates (monthly), with optional auto-send
-  - `aiProvider.ts` - AI features via OpenRouter (default: openai/gpt-5.6-luna) or any OpenAI-compatible API: personalized Czech tax advisor, expense extraction from documents, payment reminder drafting
-  - `cnbExchangeRate.ts` - CNB (Czech National Bank) exchange rate fetching with DB caching and weekend/holiday fallback. Converts EUR invoices to CZK for dashboard totals and paušální daň tracking
-  - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
-- **i18n**: `i18n/translations.ts` - Plain TypeScript translation maps (cs/en) for PDF labels and email templates. Backend services (pdfGenerator, emailSender, globalEmailSender) use the user's `language` preference to select translations
-- **Utils**: `utils/` - Utility functions:
-  - `validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
-  - `encryption.ts` - AES-256-GCM encryption/decryption for sensitive data at rest (SMTP/IMAP credentials)
-  - `money.ts` - Monetary rounding helpers (`roundMoney`, `calculateInvoiceTotals`) used by invoice routes and the recurring generator
-  - `jwt.ts` - JWT secret access with startup validation (`JWT_SECRET` required, min 16 chars, no fallback)
-  - `logger.ts` - Timestamped logging utility (info, warn, error)
-- **Scripts**: `scripts/delete-user.ts` - Admin CLI script to delete a user by email
-- **Seed**: `db/seed.ts` - Seeds test data (user, clients, invoices, expenses, payments) for development. Run with `bun run seed [email] [password]`
-- **Middleware**: `middleware/auth.ts` - JWT authentication middleware
-- **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, `language` (VARCHAR(5), default 'cs') for UI/PDF/email language preference, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow. `recurring_invoices` and `recurring_invoice_items` tables store monthly recurring invoice templates; `invoices.recurring_invoice_id` tracks which invoices were auto-generated from templates. Invoices table includes `exchange_rate` (DECIMAL) and `total_czk` (DECIMAL) for EUR→CZK conversion at CNB rates. `exchange_rates` table caches fetched CNB rates by date and currency.
+## Documentation maintenance
 
-### Frontend (`frontend/src/`)
-- **React 18** with TypeScript, Vite, and TailwindCSS
-- **i18n**: react-i18next with 10 namespaces (common, dashboard, invoices, expenses, clients, payments, settings, profile, auth, calculator). Translation JSON files live in `i18n/locales/{cs,en}/`. Configured in `i18n/i18n.ts`. Format utilities in `utils/format.ts` are locale-aware via `i18n.language`
-- **Context**:
-  - `context/AuthContext.tsx` - Authentication state management
-  - `context/AIContext.tsx` - AI assistant state management
-  - `context/ThemeContext.tsx` - Dark/light theme state management
-- **Components**: `components/` - Reusable UI:
-  - `Layout.tsx` - Main layout wrapper with navigation
-  - `ThemeToggle.tsx` - Theme switcher + language picker dropdown (used on auth pages)
-  - `AIAssistant.tsx` - AI assistant chat component
-- **Pages**: `pages/` - Dashboard, Clients, ClientDetail, Invoices, InvoiceCreate, InvoiceDetail, RecurringInvoices, RecurringInvoiceCreate, RecurringInvoiceDetail, Expenses, ExpenseCreate, ExpenseDetail, Payments, Settings, Profile, Calculator, Login, Register, Onboarding, ForgotPassword, ResetPassword
-- **Utils**:
-  - `utils/format.ts` - Locale-aware date/currency formatting helpers
-  - `utils/api.ts` - API client and request utilities
-- **Path alias**: `@/*` maps to `src/*`
+Update documentation affected by the change; avoid copying full component inventories or volatile defaults into agent instructions.
 
-### Helm Chart (`helm-chart/`)
-- **Chart.yaml**: Chart metadata (no external dependencies)
-- **values.yaml**: All configurable values (backend, frontend, ingress, postgresql, secrets, security contexts, autoscaling, PDBs)
-- **templates/**: Kubernetes manifests (see [docs/architecture.md](docs/architecture.md) for full list)
-- PostgreSQL deployed via built-in StatefulSet with PVC persistence; can be disabled in favor of external DB
-
-### Key Integrations
-- **ARES API**: Czech company registry lookup by IČO (`routes/ares.ts`)
-- **SPAYD**: Czech QR payment code standard for bank transfers
-- **Air Bank**: Email notification parsing for automatic payment matching
-- **OpenRouter / OpenAI-compatible AI**: Czech tax advisor chat (personalized with the user's tax situation), expense data extraction from uploaded documents, and payment reminder drafting. Defaults to OpenRouter with `openai/gpt-5.6-luna` (web search via `:online` for the tax advisor); users can point it at any OpenAI-compatible API and model (`routes/ai.ts`, `services/aiProvider.ts`)
-- **CNB Exchange Rates**: Auto-fetches daily EUR/CZK rates from the Czech National Bank. EUR invoices store `exchange_rate` and `total_czk` for accurate dashboard totals and paušální daň tracking (`services/cnbExchangeRate.ts`)
-
-## Testing
-
-Both projects use Vitest. Tests are co-located with source files (`*.test.ts`).
-
-Run a single test file:
-```bash
-cd backend && bun vitest run src/utils/validation.test.ts
-cd frontend && bun vitest run src/utils/format.test.ts
-```
-
-**Important**: Before submitting any code changes:
-1. Write comprehensive tests for new functionality
-2. Run all tests in both frontend and backend to ensure no regressions:
-   ```bash
-   cd backend && bun run test
-   cd frontend && bun run test
-   ```
-
-## Environment
-
-Requires `.env` file in root (copy from `.env.example`). Key variables:
-- `JWT_SECRET` - Required for authentication
-- `ENCRYPTION_KEY` - Required for encrypting secrets at rest (64-char hex, generate with `openssl rand -hex 32`)
-- `DB_*` - PostgreSQL connection settings
-- `GLOBAL_SMTP_*` - Global SMTP configuration for system emails (welcome, password reset). Separate from per-user SMTP
-- `FRONTEND_URL` - Frontend URL for constructing email links (default: `http://localhost:8080`)
-- Per-user SMTP/IMAP configured in-app via Settings page
-
-See [docs/configuration.md](docs/configuration.md) for the full environment variables reference.
-
-## Documentation Maintenance
-
-When making changes to the codebase, update the relevant documentation files:
-
-### Files to Keep Updated
-- **CLAUDE.md** - Architecture overview, commands, testing (this file)
-- **README.md** - Features list, quick start
-- **docs/api-reference.md** - API endpoints
-- **docs/architecture.md** - Backend/frontend/helm structure, integrations, security
-- **docs/configuration.md** - Environment variables, SMTP/IMAP/AI setup
-- **docs/deployment.md** - Docker, Helm, backup procedures
-- **docs/development.md** - Local setup, testing, project structure, contributing
-- **docs/troubleshooting.md** - Common issues
-- **.env.example** - All environment variables with comments
-- **helm-chart/** - Helm chart configuration, templates, README, values.yaml, Chart.yaml
-
-
-### Quick Checklist
-- API endpoints changed? → `docs/api-reference.md`
-- New pages/routes/services? → CLAUDE.md architecture + `docs/architecture.md`
-- New env vars? → `.env.example` + `docs/configuration.md`
-- New features? → README.md features list
-- Project structure changed? → `docs/development.md`
-`
+| Change | Documentation to update |
+| --- | --- |
+| Agent workflow or repository conventions | `AGENTS.md`; keep `CLAUDE.md` as a pointer |
+| API endpoints or request/response behavior | `docs/api-reference.md` |
+| Architecture, pages, services, or integrations | `docs/architecture.md` |
+| Environment/configuration options | `.env.example`, `docs/configuration.md`, and affected Compose/Helm configuration |
+| User-facing features | `README.md` |
+| Local setup, commands, testing, or structure | `docs/development.md` |
+| Deployment or chart behavior | `docs/deployment.md`, `helm-chart/README.md`, and affected chart files |
+| Troubleshooting guidance | `docs/troubleshooting.md` |

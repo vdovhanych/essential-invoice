@@ -7,10 +7,12 @@
 
 ## Local Development Setup
 
-**Important:** For local development, the frontend runs on port 5173 (Vite default).
-Make sure your `.env` file has: `CORS_ORIGIN=http://localhost:5173`
+Agents should read [AGENTS.md](../AGENTS.md) for the shared repository instructions. `CLAUDE.md` points to that file so the guidance stays in sync.
 
-1. Start database:
+**Important:** For local development, the frontend runs on port 5173 (Vite default).
+Compose reads the root `.env`; direct Bun commands from `backend/` use `backend/.env`.
+
+1. Create a root `.env` from `.env.example` if it does not exist and configure database credentials, then start the database:
 ```bash
 docker compose up -d db
 ```
@@ -19,8 +21,10 @@ docker compose up -d db
 ```bash
 cd backend
 bun install
-cp ../.env.example .env
-# Edit .env - ensure CORS_ORIGIN=http://localhost:5173 for local dev
+# If backend/.env does not exist, copy ../.env.example to .env
+# Set DB_HOST=localhost and match the root .env database credentials/port.
+# Set CORS_ORIGIN=http://localhost:5173 and FRONTEND_URL=http://localhost:5173.
+# Configure JWT_SECRET and ENCRYPTION_KEY before starting the API.
 bun run dev
 ```
 
@@ -33,7 +37,7 @@ bun run dev
 
 ## Running Tests
 
-Both backend and frontend include test suites using Vitest. Tests are co-located with source files (`*.test.ts`).
+Both backend and frontend use Vitest (`bun run test`, not `bun test`). Tests are co-located with source files: backend `*.test.ts`, frontend `*.test.ts` and `*.test.tsx`.
 
 **Backend tests:**
 ```bash
@@ -53,9 +57,11 @@ bun run test:coverage     # With coverage report
 
 Run a single test file:
 ```bash
-cd backend && bun vitest run src/utils/validation.test.ts
-cd frontend && bun vitest run src/utils/format.test.ts
+(cd backend && bun run test src/utils/validation.test.ts)
+(cd frontend && bun run test src/utils/format.test.ts)
 ```
+
+Before submitting code changes, run both suites. For frontend changes, also run `(cd frontend && bun run build)` from the repository root to check TypeScript and the production bundle. Documentation-only changes need link/path/command checks and `git diff --check`.
 
 **Test coverage includes:**
 - Air Bank email parsing (incoming payment detection, field extraction)
@@ -131,7 +137,8 @@ essential-invoice/
 ├── docker-compose.yml
 ├── docker-compose.production.yml
 ├── .env.example
-├── CLAUDE.md
+├── AGENTS.md                # Shared repository instructions for agents
+├── CLAUDE.md                # Points to AGENTS.md
 └── README.md
 ```
 
@@ -164,7 +171,7 @@ To add a new translation key:
 
 To add a new namespace:
 1. Create `<namespace>.json` in both `cs/` and `en/` locale directories
-2. Register the namespace in `frontend/src/i18n/index.ts`
+2. Register the namespace in `frontend/src/i18n/i18n.ts`
 
 ### Backend
 
@@ -181,6 +188,6 @@ When contributing code changes, **always update the documentation** to reflect y
 1. **Added a new feature?** - Update README.md features, add API endpoints to `docs/api-reference.md`, update `docs/architecture.md`
 2. **Changed existing behavior?** - Update the relevant docs files
 3. **Added configuration options?** - Add to `.env.example` and `docs/configuration.md`
-4. **Changed dependencies?** - Update mentions in CLAUDE.md and relevant docs
+4. **Changed dependencies?** - Update the corresponding `bun.lock` and affected documentation; update `AGENTS.md` if commands or conventions change
 
 **Documentation is part of your contribution.** PRs with outdated documentation may be rejected.
