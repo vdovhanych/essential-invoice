@@ -385,7 +385,7 @@ export default function InvoiceCreate() {
                       name="vatRate"
                       value={formData.vatRate}
                       onChange={handleChange}
-                      className="bg-surface text-text border border-border rounded-[9px] px-2.5 py-1.5 text-[13px] focus:outline-none focus:border-accent"
+                      className="bg-surface text-text border border-border rounded-[9px] px-2.5 py-1.5 text-[13px] focus:outline-hidden focus:border-accent"
                     >
                       <option value="0">0 %</option>
                       <option value="12">12 %</option>

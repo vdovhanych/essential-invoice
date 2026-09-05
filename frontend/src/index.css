@@ -1,11 +1,43 @@
-@import '@fontsource-variable/inter';
+@import '@fontsource-variable/inter' layer(base);
+@import 'tailwindcss';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans:
+    'Inter Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-hairline: var(--hairline);
+  --color-hairline-soft: var(--hairline-soft);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-tint: var(--accent-tint);
+  --color-accent-quiet: var(--accent-quiet);
+  --color-accent-link: var(--accent-link);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-neutral-chip-bg: var(--neutral-chip-bg);
+  --color-neutral-chip-fg: var(--neutral-chip-fg);
+  --color-chart-secondary: var(--chart-secondary);
+  --color-row-hover: var(--row-hover);
+  --color-nav-hover: var(--nav-hover);
+}
 
 /* "Calm Indigo" design tokens. The dark skin is a token swap only — same
-   layout, same spacing. Consumed by tailwind.config.js theme colors. */
+   layout, same spacing. Exposed to Tailwind through the @theme block above. */
 :root {
   --canvas: #f4f5f9;
   --surface: #ffffff;
@@ -120,7 +152,7 @@ body {
   }
 
   .input {
-    @apply w-full min-h-[42px] px-3 py-2 bg-surface text-text placeholder-text-faint border border-border-strong rounded-[9px] focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)];
+    @apply w-full min-h-[42px] px-3 py-2 bg-surface text-text placeholder-text-faint border border-border-strong rounded-[9px] focus:outline-hidden focus:border-accent focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)];
   }
 
   .label {
@@ -129,7 +161,7 @@ body {
 
   /* Auth screens are one task each — larger fields than in-app inputs */
   .input-auth {
-    @apply w-full px-3.5 py-3.5 text-[15px] bg-surface text-text placeholder-text-faint border border-border-strong rounded-[12px] focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)];
+    @apply w-full px-3.5 py-3.5 text-[15px] bg-surface text-text placeholder-text-faint border border-border-strong rounded-[12px] focus:outline-hidden focus:border-accent focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)];
   }
 
   .card {

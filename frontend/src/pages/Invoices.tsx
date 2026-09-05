@@ -243,7 +243,7 @@ export default function Invoices() {
                 placeholder={t('list.searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-surface-sunken rounded-[9px] pl-9 pr-3 py-2 text-sm text-text placeholder-text-faint focus:outline-none focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)]"
+                className="w-full bg-surface-sunken rounded-[9px] pl-9 pr-3 py-2 text-sm text-text placeholder-text-faint focus:outline-hidden focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)]"
               />
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
@@ -312,7 +312,7 @@ export default function Invoices() {
                   placeholder={t('list.searchPlaceholder')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-surface-sunken rounded-[9px] pl-9 pr-3 py-2 text-sm text-text placeholder-text-faint focus:outline-none focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)]"
+                  className="w-full bg-surface-sunken rounded-[9px] pl-9 pr-3 py-2 text-sm text-text placeholder-text-faint focus:outline-hidden focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)]"
                 />
               </div>
               <div className="ml-auto flex bg-surface border border-border rounded-[10px] p-[3px]">
@@ -374,7 +374,7 @@ export default function Invoices() {
                     checked={allFilteredSelected}
                     onChange={toggleSelectAll}
                     aria-label={t('list.selectAll')}
-                    className="h-4 w-4 rounded accent-accent"
+                    className="h-4 w-4 rounded-sm accent-accent"
                   />
                   {[
                     t('list.columnNumber'),
@@ -409,7 +409,7 @@ export default function Invoices() {
                       checked={selectedIds.has(invoice.id)}
                       onChange={() => toggleSelected(invoice.id)}
                       aria-label={invoice.invoiceNumber}
-                      className="h-4 w-4 rounded accent-accent"
+                      className="h-4 w-4 rounded-sm accent-accent"
                     />
                     <Link
                       to={`/invoices/${invoice.id}`}

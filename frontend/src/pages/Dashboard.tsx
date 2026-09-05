@@ -335,7 +335,7 @@ export default function Dashboard() {
             has no pace left to project — its bar is the final figure. */}
         {!projection.closed && (
           <div
-            className={`absolute -top-[3px] w-[1.5px] h-3 ${projection.crosses ? 'bg-danger' : 'bg-text-faint'}`}
+            className={`absolute top-[-3px] w-[1.5px] h-3 ${projection.crosses ? 'bg-danger' : 'bg-text-faint'}`}
             style={{ left: `${projection.pacePct}%` }}
             data-testid="pace-marker"
           />

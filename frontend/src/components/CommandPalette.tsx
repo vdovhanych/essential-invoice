@@ -252,7 +252,7 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/40 flex items-start justify-center pt-[12vh] px-4"
+      className="fixed inset-0 z-60 bg-black/40 flex items-start justify-center pt-[12vh] px-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -274,10 +274,10 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
               setSelectedIndex(0);
             }}
             placeholder={t('palette.placeholder')}
-            className="flex-1 bg-transparent text-base text-text placeholder-text-faint focus:outline-none"
+            className="flex-1 bg-transparent text-base text-text placeholder-text-faint focus:outline-hidden"
             aria-label={t('palette.placeholder')}
           />
-          <kbd className="text-[10px] font-mono text-text-faint border border-border rounded px-1.5 py-0.5">
+          <kbd className="text-[10px] font-mono text-text-faint border border-border rounded-sm px-1.5 py-0.5">
             esc
           </kbd>
         </div>

@@ -156,7 +156,7 @@ export function RowToggle({ checked, onChange, label }: { checked: boolean; onCh
 /** Mobile drill-in header: back affordance on the left, section title centred */
 export function SettingsBackHeader({ to, backLabel, title }: { to: string; backLabel: string; title: string }) {
   return (
-    <div className="lg:hidden -mx-[18px] -mt-[18px] mb-[18px] grid grid-cols-[1fr_auto_1fr] items-center h-12 px-1.5 bg-canvas border-b border-hairline">
+    <div className="lg:hidden mx-[-18px] mt-[-18px] mb-[18px] grid grid-cols-[1fr_auto_1fr] items-center h-12 px-1.5 bg-canvas border-b border-hairline">
       <Link
         to={to}
         className="justify-self-start inline-flex items-center gap-0.5 px-2 py-1.5 text-[15px] font-medium text-accent"

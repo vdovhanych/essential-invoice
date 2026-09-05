@@ -271,14 +271,14 @@ export default function ExpenseDetail() {
                   <object
                     data={previewUrl + PDF_PREVIEW_PARAMS}
                     type="application/pdf"
-                    className="w-full h-[400px] rounded"
+                    className="w-full h-[400px] rounded-sm"
                   >
                     <p className="p-4 text-text-muted text-center text-sm">
                       {t('detail.attachment.pdfNotSupported')}
                     </p>
                   </object>
                 ) : (
-                  <img src={previewUrl} alt={expense.fileName} className="max-w-full rounded" />
+                  <img src={previewUrl} alt={expense.fileName} className="max-w-full rounded-sm" />
                 )}
               </div>
             ) : (

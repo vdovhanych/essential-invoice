@@ -44,7 +44,7 @@ export default function ThemeToggle() {
         <button
           type="button"
           onClick={() => setLangOpen(!langOpen)}
-          className="flex items-center gap-1 bg-surface rounded-lg px-3 py-2 shadow border border-border text-xs font-medium text-text-secondary hover:bg-nav-hover transition-colors"
+          className="flex items-center gap-1 bg-surface rounded-lg px-3 py-2 shadow-sm border border-border text-xs font-medium text-text-secondary hover:bg-nav-hover transition-colors"
         >
           {currentLang.flag} {currentLang.label}
           <ChevronDown className={`h-3 w-3 transition-transform ${langOpen ? 'rotate-180' : ''}`} />
@@ -68,7 +68,7 @@ export default function ThemeToggle() {
           </div>
         )}
       </div>
-      <div className="flex items-center bg-surface rounded-lg p-1 shadow border border-border">
+      <div className="flex items-center bg-surface rounded-lg p-1 shadow-sm border border-border">
         {themeOptions.map(({ value, icon: Icon, label }) => (
           <button
             key={value}
@@ -76,7 +76,7 @@ export default function ThemeToggle() {
             onClick={() => setTheme(value)}
             className={`p-2 rounded-md text-xs flex items-center gap-1 transition-colors ${
               theme === value
-                ? 'bg-surface shadow-sm text-text'
+                ? 'bg-surface shadow-xs text-text'
                 : 'text-text-muted hover:text-text-secondary'
             }`}
             title={label}

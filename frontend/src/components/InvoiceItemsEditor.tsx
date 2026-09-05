@@ -95,7 +95,7 @@ export default function InvoiceItemsEditor({
 
             <ItemField
               label={t('itemDescription')}
-              className="order-3 col-span-2 md:order-none md:col-span-1"
+              className="order-3 col-span-2 md:order-0 md:col-span-1"
             >
               <input
                 type="text"
@@ -109,7 +109,7 @@ export default function InvoiceItemsEditor({
               />
             </ItemField>
 
-            <ItemField label={t('itemQuantity')} className="order-4 md:order-none">
+            <ItemField label={t('itemQuantity')} className="order-4 md:order-0">
               <input
                 type="number"
                 value={item.quantity}
@@ -124,7 +124,7 @@ export default function InvoiceItemsEditor({
               />
             </ItemField>
 
-            <ItemField label={t('itemUnit')} className="order-5 md:order-none">
+            <ItemField label={t('itemUnit')} className="order-5 md:order-0">
               <input
                 type="text"
                 value={item.unit}
@@ -137,7 +137,7 @@ export default function InvoiceItemsEditor({
 
             <ItemField
               label={t('itemUnitPrice')}
-              className="order-6 col-span-2 md:order-none md:col-span-1"
+              className="order-6 col-span-2 md:order-0 md:col-span-1"
             >
               <input
                 type="number"
@@ -154,7 +154,7 @@ export default function InvoiceItemsEditor({
               />
             </ItemField>
 
-            <div className="order-7 col-span-2 flex items-center justify-between border-t border-hairline pt-2.5 md:order-none md:col-span-1 md:block md:border-0 md:pt-0 md:text-right">
+            <div className="order-7 col-span-2 flex items-center justify-between border-t border-hairline pt-2.5 md:order-0 md:col-span-1 md:block md:border-0 md:pt-0 md:text-right">
               <span className={`${columnHeader} md:hidden`}>{t('itemTotal')}</span>
               <span className="text-sm font-semibold text-text tabular-nums">
                 {formatCurrency((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}
@@ -165,7 +165,7 @@ export default function InvoiceItemsEditor({
               type="button"
               onClick={() => onRemoveItem(index)}
               disabled={items.length === 1}
-              className="order-2 justify-self-end self-center p-1.5 rounded-lg text-text-faint hover:text-danger hover:bg-nav-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed md:order-none"
+              className="order-2 justify-self-end self-center p-1.5 rounded-lg text-text-faint hover:text-danger hover:bg-nav-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed md:order-0"
               aria-label={t('removeItem')}
             >
               <X className="h-4 w-4" />

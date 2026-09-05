@@ -25,17 +25,17 @@ const markdownComponents = {
   ),
   a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
     <a
-      className="text-accent underline break-words"
+      className="text-accent underline wrap-break-word"
       target="_blank"
       rel="noopener noreferrer"
       {...props}
     />
   ),
   code: (props: React.HTMLAttributes<HTMLElement>) => (
-    <code className="text-xs font-mono bg-surface-sunken rounded px-1 py-0.5 text-text" {...props} />
+    <code className="text-xs font-mono bg-surface-sunken rounded-sm px-1 py-0.5 text-text" {...props} />
   ),
   pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
-    <pre className="text-xs bg-surface-sunken rounded p-2 mb-2 overflow-x-auto" {...props} />
+    <pre className="text-xs bg-surface-sunken rounded-sm p-2 mb-2 overflow-x-auto" {...props} />
   ),
   blockquote: (props: React.BlockquoteHTMLAttributes<HTMLQuoteElement>) => (
     <blockquote className="border-l-2 border-border-strong pl-3 mb-2 last:mb-0" {...props} />

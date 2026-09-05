@@ -448,7 +448,7 @@ export default function ExpenseCreate() {
                       <img
                         src={previewUrl}
                         alt={fileName}
-                        className="w-full max-h-[300px] object-contain rounded"
+                        className="w-full max-h-[300px] object-contain rounded-sm"
                       />
                     ) : (
                       <div className="flex items-center justify-center h-32">

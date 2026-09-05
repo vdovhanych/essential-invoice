@@ -31,7 +31,7 @@ export default function StickySaveBar({
         show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
       }`}
     >
-      <div className="bg-surface/95 backdrop-blur border-t border-border">
+      <div className="bg-surface/95 backdrop-blur-sm border-t border-border">
         <div className="flex items-center gap-3 px-[18px] py-3 lg:px-7 lg:pr-[88px]">
           <p className="hidden sm:block text-[13px] text-text-muted">{message}</p>
           <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
