@@ -214,7 +214,7 @@ export default function Onboarding() {
                 name="vatPayer"
                 checked={formData.vatPayer}
                 onChange={handleChange}
-                className="mt-1 h-4 w-4 text-accent border-border-strong rounded focus:border-accent"
+                className="mt-1 h-4 w-4 text-accent border-border-strong rounded-sm focus:border-accent"
               />
               <div className="flex-1">
                 <label htmlFor="vatPayer" className="text-sm font-medium text-text cursor-pointer">
@@ -246,7 +246,7 @@ export default function Onboarding() {
                 name="pausalniDanEnabled"
                 checked={formData.pausalniDanEnabled}
                 onChange={handleChange}
-                className="rounded border-border-strong text-accent"
+                className="rounded-sm border-border-strong text-accent"
               />
               <span className="text-sm text-text-muted">{t('onboarding.pausalniDan.enabledLabel')}</span>
             </label>
@@ -357,7 +357,7 @@ export default function Onboarding() {
             </p>
 
             <div className="flex items-start space-x-6">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 {logoUploaded || user?.hasLogo ? (
                   <img
                     src={logoUrl}

@@ -54,7 +54,7 @@ export default function ResetPassword() {
           </div>
           <div>
             <div className="flex items-center space-x-2 p-3 bg-danger-bg text-danger rounded-lg mb-4">
-              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <AlertCircle className="h-5 w-5 shrink-0" />
               <span>{t('resetPassword.invalidTokenMessage')}</span>
             </div>
             <p className="text-center text-text-muted mt-4">
@@ -84,7 +84,7 @@ export default function ResetPassword() {
           {success ? (
             <div>
               <div className="flex items-center space-x-2 p-3 bg-success-bg text-success rounded-lg mb-4">
-                <CheckCircle className="h-5 w-5 flex-shrink-0" />
+                <CheckCircle className="h-5 w-5 shrink-0" />
                 <span>{t('resetPassword.successMessage')}</span>
               </div>
               <p className="text-center text-text-muted mt-4">

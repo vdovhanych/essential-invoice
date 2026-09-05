@@ -620,7 +620,7 @@ export default function InvoiceDetail() {
                   <object
                     data={pdfPreviewUrl ? pdfPreviewUrl + PDF_PREVIEW_PARAMS : undefined}
                     type="application/pdf"
-                    className="w-full h-[400px] lg:h-[calc(100%-2rem)] rounded border border-border"
+                    className="w-full h-[400px] lg:h-[calc(100%-2rem)] rounded-sm border border-border"
                   >
                     <p className="p-4 text-text-muted text-center">
                       {t('detail.sendModal.pdfNotSupported')}{' '}
@@ -663,7 +663,7 @@ export default function InvoiceDetail() {
                           type="checkbox"
                           checked={sendToSecondary}
                           onChange={(e) => setSendToSecondary(e.target.checked)}
-                          className="rounded accent-accent"
+                          className="rounded-sm accent-accent"
                         />
                         <span className="text-sm text-text-secondary">{t('detail.sendModal.sendToSecondary')}</span>
                       </label>

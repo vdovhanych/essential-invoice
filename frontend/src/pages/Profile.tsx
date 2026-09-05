@@ -200,7 +200,7 @@ export default function Profile() {
   const section = activeSection.key;
 
   const deleteModal = showDeleteModal && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-surface rounded-[18px] shadow-xl max-w-md w-full p-6 space-y-4">
         <h3 className="text-lg font-semibold text-danger">{t('dangerZone.deleteModalTitle')}</h3>
         <p className="text-sm text-text-muted">
@@ -432,7 +432,7 @@ export default function Profile() {
             name="vatPayer"
             checked={formData.vatPayer}
             onChange={handleChange}
-            className="mt-1 h-4 w-4 text-accent border-border-strong rounded focus:border-accent"
+            className="mt-1 h-4 w-4 text-accent border-border-strong rounded-sm focus:border-accent"
           />
           <div className="flex-1">
             <label htmlFor="vatPayer" className="text-sm font-medium text-text cursor-pointer">
@@ -513,7 +513,7 @@ export default function Profile() {
               name="pausalniDanEnabled"
               checked={formData.pausalniDanEnabled}
               onChange={handleChange}
-              className="rounded border-border-strong text-accent"
+              className="rounded-sm border-border-strong text-accent"
             />
             <span className="text-sm text-text-muted">{t('pausalniDan.enable')}</span>
           </label>
@@ -599,7 +599,7 @@ export default function Profile() {
 
         <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
           {/* Logo preview */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             {user?.hasLogo ? (
               <div className="relative">
                 <img

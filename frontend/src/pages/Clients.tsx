@@ -209,7 +209,7 @@ export default function Clients() {
               placeholder={t('list.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-surface-sunken rounded-[9px] pl-9 pr-3 py-2 text-sm text-text placeholder-text-faint focus:outline-none focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)]"
+              className="w-full bg-surface-sunken rounded-[9px] pl-9 pr-3 py-2 text-sm text-text placeholder-text-faint focus:outline-hidden focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)]"
             />
           </div>
           <button onClick={openCreateModal} className="btn btn-primary flex items-center space-x-2">
@@ -227,7 +227,7 @@ export default function Clients() {
           placeholder={t('list.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-surface-sunken rounded-[9px] pl-9 pr-3 py-2 text-sm text-text placeholder-text-faint focus:outline-none focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)]"
+          className="w-full bg-surface-sunken rounded-[9px] pl-9 pr-3 py-2 text-sm text-text placeholder-text-faint focus:outline-hidden focus:shadow-[0_0_0_3px_rgba(79,70,229,.12)]"
         />
       </div>
 

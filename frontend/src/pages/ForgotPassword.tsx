@@ -43,7 +43,7 @@ export default function ForgotPassword() {
           {success ? (
             <div>
               <div className="flex items-center space-x-2 p-3 bg-success-bg text-success rounded-lg mb-4">
-                <CheckCircle className="h-5 w-5 flex-shrink-0" />
+                <CheckCircle className="h-5 w-5 shrink-0" />
                 <span>{t('forgotPassword.successMessage')}</span>
               </div>
               <p className="text-center text-text-muted mt-4">

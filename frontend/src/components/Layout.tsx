@@ -122,7 +122,7 @@ export default function Layout() {
                 {'badge' in item && !!item.badge && (
                   <span
                     className={`text-[11px] font-semibold rounded-full px-1.5 min-w-[20px] text-center tabular-nums ${
-                      isActive ? 'bg-white/[.22] text-white' : 'bg-surface-sunken text-text-muted'
+                      isActive ? 'bg-white/22 text-white' : 'bg-surface-sunken text-text-muted'
                     }`}
                   >
                     {item.badge}
@@ -209,7 +209,7 @@ export default function Layout() {
             >
               <Search className="h-4 w-4" />
               <span>{t('nav.search')}</span>
-              <span className="ml-1 border border-border rounded px-1.5 py-px text-[10px] font-mono leading-4">
+              <span className="ml-1 border border-border rounded-sm px-1.5 py-px text-[10px] font-mono leading-4">
                 ⌘K
               </span>
             </button>

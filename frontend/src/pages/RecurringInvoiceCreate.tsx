@@ -157,7 +157,7 @@ export default function RecurringInvoiceCreate() {
       : t('recurring.create.createRecurring');
 
   // Inline control inside the schedule sentence
-  const inlineControl = 'bg-surface text-text border border-border-strong rounded-[9px] px-2.5 py-1 text-sm focus:outline-none focus:border-accent align-baseline';
+  const inlineControl = 'bg-surface text-text border border-border-strong rounded-[9px] px-2.5 py-1 text-sm focus:outline-hidden focus:border-accent align-baseline';
   const selectedClient = clients.find(c => c.id === formData.clientId);
 
   // Preview: the next three issue dates, so the rule is confirmed in plain dates
@@ -212,7 +212,7 @@ export default function RecurringInvoiceCreate() {
         {/* The schedule, as a sentence rather than a grid of fields */}
         <div className="card">
           <h2 className="text-[15px] font-semibold text-text mb-4">{t('recurring.create.scheduleSection')}</h2>
-          <p className="text-base leading-[2] text-text-secondary">
+          <p className="text-base leading-loose text-text-secondary">
             {t('recurring.create.sentencePart1')}{' '}
             <select
               id="clientId"
