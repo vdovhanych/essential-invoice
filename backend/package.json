@@ -21,9 +21,9 @@
     "express-validator": "^7.3.2",
     "imap": "^0.8.19",
     "jsonwebtoken": "^9.0.2",
-    "mailparser": "^3.9.19",
+    "mailparser": "^3.9.20",
     "multer": "^2.3.0",
-    "nodemailer": "^9.1.0",
+    "nodemailer": "^9.1.1",
     "pdfmake": "^0.3.11",
     "pg": "^8.23.0",
     "qrcode": "^1.5.3"
