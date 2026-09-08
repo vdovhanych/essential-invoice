@@ -23,6 +23,7 @@ export async function initializeDatabase() {
         company_ico VARCHAR(20),
         company_dic VARCHAR(20),
         company_address TEXT,
+        company_register_info TEXT,
         bank_account VARCHAR(50),
         bank_code VARCHAR(10),
         logo_data TEXT,
@@ -149,6 +150,7 @@ export async function initializeDatabase() {
         email_polling_interval INTEGER DEFAULT 300,
         invoice_number_prefix VARCHAR(20) DEFAULT '',
         invoice_number_format VARCHAR(50) DEFAULT 'YYYYMM##',
+        invoice_pdf_template VARCHAR(20) NOT NULL DEFAULT 'classic' CHECK (invoice_pdf_template IN ('classic', 'minimalistic')),
         default_vat_rate DECIMAL(5, 2) DEFAULT 21,
         default_payment_terms INTEGER DEFAULT 14,
         email_template TEXT,
@@ -367,6 +369,13 @@ export async function initializeDatabase() {
           ALTER TABLE settings DROP COLUMN perplexity_api_key;
         END IF;
       END $$;
+
+      -- Supplier registration details for existing installations.
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS company_register_info TEXT;
+
+      -- PDF theme for existing installations; classic remains the default.
+      ALTER TABLE settings ADD COLUMN IF NOT EXISTS invoice_pdf_template VARCHAR(20)
+        NOT NULL DEFAULT 'classic' CHECK (invoice_pdf_template IN ('classic', 'minimalistic'));
 
       -- Exchange rates cache table
       CREATE TABLE IF NOT EXISTS exchange_rates (

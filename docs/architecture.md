@@ -8,7 +8,7 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
 - **Entry point**: `index.ts` - Express app setup, middleware, route mounting
 - **Routes**: `routes/` - REST endpoints for auth (register, login, forgot-password, reset-password, delete account), clients, invoices, recurring invoices, expenses, payments, settings, ARES lookup, dashboard, AI
 - **Services**: `services/` - Business logic:
-  - `pdfGenerator.ts` - Invoice PDF generation using **pdfmake** library with Czech formatting, QR payment codes (SPAYD), and VAT/non-VAT payer support, per-line tax treatments, tax-point dates and grouped VAT breakdowns
+  - `pdfGenerator.ts` - Invoice PDFs using **pdfmake**, with classic (default, Roboto) and minimalistic (IBM Plex Sans) themes selected by `settings.invoice_pdf_template`. Both support Czech/English labels, QR payments (SPAYD), VAT/non-VAT payers, per-line tax treatments, tax-point dates and grouped VAT breakdowns.
   - `emailSender.ts` - Per-user SMTP email sending for invoice delivery
   - `globalEmailSender.ts` - Global SMTP email sending for system emails (welcome, password reset), configured via env vars
   - `emailPoller.ts` - IMAP polling for bank payment notifications
@@ -19,6 +19,8 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
   - `aiProvider.ts` - AI features via OpenRouter (default: openai/gpt-5.6-luna) or any OpenAI-compatible API: personalized Czech tax advisor, expense extraction from documents, payment reminder drafting
   - `cnbExchangeRate.ts` - CNB (Czech National Bank) exchange rate fetching with DB caching and weekend/holiday fallback. Used to convert EUR invoices and expenses to CZK equivalents for dashboard totals and paušální daň tracking
   - `bankParsers/` - Extensible bank email parsing (Air Bank implemented)
+- Supplier registration text is stored as `users.company_register_info`, edited in Profile, and printed by both PDF templates. This supports the business-document disclosures in [Section 435 of the Czech Civil Code](https://www.zakonyprolidi.cz/cs/2012-89#p435); users supply their own applicable registration details.
+
 - **i18n**: `i18n/translations.ts` - Plain TypeScript translation maps (cs/en) for PDF labels and email templates. Services look up translations by the user's `language` column. Backend error messages use language-neutral error codes (e.g., `TOO_MANY_LOGIN_ATTEMPTS`) that the frontend maps to localized strings
 - **Utils**: `utils/` - Utility functions:
   - `validation.ts` - Czech IČO validation, IBAN conversion, SPAYD generation
