@@ -80,7 +80,27 @@
     "vatDefaultBadge": "Default",
     "tierImpact": "Puts you at {{amount}} this year — {{pct}}% of the flat-rate tier.",
     "tierImpactCrosses": "This invoice would put you at {{amount}} — over the flat-rate tier limit.",
-    "previewSection": "Preview"
+    "previewSection": "Preview",
+    "livePreview": {
+      "title": "Invoice preview",
+      "expand": "Expand",
+      "close": "Close",
+      "openPdf": "Open PDF",
+      "draftHint": "Draft · The invoice number and payment QR are assigned when saved.",
+      "editHint": "Preview of unsaved changes.",
+      "updating": "Updating preview…",
+      "error": "Preview could not be updated. The document shown may be out of date.",
+      "retry": "Retry",
+      "loading": "Preparing your invoice…",
+      "unavailable": "Preview unavailable.",
+      "previousPage": "Previous page",
+      "nextPage": "Next page",
+      "pageCount": "{{page}} / {{count}}",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "fitWidth": "Fit width",
+      "renderError": "The PDF could not be displayed. Use Open PDF to view it in a separate tab."
+    }
   },
   "detail": {
     "title": "Invoice {{number}}",

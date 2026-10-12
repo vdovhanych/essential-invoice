@@ -82,7 +82,27 @@
     "vatDefaultBadge": "Výchozí",
     "tierImpact": "Letos se dostanete na {{amount}} — {{pct}} % limitu paušální daně.",
     "tierImpactCrosses": "Tato faktura vás dostane na {{amount}} — nad limit paušální daně.",
-    "previewSection": "Náhled"
+    "previewSection": "Náhled",
+    "livePreview": {
+      "title": "Náhled faktury",
+      "expand": "Zvětšit",
+      "close": "Zavřít",
+      "openPdf": "Otevřít PDF",
+      "draftHint": "Návrh · Číslo faktury a platební QR kód budou přiděleny při uložení.",
+      "editHint": "Náhled neuložených změn.",
+      "updating": "Aktualizuji náhled…",
+      "error": "Náhled se nepodařilo aktualizovat. Zobrazený dokument může být zastaralý.",
+      "retry": "Zkusit znovu",
+      "loading": "Připravuji náhled faktury…",
+      "unavailable": "Náhled není dostupný.",
+      "previousPage": "Předchozí stránka",
+      "nextPage": "Další stránka",
+      "pageCount": "{{page}} / {{count}}",
+      "zoomOut": "Oddálit",
+      "zoomIn": "Přiblížit",
+      "fitWidth": "Na šířku",
+      "renderError": "PDF se nepodařilo zobrazit. Pomocí Otevřít PDF jej zobrazíte na samostatné kartě."
+    }
   },
   "detail": {
     "title": "Faktura {{number}}",

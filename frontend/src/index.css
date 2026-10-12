@@ -109,10 +109,11 @@ html {
 
 /* Layout's content wrapper clips its own overflow, but auth pages, modals and
    fixed elements sit outside it — without this a single wide row lets the whole
-   document pan sideways. */
+   document pan sideways. Clip without creating a scroll container so sticky
+   headers and the invoice preview follow the document scroll. */
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {

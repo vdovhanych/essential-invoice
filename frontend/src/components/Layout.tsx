@@ -199,7 +199,7 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-[216px] overflow-x-hidden">
+      <div className="lg:pl-[216px] overflow-x-clip">
         {/* Header (desktop only; mobile navigation lives in the bottom tab bar) */}
         <header className="hidden lg:block sticky top-0 z-30 bg-surface border-b border-border">
           <div className="flex items-center h-[60px] px-5">

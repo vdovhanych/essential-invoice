@@ -15,6 +15,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 - **Recurring Invoices**: Monthly recurring invoice templates with optional auto-send
 - **Expense Tracking**: Track business expenses with PDF attachments and automatic numbering
 - **Client Management**: Store and manage client contacts with ARES API integration for Czech companies
+- **Live Invoice Preview**: See the actual PDF while editing, with a larger desktop preview and an expanded viewer on mobile. Draft previews do not save invoices or assign numbers.
 - **PDF Generation**: Professional Czech invoice templates with QR payment codes (SPAYD format), VAT/non-VAT payer support
 - **Email Integration**: Send invoices via SMTP, receive bank notifications via IMAP
 - **Bank Payment Matching**: Automatic matching of Air Bank payment notifications to invoices
