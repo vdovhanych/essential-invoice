@@ -43,6 +43,10 @@ chart (`dhi.io/postgres:18`), which requires registry authentication:
 docker login dhi.io
 ```
 
+### Frontend module assets
+
+The frontend nginx configuration serves `.mjs` assets (including the PDF preview worker) as `application/javascript`, with missing modules returning 404 rather than the SPA fallback. Preserve this MIME mapping when using custom hosting. The PWA precache includes these module assets. After changing the frontend configuration, rebuild and recreate it with `docker compose up -d --build --no-deps frontend`.
+
 ## Kubernetes (Helm)
 
 ```bash
