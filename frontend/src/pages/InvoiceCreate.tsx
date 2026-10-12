@@ -172,7 +172,7 @@ export default function InvoiceCreate() {
           ...item,
           quantity: Number(item.quantity),
           unitPrice: Number(item.unitPrice),
-          vatRate: item.vatTreatment === 'exempt' ? 0 : Number(item.vatRate ?? formData.vatRate),
+          vatRate: (item.vatTreatment === 'exempt' || item.vatTreatment === 'eu_service') ? 0 : Number(item.vatRate ?? formData.vatRate),
         })),
       };
 

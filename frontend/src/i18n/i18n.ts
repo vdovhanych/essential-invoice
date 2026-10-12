@@ -1,3 +1,5 @@
+import csVat from './locales/cs/vat.json';
+import enVat from './locales/en/vat.json';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
@@ -35,6 +37,7 @@ i18n.use(initReactI18next).init({
   resources: {
     cs: {
       common: csCommon,
+      vat: csVat,
       dashboard: csDashboard,
       invoices: csInvoices,
       expenses: csExpenses,
@@ -47,6 +50,7 @@ i18n.use(initReactI18next).init({
     },
     en: {
       common: enCommon,
+      vat: enVat,
       dashboard: enDashboard,
       invoices: enInvoices,
       expenses: enExpenses,

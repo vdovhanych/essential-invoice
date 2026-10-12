@@ -189,11 +189,12 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
 
   const itemRows: TableCell[][] = invoice.items.map(item => [
     { text: [item.description,
+      ...(item.vatTreatment === 'eu_service' ? [`\n${tr.euService}: ${item.vatReason || '§ 9(1)'}`] : []),
       ...(item.vatTreatment === 'exempt' ? [`\n${tr.exempt}: ${item.vatReason}`] : []),
       ...(item.vatTreatment === 'reverse_charge' ? [`\n${tr.reverseChargeNotice}${item.vatReason ? ` ${item.vatReason}` : ''}`] : [])].join('') },
     { text: `${item.quantity} ${item.unit}`, alignment: 'right' as const },
     { text: formatCurrency(item.unitPrice, invoice.currency, lang), alignment: 'right' as const },
-    ...(invoice.userVatPayer ? [{ text: item.vatTreatment === 'exempt' ? tr.exempt : item.vatTreatment === 'reverse_charge' ? tr.reverseCharge : `${item.vatRate ?? invoice.vatRate}%`, alignment: 'right' as const, fontSize: 8 }] : []),
+    ...(invoice.userVatPayer ? [{ text: item.vatTreatment === 'eu_service' ? tr.euService : item.vatTreatment === 'exempt' ? tr.exempt : item.vatTreatment === 'reverse_charge' ? tr.reverseCharge : `${item.vatRate ?? invoice.vatRate}%`, alignment: 'right' as const, fontSize: 8 }] : []),
     { text: formatCurrency(item.total, invoice.currency, lang), alignment: 'right' as const },
   ]);
 
@@ -226,7 +227,7 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
 
   if (invoice.userVatPayer) {
     for (const group of summarizeStoredTax(invoice.items, invoice.vatRate)) {
-      const label = group.vatTreatment === 'standard' ? `${tr.vat} (${group.vatRate}%)` : group.vatTreatment === 'exempt' ? tr.exempt : tr.reverseCharge;
+      const label = group.vatTreatment === 'standard' ? `${tr.vat} (${group.vatRate}%)` : group.vatTreatment === 'eu_service' ? tr.euService : group.vatTreatment === 'exempt' ? tr.exempt : tr.reverseCharge;
       totalsRows.push([
         { text: `${label} · ${tr.taxBase}: ${formatCurrency(group.base, invoice.currency, lang)}`, fontSize: 9 },
         { text: formatCurrency(group.vatAmount, invoice.currency, lang), alignment: 'right' as const },

@@ -63,6 +63,12 @@ describe('Invoice Routes', () => {
     vi.clearAllMocks();
   });
 
+  it('returns date-only invoice fields without a UTC day shift', async () => {
+    vi.mocked(db.query).mockResolvedValueOnce(mockQueryResult([{id:'i1',issue_date:new Date(2026,7,1),due_date:new Date(2026,7,15),delivery_date:new Date(2026,7,2),subtotal:'100',vat_rate:'21',vat_amount:'21',total:'121'}])).mockResolvedValueOnce(mockQueryResult([]));
+    const response=await request(app).get('/invoices/i1');
+    expect(response.body).toMatchObject({issueDate:'2026-08-01',dueDate:'2026-08-15',deliveryDate:'2026-08-02'});
+  });
+
   describe('POST /invoices/:id/send', () => {
     it('refuses to send a paid invoice and sends no email', async () => {
       vi.mocked(db.query).mockResolvedValueOnce(mockQueryResult([invoiceRow('paid')]));
