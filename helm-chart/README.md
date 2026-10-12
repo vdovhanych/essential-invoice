@@ -41,6 +41,10 @@ helm uninstall essential-invoice -n essential-invoice
 > **Note**: The PostgreSQL PVC is not deleted on uninstall. Delete it manually if needed:
 > `kubectl delete pvc -l app.kubernetes.io/instance=essential-invoice -n essential-invoice`
 
+## Frontend assets
+
+The frontend ConfigMap explicitly serves `.mjs` module workers as `application/javascript` and returns 404 for missing modules. This is required by the invoice PDF preview. Preserve this mapping in custom nginx configurations; changes to the chart ConfigMap trigger a frontend rollout through its checksum annotation.
+
 ## Configuration Reference
 
 ### Service Account
