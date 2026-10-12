@@ -1,6 +1,11 @@
 export type Locale = 'cs' | 'en';
 
 interface PdfTranslations {
+  previewNumber: string;
+  previewAssignedOnSave: string;
+  previewCustomer: string;
+  previewItem: string;
+  previewQr: string;
   invoice: string;
   invoiceNumberShort: string;
   supplier: string;
@@ -52,6 +57,11 @@ interface Translations {
 const translations: Record<Locale, Translations> = {
   cs: {
     pdf: {
+      previewNumber: 'NÁVRH',
+      previewAssignedOnSave: 'Přiděleno při uložení',
+      previewCustomer: 'Vyberte odběratele',
+      previewItem: 'Popis položky',
+      previewQr: 'QR platba po uložení',
       invoice: 'FAKTURA',
       invoiceNumberShort: 'č.',
       supplier: 'DODAVATEL',
@@ -130,6 +140,11 @@ S pozdravem,
   },
   en: {
     pdf: {
+      previewNumber: 'DRAFT',
+      previewAssignedOnSave: 'Assigned on save',
+      previewCustomer: 'Select a customer',
+      previewItem: 'Item description',
+      previewQr: 'Payment QR after saving',
       invoice: 'INVOICE',
       invoiceNumberShort: 'No.',
       supplier: 'SUPPLIER',

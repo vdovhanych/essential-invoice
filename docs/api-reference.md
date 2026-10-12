@@ -41,6 +41,7 @@ Requests share a limit of **1,000 requests per IP per 15 minutes**, except `/api
 - `POST /api/invoices/:id/mark-paid` - Mark as paid
 - `POST /api/invoices/:id/cancel` - Cancel invoice
 - `GET /api/invoices/:id/preview` - Preview invoice email before sending
+- `POST /api/invoices/preview` - Render unsaved invoice form data as `{ pdfBase64 }` using the same PDF template. Accepts optional owner-scoped `invoiceId` (to retain an existing number), optional `clientId`, date-only `issueDate`/`dueDate`/`deliveryDate`, `currency`, `vatRate`, `notes`, and `items` (up to 500). Missing clients/dates and blank descriptions are displayed as draft placeholders; quantities/prices may be zero while editing. Invalid supplied values return 400, inaccessible clients/invoices return 404. Calculates amounts on the server and loads the authenticated supplier profile. Creates no invoice, allocates no number, and sends no email; EUR conversion may populate the exchange-rate cache. Unsaved new invoices show a QR placeholder until a payment reference exists. Responses use `Cache-Control: no-store`.
 
 EUR invoices include `exchangeRate` (CNB rate at issue date) and `totalCzk` (converted CZK equivalent) in responses. These are auto-fetched from the Czech National Bank when the invoice is created or updated. Dashboard totals and paušální daň tracking use the CZK equivalent for EUR invoices.
 

@@ -12,8 +12,10 @@ import { convertEurToCzk } from '../services/cnbExchangeRate';
 import { generateISDOC } from '../services/isdocGenerator';
 import { ExportError, safeFilename, documentDate } from '../services/invoiceDocument';
 import { vatValidation } from '../utils/vatValidation';
+import { invoicePreviewRouter } from './invoicePreview';
 
 export const invoiceRouter: ReturnType<typeof Router> = Router();
+invoiceRouter.use('/preview', invoicePreviewRouter);
 
 // Legal status transitions for PUT /:id. Status changes normally go through the
 // dedicated mark-sent/mark-paid/cancel endpoints; this guards direct API updates

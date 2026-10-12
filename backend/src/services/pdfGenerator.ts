@@ -11,15 +11,17 @@ pdfmake.addVirtualFileSystem(vfsFonts);
 
 import type { TDocumentDefinitions, Content, TableCell, Column } from 'pdfmake/interfaces';
 
-interface InvoiceData {
+export interface InvoiceData {
+  /** Unsaved invoices have no assigned number or usable payment QR yet. */
+  draftPreview?: boolean;
   id: string;
   invoiceNumber: string;
   variableSymbol: string;
   status: string;
   currency: string;
-  issueDate: Date;
-  dueDate: Date;
-  deliveryDate: Date;
+  issueDate: Date | null;
+  dueDate: Date | null;
+  deliveryDate: Date | null;
   subtotal: number;
   vatRate: number;
   vatAmount: number;
@@ -60,8 +62,8 @@ function formatCurrency(amount: number, currency: string, locale?: string): stri
   return formatCurrencyLocale(amount, currency, locale);
 }
 
-function formatDate(date: Date, locale?: string): string {
-  return formatDateLocale(date, locale);
+function formatDate(date: Date | null, locale?: string): string {
+  return date ? formatDateLocale(date, locale) : '—';
 }
 
 async function generateQRCodeDataURL(data: string): Promise<string> {
@@ -321,6 +323,16 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
     });
   }
 
+  if (invoice.draftPreview && invoice.currency === 'CZK' && invoice.userBankAccount && invoice.userBankCode) {
+    paymentColumns.push({
+      width: 100,
+      stack: [
+        { canvas: [{ type: 'rect', x: 0, y: 0, w: 100, h: 75, lineColor: GRAY_BORDER, color: '#f9fafb' }] },
+        { text: tr.previewQr, fontSize: 8, color: '#666', alignment: 'center', margin: [0, 4, 0, 0] },
+      ],
+    });
+  }
+
   const paymentSection: Content = {
     table: {
       widths: ['*'],
@@ -506,6 +518,11 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
     }))
   };
 
+  return renderInvoicePDF(invoiceData);
+}
+
+/** Shared renderer for saved invoices and unsaved editor previews. */
+export async function renderInvoicePDF(invoiceData: InvoiceData): Promise<Buffer> {
   // Generate QR code for CZK invoices
   let qrCodeDataUrl = '';
   if (invoiceData.qrPaymentData && invoiceData.currency === 'CZK') {
