@@ -14,6 +14,7 @@ interface PdfTranslations {
   subtotal: string;
   vat: string;
   exempt: string;
+  euService: string;
   reverseCharge: string;
   reverseChargeNotice: string;
   taxBase: string;
@@ -64,6 +65,7 @@ const translations: Record<Locale, Translations> = {
       subtotal: 'Základ daně:',
       vat: 'DPH',
       exempt: 'Osvobozeno od DPH',
+      euService: 'EU B2B služba – daň odvede zákazník',
       reverseCharge: 'Přenesená DPH',
       reverseChargeNotice: 'Daň odvede zákazník.',
       taxBase: 'Základ daně',
@@ -141,6 +143,7 @@ S pozdravem,
       subtotal: 'Subtotal:',
       vat: 'VAT',
       exempt: 'VAT exempt',
+      euService: 'EU B2B service – reverse charge',
       reverseCharge: 'Reverse charge',
       reverseChargeNotice: 'Reverse charge - the customer accounts for VAT.',
       taxBase: 'Tax base',

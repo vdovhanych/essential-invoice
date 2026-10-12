@@ -5,7 +5,7 @@ export function vatValidation() {
   return [
     body('vatRate').optional().isFloat({ min: 0, max: 100 }).custom(value => Number(value) === roundMoney(Number(value))).withMessage('VAT rate must be between 0 and 100, with at most two decimal places'),
     body('items.*.vatRate').optional().isFloat({ min: 0, max: 100 }).custom(value => Number(value) === roundMoney(Number(value))).withMessage('VAT rate must be between 0 and 100, with at most two decimal places'),
-    body('items.*.vatTreatment').optional().isIn(['standard', 'exempt', 'reverse_charge']),
+    body('items.*.vatTreatment').optional().isIn(['standard', 'exempt', 'reverse_charge', 'eu_service']),
     body('items.*.vatCode').optional().isString().isLength({ max: 20 }),
     body('items.*.vatReason').optional().isString().isLength({ max: 300 }),
     body('items').optional().custom(items => {

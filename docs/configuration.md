@@ -83,3 +83,9 @@ Once configured, AI features become available:
 - Tax advisor chatbot accessible from the AI assistant button, personalized with your VAT payer status, paušální daň settings, and current-year revenue
 - "Fill form from document" on the expense form — extracts supplier, dates, amounts, and VAT from an uploaded invoice/receipt (PDF or photo; requires a vision-capable model such as the default `openai/gpt-5.6-luna`)
 - "Draft payment reminder" in the invoice send dialog for sent/overdue invoices — drafts a polite reminder email in your language that you can edit before sending
+
+## VAT filing configuration
+
+No additional runtime environment variables, tax-authority credentials or background jobs are required. Configure the registered individual taxpayer identity, VAT status, effective date, office/branch and filing frequency in **Settings → Exports → VAT filings → Taxpayer**. Per-document classification, receipt dates, deduction decisions and reviewed tax conversion rates are configured in that workspace. These are separate from SMTP/IMAP/AI settings. The existing company VAT-payer flag stays synchronized when this taxpayer status is saved.
+
+Official XSD/code-list versions are bundled, not fetched at export time. Updating their supported period requires a reviewed application release. The existing CNB service can supply a daily EUR rate on demand. XML, personal tax identifiers and snapshots live in PostgreSQL: protect backups, restrict database access and keep request bodies/parser diagnostics out of logs. [Supported scope](vat-filings.md).

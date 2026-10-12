@@ -19,6 +19,7 @@ const Expenses = lazy(() => import('./pages/Expenses'));
 const ExpenseCreate = lazy(() => import('./pages/ExpenseCreate'));
 const ExpenseDetail = lazy(() => import('./pages/ExpenseDetail'));
 const Calculator = lazy(() => import('./pages/Calculator'));
+const VatFilings = lazy(() => import('./pages/VatFilings'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Profile = lazy(() => import('./pages/Profile'));
 const RecurringInvoiceCreate = lazy(() => import('./pages/RecurringInvoiceCreate'));
@@ -103,6 +104,7 @@ export default function App() {
           <Route path="clients" element={<Clients />} />
           <Route path="clients/:id" element={<ClientDetail />} />
           <Route path="payments" element={<Payments />} />
+          <Route path="vat-filings" element={<VatFilings />} />
           <Route path="calculator" element={<Calculator />} />
           {/* Sections are routes so mobile can drill in and the back button works */}
           <Route path="settings" element={<Settings />} />

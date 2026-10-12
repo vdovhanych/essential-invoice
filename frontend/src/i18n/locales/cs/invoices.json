@@ -342,7 +342,8 @@
     "customRate": "Jiná sazba…",
     "differentDate": "Jiné datum zdanitelného plnění",
     "reverseShort": "Přenesená DPH",
-    "exemptShort": "Osvobozeno"
+    "exemptShort": "Osvobozeno",
+    "eu_service": "Služba B2B do EU (§ 9 odst. 1)"
   },
   "export": {
     "title": "Export pro účetní",
@@ -362,6 +363,23 @@
     "scope": "Zahrnuje odeslané, uhrazené a neuhrazené faktury po splatnosti a všechny náklady za období. Koncepty a zrušené faktury se nezahrnují. Bez data plnění se použije datum vystavení. Nejvýše 500 dokladů / 100 MB. Neobsahuje XML daňových podání.",
     "success": "Podklady pro účetní byly staženy",
     "error": "Export se nezdařil",
-    "isdoc": "Stáhnout ISDOC"
+    "isdoc": "Stáhnout ISDOC",
+    "vatDescription": "Přiznání k DPH, kontrolní a souhrnné hlášení.",
+    "vatHint": "Zkontrolujte doklady, uložte verzi XML a importujte ji do EPO. Podporovaná období: 2026.",
+    "openVat": "Otevřít podání DPH",
+    "contents": "Obsah balíčku",
+    "invoiceFiles": "Faktury PDF a ISDOC",
+    "expenseFiles": "Přehledy CSV a přílohy",
+    "dphFiles": "Podklady pro DPH",
+    "period": "Období exportu",
+    "quickPeriods": "Rychlý výběr období",
+    "lastMonth": "Minulý měsíc",
+    "lastQuarter": "Minulé čtvrtletí",
+    "thisYear": "Letošní rok",
+    "details": "Co balíček obsahuje a jaká má omezení",
+    "invalidRange": "Vyplňte obě data. Datum „Od“ musí být před datem „Do“ nebo stejné.",
+    "limit": "Nejvýše 500 dokladů · 100 MB",
+    "retry": "Zkusit stáhnout znovu",
+    "preparingHint": "Připravujeme faktury a přílohy. U většího balíčku to může chvíli trvat."
   }
 }

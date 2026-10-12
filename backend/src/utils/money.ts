@@ -10,7 +10,7 @@ export interface LineItem {
   quantity: number;
   unitPrice: number;
   vatRate?: number;
-  vatTreatment?: 'standard' | 'exempt' | 'reverse_charge';
+  vatTreatment?: 'standard' | 'exempt' | 'reverse_charge' | 'eu_service';
   vatReason?: string;
   vatCode?: string;
 }
@@ -28,7 +28,7 @@ export function calculateInvoiceTax(items: LineItem[], defaultRate: number) {
   const groups = new Map<string, VatBreakdown>();
   const lines = items.map(item => {
     const vatTreatment = item.vatTreatment ?? 'standard';
-    const vatRate = vatTreatment === 'exempt' ? 0 : Number(item.vatRate ?? defaultRate);
+    const vatRate = (vatTreatment === 'exempt' || vatTreatment === 'eu_service') ? 0 : Number(item.vatRate ?? defaultRate);
     const key = `${vatTreatment}:${vatRate}`;
     const group = groups.get(key) ?? { vatRate, vatTreatment, base: 0, vatAmount: 0 };
     const total = calculateLineTotal(item);

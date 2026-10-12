@@ -7,7 +7,7 @@ export interface LineItem {
   unit: string;
   unitPrice: number;
   vatRate?: number;
-  vatTreatment?: 'standard' | 'exempt' | 'reverse_charge';
+  vatTreatment?: 'standard' | 'exempt' | 'reverse_charge' | 'eu_service';
   vatReason?: string;
   vatCode?: string;
   vatAmount?: number;
@@ -27,7 +27,7 @@ export function useLineItems(vatRate: number | string) {
 
   function handleItemChange(index: number, field: keyof LineItem, value: string | number) {
     setItems(prev => prev.map((item, i) =>
-      i === index ? { ...item, [field]: value, ...(field === 'vatTreatment' && value === 'exempt' ? { vatRate: 0 } : {}) } : item
+      i === index ? { ...item, [field]: value, ...(field === 'vatTreatment' && (value === 'exempt' || value === 'eu_service') ? { vatRate: 0 } : {}) } : item
     ));
   }
 

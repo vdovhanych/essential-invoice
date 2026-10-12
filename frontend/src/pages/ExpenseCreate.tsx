@@ -1,3 +1,4 @@
+import ExpenseVatEditor, { type ExpenseTaxBucket } from '../components/ExpenseVatEditor';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +22,7 @@ export default function ExpenseCreate() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation('expenses');
+  const { t: tVat } = useTranslation('vat');
   const isEdit = !!id;
 
   const { aiStatus, extractExpense } = useAI();
@@ -41,6 +43,7 @@ export default function ExpenseCreate() {
     notes: '',
   });
 
+  const [vatBreakdown,setVatBreakdown] = useState<ExpenseTaxBucket[] | null>(null);
   const [fileData, setFileData] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileMimeType, setFileMimeType] = useState<string | null>(null);
@@ -69,6 +72,7 @@ export default function ExpenseCreate() {
 
       if (isEdit) {
         const expense = await api.get(`/expenses/${id}`);
+        setVatBreakdown(expense.vatBreakdown || [{rate:expense.vatRate,base:expense.amount,tax:expense.vatAmount}]);
         setFormData({
           clientId: expense.clientId || '',
           supplierInvoiceNumber: expense.supplierInvoiceNumber || '',
@@ -96,6 +100,7 @@ export default function ExpenseCreate() {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
+    if (name === 'amount' || name === 'vatRate') setVatBreakdown(null);
     setFormData(prev => ({ ...prev, [name]: value }));
   }
 
@@ -158,6 +163,7 @@ export default function ExpenseCreate() {
   }
 
   function calculateVatAmount(): number {
+    if (vatBreakdown) return Math.round(vatBreakdown.reduce((s,b)=>s+b.tax,0)*100)/100;
     return Number(formData.amount) * (Number(formData.vatRate) / 100);
   }
 
@@ -183,6 +189,7 @@ export default function ExpenseCreate() {
         dueDate: formData.dueDate,
         currency: formData.currency,
         amount: Number(formData.amount),
+        ...(vatBreakdown ? {vatBreakdown} : {}),
         vatRate: Number(formData.vatRate),
         description: formData.description || null,
         notes: formData.notes || null,
@@ -257,6 +264,7 @@ export default function ExpenseCreate() {
       </div>
 
       <form id="expense-form" onSubmit={handleSubmit}>
+
         <div className="max-w-[980px] grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 lg:gap-5">
           {/* Left column */}
           <div className="space-y-4">
@@ -343,7 +351,7 @@ export default function ExpenseCreate() {
               <input
                 type="number"
                 id="amount"
-                name="amount"
+                name="amount" disabled={(vatBreakdown?.length || 0) > 1}
                 value={formData.amount}
                 onChange={handleChange}
                 className="input"
@@ -356,7 +364,7 @@ export default function ExpenseCreate() {
               <label htmlFor="vatRate" className="label">{t('create.amount.vatRate')}</label>
               <select
                 id="vatRate"
-                name="vatRate"
+                name="vatRate" disabled={(vatBreakdown?.length || 0) > 1}
                 value={formData.vatRate}
                 onChange={handleChange}
                 className="input"
@@ -368,6 +376,11 @@ export default function ExpenseCreate() {
             </div>
           </div>
 
+          <details className="mt-4" open={(vatBreakdown?.length || 0) > 1 || undefined}>
+            <summary className="cursor-pointer text-sm text-accent py-2">{tVat('editBreakdown')}</summary>
+        <ExpenseVatEditor buckets={vatBreakdown || [{rate:Number(formData.vatRate),base:Number(formData.amount)||0,tax:Math.round(calculateVatAmount()*100)/100}]} onChange={b=>{setVatBreakdown(b);setFormData(prev=>({...prev,amount:Math.round(b.reduce((s,v)=>s+v.base,0)*100)/100}));}}/>
+          </details>
+
           <div className="mt-4 pt-4 border-t border-hairline">
             <div className="flex flex-col items-end space-y-2">
               <div className="flex justify-between w-full max-w-xs">
@@ -375,7 +388,7 @@ export default function ExpenseCreate() {
                 <span className="text-sm font-medium text-text tabular-nums">{formatCurrencyLocal(Number(formData.amount))}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs">
-                <span className="text-[13px] text-text-muted">{t('create.amount.vatLabel', { rate: formData.vatRate })}</span>
+                <span className="text-[13px] text-text-muted">{(vatBreakdown?.length || 0) > 1 ? tVat('tax') : t('create.amount.vatLabel', { rate: formData.vatRate })}</span>
                 <span className="text-sm font-medium text-text tabular-nums">{formatCurrencyLocal(calculateVatAmount())}</span>
               </div>
               <div className="flex justify-between w-full max-w-xs items-baseline">

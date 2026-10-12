@@ -57,7 +57,7 @@ function ItemVat({ item, index, defaultRate, onChange }: {
   const isCustom = customRate || ![0, 12, 21].includes(Number(rate));
   function select(value: string) {
     setCustomRate(value === 'custom');
-    const nextTreatment = value === 'exempt' || value === 'reverse_charge' ? value : 'standard';
+    const nextTreatment = value === 'exempt' || value === 'reverse_charge' || value === 'eu_service' ? value : 'standard';
     onChange(index, 'vatTreatment', nextTreatment);
     // Remove metadata belonging to the previous treatment.
     if (nextTreatment !== treatment) {
@@ -76,6 +76,7 @@ function ItemVat({ item, index, defaultRate, onChange }: {
         <option value="12">12 %</option>
         <option value="21">21 %</option>
         <option value="exempt">{t('tax.exemptShort')}</option>
+        <option value="eu_service">{t('tax.eu_service')}</option>
         <option value="reverse_charge">{t('tax.reverseShort')}</option>
         <option value="custom">{t('tax.customRate')}</option>
       </select>

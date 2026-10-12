@@ -368,6 +368,41 @@ export async function initializeDatabase() {
         END IF;
       END $$;
 
+      ALTER TABLE invoice_items DROP CONSTRAINT IF EXISTS invoice_items_vat_treatment_check;
+      ALTER TABLE invoice_items ADD CONSTRAINT invoice_items_vat_treatment_check
+        CHECK (vat_treatment IN ('standard', 'exempt', 'reverse_charge', 'eu_service'));
+      ALTER TABLE recurring_invoice_items DROP CONSTRAINT IF EXISTS recurring_invoice_items_vat_treatment_check;
+      ALTER TABLE recurring_invoice_items ADD CONSTRAINT recurring_invoice_items_vat_treatment_check
+        CHECK (vat_treatment IN ('standard', 'exempt', 'reverse_charge', 'eu_service'));
+      -- Filing metadata is reviewed explicitly. No inference from VAT rates, names or currency.
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS vat_filing_profile JSONB;
+      ALTER TABLE invoices ADD COLUMN IF NOT EXISTS vat_filing JSONB;
+      ALTER TABLE expenses ADD COLUMN IF NOT EXISTS vat_filing JSONB;
+      ALTER TABLE expenses ADD COLUMN IF NOT EXISTS vat_breakdown JSONB;
+      -- Preserve supplier-recorded amounts, including historical rounding. Never backfill deductions.
+      UPDATE expenses SET vat_breakdown = jsonb_build_array(jsonb_build_object(
+        'rate', vat_rate, 'base', amount, 'tax', vat_amount)) WHERE vat_breakdown IS NULL;
+      CREATE TABLE IF NOT EXISTS vat_filing_versions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        period VARCHAR(7) NOT NULL,
+        filing_type VARCHAR(10) NOT NULL CHECK (filing_type IN ('DPHDP3','DPHKH1','DPHSHV')),
+        filing_mode VARCHAR(20) NOT NULL,
+        schema_version VARCHAR(20) NOT NULL,
+        snapshot JSONB NOT NULL,
+        snapshot_hash VARCHAR(64) NOT NULL,
+        calculation JSONB NOT NULL,
+        validation JSONB NOT NULL,
+        xml TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_vat_versions_user_period ON vat_filing_versions(user_id, period, created_at);
+      CREATE OR REPLACE FUNCTION reject_vat_version_update() RETURNS trigger AS $immutable$
+      BEGIN RAISE EXCEPTION 'VAT export versions are immutable'; END; $immutable$ LANGUAGE plpgsql;
+      DROP TRIGGER IF EXISTS vat_version_immutable ON vat_filing_versions;
+      CREATE TRIGGER vat_version_immutable BEFORE UPDATE ON vat_filing_versions
+        FOR EACH ROW EXECUTE FUNCTION reject_vat_version_update();
+
       -- Exchange rates cache table
       CREATE TABLE IF NOT EXISTS exchange_rates (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

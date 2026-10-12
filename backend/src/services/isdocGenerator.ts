@@ -32,7 +32,7 @@ export function buildISDOC({ invoice: row, items }: Awaited<ReturnType<typeof lo
     throw new ExportError(`Invoice ${row.invoice_number}: stored totals do not reconcile with its lines`);
   }
   const vatApplicable = row.user_vat_payer === true || tax > 0 || items.some(item => item.vatTreatment !== 'standard');
-  const applicable = (treatment: string) => vatApplicable && treatment !== 'exempt';
+  const applicable = (treatment: string) => vatApplicable && treatment !== 'exempt' && treatment !== 'eu_service';
   const local = (value: number) => roundMoney(value * rate);
   // Allocate conversion rounding across lines; group and document CZK totals
   // are sums of the converted lines. PayableRoundingAmount reconciles the
@@ -51,7 +51,7 @@ export function buildISDOC({ invoice: row, items }: Awaited<ReturnType<typeof lo
     const isReverse = item.vatTreatment === 'reverse_charge';
     if (isReverse && !item.vatCode) throw new ExportError(`Invoice ${row.invoice_number}: reverse-charge supply code is missing`);
     if (item.vatTreatment === 'exempt' && !item.vatReason) throw new ExportError(`Invoice ${row.invoice_number}: exemption reason is missing`);
-    const note = isReverse ? `Daň odvede zákazník. ${item.vatReason}`.trim() : item.vatReason;
+    const note = item.vatTreatment === 'eu_service' ? `Reverse charge – § 9(1). ${item.vatReason}`.trim() : isReverse ? `Daň odvede zákazník. ${item.vatReason}`.trim() : item.vatReason;
     const c = converted[index];
     return `<InvoiceLine>${element('ID', index + 1)}
       <InvoicedQuantity unitCode="${xmlEscape(item.unit)}">${Number(item.quantity)}</InvoicedQuantity>
