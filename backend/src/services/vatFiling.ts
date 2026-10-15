@@ -44,6 +44,33 @@ export function validDate(v: unknown): v is string {
 const czVat = validCzechVatId;
 const inPeriod = (date: string, b: { from: string; to: string }) =>
   date >= b.from && date <= b.to;
+function needsOverdueDeductionReview(
+  d: FilingDocument,
+  b: { from: string; to: string; quarter: boolean },
+): boolean {
+  const m = d.metadata;
+  if (
+    d.direction !== 'received' || m?.classification !== 'domestic' ||
+    m.deduction !== 'full' || !m.claimPeriod || !validDate(d.dueDate)
+  ) return false;
+  try {
+    if (periodBounds(m.claimPeriod).to >= b.from) return false;
+  } catch {
+    return false;
+  }
+  // §74b applies to supplier-charged VAT, not self-assessed reverse charge.
+  const deadline = new Date(`${d.dueDate}T00:00:00Z`);
+  deadline.setUTCMonth(deadline.getUTCMonth() + 7, 0);
+  // Quarterly payers can settle until the end of the quarter containing the cutoff.
+  if (b.quarter)
+    deadline.setUTCMonth(Math.floor(deadline.getUTCMonth() / 3) * 3 + 3, 0);
+  const adjustmentDate = deadline.toISOString().slice(0, 10);
+  if (adjustmentDate > b.to) return false;
+  if (d.status !== 'paid' || !validDate(d.paidAt)) return true;
+  // Later payment cannot erase a historical adjustment. The repayment period
+  // also requires an unsupported correction; periods after repayment do not.
+  return d.paidAt > adjustmentDate && d.paidAt >= b.from;
+}
 const add = (a: number, b: number) => roundMoney(a + b);
 const sum = (values: number[]) => values.reduce(add, 0);
 const EU = new Set(
@@ -206,22 +233,25 @@ export function reviewFiling(
         }
       })();
     const taxSelected = inPeriod(approximate, b);
+    const paymentDates = d.direction === 'issued'
+      ? [
+          ...(d.paidAt ? [d.paidAt] : []),
+          ...(d.payments || []).filter((payment) => payment.amount > 0).map((payment) => payment.date),
+        ]
+      : [];
+    const advanceDates = paymentDates.filter((date) => !validDate(date) || date < approximate);
+    // Advances are unsupported, but must block the receipt period even when
+    // the supply belongs to a later month/quarter. Unknown dates need review.
+    const advanceSelected = advanceDates.some((date) => !validDate(date) || inPeriod(date, b));
     const backlog =
       unresolved &&
       approximate <= b.to &&
       approximate >= (p.effectiveFrom || '2026-01-01');
-    const overdueDeduction =
-      d.direction === 'received' &&
-      m?.deduction === 'full' &&
-      !!m.claimPeriod &&
-      m.claimPeriod < period &&
-      d.status !== 'paid' &&
-      d.dueDate &&
-      d.dueDate < b.from;
-    if (!taxSelected && !claimSelected && !backlog && !overdueDeduction)
+    const overdueDeduction = needsOverdueDeductionReview(d, b);
+    if (!taxSelected && !claimSelected && !backlog && !overdueDeduction && !advanceSelected)
       continue;
     if (d.direction === 'issued' && d.status === 'draft') {
-      if (taxSelected) issue('draft_excluded', d, undefined, 'warning');
+      if (taxSelected || advanceSelected) issue('draft_excluded', d, undefined, 'warning');
       continue;
     }
     result.documents.push(d);
@@ -246,20 +276,8 @@ export function reviewFiling(
       issue('tax_point', d, 'taxPoint');
       continue;
     }
-    if (
-      d.direction === 'issued' &&
-      ((d.paidAt && d.paidAt < m.taxPoint) ||
-        d.payments?.some(
-          (p) => p.amount > 0 && (!validDate(p.date) || p.date < m.taxPoint),
-        ))
-    )
-      issue('advance_payment', d);
-    if (overdueDeduction) {
-      const cutoff = new Date(`${d.dueDate}T00:00:00Z`);
-      cutoff.setUTCMonth(cutoff.getUTCMonth() + 7, 0);
-      if (cutoff.toISOString().slice(0, 10) <= b.to)
-        issue('unpaid_adjustment', d);
-    }
+    if (advanceDates.length > 0) issue('advance_payment', d);
+    if (overdueDeduction) issue('unpaid_adjustment', d);
     const cls = m.classification;
     const received = d.direction === 'received';
     if (

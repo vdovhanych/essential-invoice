@@ -441,6 +441,9 @@ export default function Profile() {
             <p className="text-xs text-text-muted mt-1">
               {t('company.vatPayerHelp')}
             </p>
+            <Link className="inline-flex min-h-11 items-center text-sm text-accent underline" to="/vat-filings?section=profile">
+              {t('company.vatRegistration')}
+            </Link>
           </div>
         </div>
 

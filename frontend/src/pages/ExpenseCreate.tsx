@@ -80,7 +80,7 @@ export default function ExpenseCreate() {
           dueDate: expense.dueDate.split('T')[0],
           currency: expense.currency,
           amount: expense.amount,
-          vatRate: expense.vatRate,
+          vatRate: expense.vatBreakdown?.length === 1 ? expense.vatBreakdown[0].rate : expense.vatRate,
           description: expense.description || '',
           notes: expense.notes || '',
         });
@@ -102,6 +102,15 @@ export default function ExpenseCreate() {
     const { name, value } = e.target;
     if (name === 'amount' || name === 'vatRate') setVatBreakdown(null);
     setFormData(prev => ({ ...prev, [name]: value }));
+  }
+
+  function handleVatBreakdownChange(buckets: ExpenseTaxBucket[]) {
+    setVatBreakdown(buckets);
+    setFormData(prev => ({
+      ...prev,
+      amount: Math.round(buckets.reduce((sum, bucket) => sum + bucket.base, 0) * 100) / 100,
+      vatRate: buckets.length === 1 ? buckets[0].rate : prev.vatRate,
+    }));
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -142,18 +151,25 @@ export default function ExpenseCreate() {
     try {
       const extracted = await extractExpense(fileData, fileMimeType, fileName || undefined);
       const matchedSupplier = findSupplierClient(clients, extracted.supplierName, extracted.supplierIco);
+      // Extraction returns one rate, so it cannot replace a recorded mixed-rate breakdown.
+      const preserveMixedVat = (vatBreakdown?.length || 0) > 1;
+      const amount = preserveMixedVat ? formData.amount : extracted.amount ?? formData.amount;
+      const vatRate = preserveMixedVat ? formData.vatRate : extracted.vatRate ?? formData.vatRate;
+      if (Number(amount) !== Number(formData.amount) || Number(vatRate) !== Number(formData.vatRate)) {
+        setVatBreakdown(null);
+      }
       setFormData(prev => ({
         ...prev,
         clientId: matchedSupplier?.id ?? prev.clientId,
         supplierInvoiceNumber: extracted.supplierInvoiceNumber ?? prev.supplierInvoiceNumber,
         issueDate: extracted.issueDate ?? prev.issueDate,
         dueDate: extracted.dueDate ?? prev.dueDate,
-        currency: extracted.currency === 'EUR' || extracted.currency === 'CZK' ? extracted.currency : prev.currency,
-        amount: (extracted.amount ?? prev.amount) as number,
-        vatRate: extracted.vatRate ?? prev.vatRate,
+        currency: !preserveMixedVat && (extracted.currency === 'EUR' || extracted.currency === 'CZK') ? extracted.currency : prev.currency,
+        amount,
+        vatRate,
         description: extracted.description ?? extracted.supplierName ?? prev.description,
       }));
-      toast.success(t('create.attachment.aiExtractSuccess'));
+      toast.success(t(preserveMixedVat ? 'create.attachment.aiExtractMixedVatPreserved' : 'create.attachment.aiExtractSuccess'));
     } catch (err: unknown) {
       const error = err as Error;
       toast.error(error.message || t('create.attachment.aiExtractFailed'));
@@ -189,7 +205,11 @@ export default function ExpenseCreate() {
         dueDate: formData.dueDate,
         currency: formData.currency,
         amount: Number(formData.amount),
-        ...(vatBreakdown ? {vatBreakdown} : {}),
+        vatBreakdown: vatBreakdown || [{
+          rate: Number(formData.vatRate),
+          base: Number(formData.amount),
+          tax: Math.round(calculateVatAmount() * 100) / 100,
+        }],
         vatRate: Number(formData.vatRate),
         description: formData.description || null,
         notes: formData.notes || null,
@@ -378,7 +398,10 @@ export default function ExpenseCreate() {
 
           <details className="mt-4" open={(vatBreakdown?.length || 0) > 1 || undefined}>
             <summary className="cursor-pointer text-sm text-accent py-2">{tVat('editBreakdown')}</summary>
-        <ExpenseVatEditor buckets={vatBreakdown || [{rate:Number(formData.vatRate),base:Number(formData.amount)||0,tax:Math.round(calculateVatAmount()*100)/100}]} onChange={b=>{setVatBreakdown(b);setFormData(prev=>({...prev,amount:Math.round(b.reduce((s,v)=>s+v.base,0)*100)/100}));}}/>
+            <ExpenseVatEditor
+              buckets={vatBreakdown || [{rate:Number(formData.vatRate),base:Number(formData.amount)||0,tax:Math.round(calculateVatAmount()*100)/100}]}
+              onChange={handleVatBreakdownChange}
+            />
           </details>
 
           <div className="mt-4 pt-4 border-t border-hairline">

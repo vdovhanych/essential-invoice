@@ -130,7 +130,7 @@
     "special_document": "Zálohové, opravné a jiné zvláštní doklady nejsou podporovány.",
     "tax_point": "Zadejte správné datum plnění v době potvrzené registrace.",
     "advance_payment": "Platba předchází plnění. Je nutné zpracovat zálohu.",
-    "unpaid_adjustment": "Dřívější odpočet u neuhrazené faktury po splatnosti může vyžadovat opravu dle § 74b. Je nutné účetní zpracování.",
+    "unpaid_adjustment": "Dřívější odpočet u faktury neuhrazené ve lhůtě dle § 74b nebo její pozdější úhrada vyžaduje účetní kontrolu. Ověřte datum úhrady a opravy odpočtu.",
     "unsupported_classification": "Zařaďte plnění. Nepodporované případy zpracujte s účetní.",
     "counterparty": "Určete, zda je protistrana podnikatel nebo spotřebitel.",
     "eu_identity": "Služby v EU vyžadují zemi EU a DIČ protistrany, s povinností příjemce dle § 9 odst. 1. Ověřte registraci.",

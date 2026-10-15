@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Archive, ArrowRight, Check, Download, FileCheck2, LoaderCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 const localDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 function periods(now: Date) {
@@ -17,6 +18,8 @@ function periods(now: Date) {
   ];
 }
 export default function AccountantExport() {
+  const { user } = useAuth();
+  const showVatFilings = user?.vatPayer === true || user?.vatFilingStatus === 'identified';
   const { t } = useTranslation('invoices');
   const { t: tVat } = useTranslation('vat');
   const id = useId();
@@ -54,7 +57,7 @@ export default function AccountantExport() {
     }
   }
   return <div className="space-y-5">
-    <section className="card border-accent/30" aria-labelledby={`${id}-vat-title`}>
+    {showVatFilings && <section className="card border-accent/30" aria-labelledby={`${id}-vat-title`}>
       <div className="flex items-start gap-3">
         <div className="rounded-xl bg-accent-tint p-2.5 text-accent shrink-0"><FileCheck2 className="h-5 w-5" aria-hidden="true" /></div>
         <div className="min-w-0 flex-1">
@@ -69,7 +72,7 @@ export default function AccountantExport() {
           {t('export.openVat')}<ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
-    </section>
+    </section>}
 
     <section className="card" aria-labelledby={`${id}-zip-title`}>
       <div className="flex items-start gap-3">

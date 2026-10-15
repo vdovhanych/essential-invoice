@@ -22,6 +22,7 @@
     "dic": "DIC",
     "dicNotRequired": "DIČ není potřeba pro neplátce DPH",
     "vatPayer": "Jsem plátce DPH",
+    "vatRegistration": "Nastavení DPH a identifikované osoby",
     "vatPayerHelp": "Pokud nejste plátce DPH, na fakturách se zobrazí \"Neplátce DPH\" místo DIČ",
     "address": "Adresa",
     "bankAccount": "Číslo účtu",

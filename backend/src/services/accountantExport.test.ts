@@ -16,7 +16,7 @@ describe('accountant package', () => {
     const doc = mixedInvoice();
     vi.mocked(loadInvoiceDocument).mockResolvedValue(doc);
     vi.mocked(query).mockResolvedValueOnce(result([{ id: doc.invoice.id }]))
-      .mockResolvedValueOnce(result([{ id: 'expense-id', expense_number: '../receipt', currency: 'CZK', issue_date: '2026-09-01', due_date: '2026-09-20',
+      .mockResolvedValueOnce(result([{ id: 'expense-id', row_version: '100', expense_number: '../receipt', currency: 'CZK', issue_date: '2026-09-01', due_date: '2026-09-20',
         amount: '100', vat_rate: '21', vat_amount: '21', total: '121', file_name: '../../receipt.pdf', file_size: 4, description: '=CMD()' }]))
       .mockResolvedValueOnce(result([{ file_data: Buffer.from('receipt').toString('base64') }]));
     const files = unzipSync(await generateAccountantExport('owner', period));
@@ -38,7 +38,7 @@ describe('accountant package', () => {
     expect(manifest).toMatchObject({ formatVersion: 2, dphPreparation: { inputVatDeductibility: 'unreviewed', filingXml: false, excludedGroupCount: 0 } });
     expect(manifest.files).toEqual(expect.arrayContaining(['dph/register.csv', 'dph/summary.csv', 'dph/issues.csv', 'dph/README.txt']));
     expect(loadInvoiceDocument).toHaveBeenCalledWith(doc.invoice.id, 'owner');
-    expect(query).toHaveBeenLastCalledWith(expect.stringContaining('user_id = $2'), ['expense-id', 'owner']);
+    expect(query).toHaveBeenLastCalledWith(expect.stringContaining('user_id = $2 AND xmin::text = $3'), ['expense-id', 'owner', '100']);
     expect(query).toHaveBeenNthCalledWith(1, expect.stringContaining("status IN ('sent', 'paid', 'overdue')"), ['owner', period.from, period.to]);
     expect(query).toHaveBeenNthCalledWith(2, expect.stringContaining('c.user_id = e.user_id'), ['owner', period.from, period.to]);
   });
@@ -49,6 +49,50 @@ describe('accountant package', () => {
     expect(strFromU8(files['dph/register.csv']).trim().split('\r\n')).toHaveLength(1);
     expect(strFromU8(files['dph/summary.csv']).trim().split('\r\n')).toHaveLength(1);
     expect(query).toHaveBeenNthCalledWith(1, expect.stringContaining('COALESCE(delivery_date, issue_date)'), ['owner', period.from, period.to]);
+  });
+  it.each(['updated', 'deleted', 'attachment removed'])('rejects an expense %s before its attachment is fetched', async change => {
+    const expense = {
+      id: 'expense-id', row_version: '100', expense_number: 'N1', supplier_invoice_number: 'SUP1',
+      currency: 'CZK', issue_date: '2026-09-01', due_date: '2026-09-20',
+      amount: '100', vat_rate: '21', vat_amount: '21', total: '121', file_name: 'receipt.pdf', file_size: 4,
+    };
+    vi.mocked(query).mockResolvedValueOnce(result([])).mockResolvedValueOnce(result([expense]))
+      .mockImplementationOnce(async (sql, params) => {
+        // Simulate the row changing between selection and lazy attachment loading.
+        // Without the revision predicate an updated row would return the new receipt.
+        const currentVersion = change === 'updated' ? '101' : '100';
+        const revisionMatches = !sql.includes('xmin::text = $3') || params?.[2] === currentVersion;
+        return result(change === 'deleted' || !revisionMatches ? [] : [{
+          file_data: change === 'attachment removed' ? null : Buffer.from('Replacement receipt: base 200, VAT 42').toString('base64'),
+        }]);
+      });
+    await expect(generateAccountantExport('owner', period)).rejects.toMatchObject({
+      status: 409, message: 'An expense changed during export; try again',
+    });
+    expect(query).toHaveBeenNthCalledWith(2, expect.stringContaining('e.xmin::text AS row_version'), ['owner', period.from, period.to]);
+  });
+  it.each(['CZK', 'EUR'])('preserves stored mixed-rate expense VAT in the %s DPH files', async currency => {
+    const rate = currency === 'EUR' ? 25 : 1;
+    vi.mocked(query).mockResolvedValueOnce(result([])).mockResolvedValueOnce(result([{
+      id: 'mixed-expense', expense_number: 'N1', supplier_invoice_number: 'SUP1',
+      currency, exchange_rate: rate, total_czk: 345.01 * rate,
+      issue_date: '2026-09-01', due_date: '2026-09-20',
+      amount: '300', vat_rate: '21', vat_amount: '45.01', total: '345.01', file_size: 0,
+      vat_breakdown: [{ rate: 21, base: 100, tax: 21.01 }, { rate: 12, base: 200, tax: 24 }],
+    }]));
+    const files = unzipSync(await generateAccountantExport('owner', period));
+    // A mock can return unselected columns, so verify the real SQL loads the buckets too.
+    expect(query).toHaveBeenNthCalledWith(2, expect.stringContaining('e.vat_breakdown'), ['owner', period.from, period.to]);
+    const register = strFromU8(files['dph/register.csv']);
+    expect(register.trim().split('\r\n')).toHaveLength(3);
+    for (const [vatRate, base, tax] of [[21, 100, 21.01], [12, 200, 24]]) {
+      expect(register).toContain(csv([['unclassified', vatRate, '', '', base, tax, base * rate, tax * rate]])
+        .toString().slice(1).trim());
+      expect(strFromU8(files['dph/summary.csv'])).toContain(csv([
+        ['received', 'unclassified', vatRate, 'CZK', base * rate, tax * rate, 1, 0, 'complete', 'unreviewed'],
+      ]).toString().slice(1));
+    }
+    expect(strFromU8(files['dph/issues.csv'])).not.toContain('inconsistent_total');
   });
   it('includes missing expense conversions in the DPH report instead of silently treating EUR as CZK', async () => {
     vi.mocked(query).mockResolvedValueOnce(result([])).mockResolvedValueOnce(result([{ id: 'expense-id', expense_number: 'N1',
