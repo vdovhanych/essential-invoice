@@ -13,6 +13,7 @@ interface User {
   bankAccount?: string;
   bankCode?: string;
   vatPayer?: boolean;
+  vatFilingStatus?: 'payer' | 'identified' | 'nonpayer' | null;
   hasLogo?: boolean;
   onboardingCompleted?: boolean;
   pausalniDanEnabled?: boolean;

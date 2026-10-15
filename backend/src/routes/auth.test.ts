@@ -377,6 +377,26 @@ describe('Auth Routes', () => {
     });
   });
 
+  describe.each(['get', 'put'] as const)('%s /auth/me filing status', method => {
+    it.each(['identified', 'payer', 'nonpayer', null])('returns saved status %s without the taxpayer profile', async status => {
+      const userId = 'test-user-id';
+      const token = jwt.sign({ userId, email: 'test@example.com' }, 'test-secret-at-least-16-chars');
+      mockedQuery.mockResolvedValueOnce({ rows: [{
+        id: userId, email: 'test@example.com', name: 'Test User',
+        vat_payer: status === 'payer', vat_filing_status: status,
+      }] } as any);
+      const response = await request(app)[method]('/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .send(method === 'put' ? { name: 'Test User', vatFilingStatus: 'ignored' } : undefined);
+      expect(response.status).toBe(200);
+      expect(response.body.vatFilingStatus).toBe(status);
+      expect(response.body).not.toHaveProperty('vatFilingProfile');
+      expect(mockedQuery.mock.calls[0][0]).toContain("vat_filing_profile->>'status' AS vat_filing_status");
+      expect(mockedQuery.mock.calls[0][1]).toContain(userId);
+      expect(mockedQuery.mock.calls[0][1]).not.toContain('ignored');
+    });
+  });
+
   describe('PUT /auth/me', () => {
     it('should update user profile', async () => {
       const userId = 'test-user-id';

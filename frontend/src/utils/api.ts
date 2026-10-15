@@ -52,7 +52,8 @@ async function request(endpoint: string, options: RequestInit = {}) {
 export const api = {
   get: (endpoint: string) => request(endpoint),
 
-  post: (endpoint: string, data?: unknown) => request(endpoint, {
+  post: (endpoint: string, data?: unknown, options?: { signal?: AbortSignal }) => request(endpoint, {
+    ...options,
     method: 'POST',
     body: data ? JSON.stringify(data) : undefined,
   }),

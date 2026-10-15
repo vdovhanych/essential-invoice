@@ -183,7 +183,7 @@ recurringRouter.post('/',
         await query(
           `INSERT INTO recurring_invoice_items (recurring_invoice_id, description, quantity, unit, unit_price, sort_order, vat_rate, vat_treatment, vat_reason, vat_code)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-          [template.id, item.description, item.quantity, item.unit || 'ks', item.unitPrice, i, item.vatTreatment === 'exempt' ? 0 : (item.vatRate ?? vatRate), item.vatTreatment ?? 'standard', item.vatReason?.trim() || '', item.vatCode || '']
+          [template.id, item.description, item.quantity, item.unit || 'ks', item.unitPrice, i, (item.vatTreatment === 'exempt' || item.vatTreatment === 'eu_service') ? 0 : (item.vatRate ?? vatRate), item.vatTreatment ?? 'standard', item.vatReason?.trim() || '', item.vatCode || '']
         );
       }
 
@@ -273,7 +273,7 @@ recurringRouter.put('/:id',
           await query(
             `INSERT INTO recurring_invoice_items (recurring_invoice_id, description, quantity, unit, unit_price, sort_order, vat_rate, vat_treatment, vat_reason, vat_code)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-            [req.params.id, item.description, item.quantity, item.unit || 'ks', item.unitPrice, i, item.vatTreatment === 'exempt' ? 0 : (item.vatRate ?? vatRate ?? Number(existing.rows[0].vat_rate)), item.vatTreatment ?? 'standard', item.vatReason?.trim() || '', item.vatCode || '']
+            [req.params.id, item.description, item.quantity, item.unit || 'ks', item.unitPrice, i, (item.vatTreatment === 'exempt' || item.vatTreatment === 'eu_service') ? 0 : (item.vatRate ?? vatRate ?? Number(existing.rows[0].vat_rate)), item.vatTreatment ?? 'standard', item.vatReason?.trim() || '', item.vatCode || '']
           );
         }
       }

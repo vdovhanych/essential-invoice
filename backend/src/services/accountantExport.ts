@@ -34,8 +34,8 @@ export async function generateAccountantExport(userId: string, period: ReturnTyp
   const invoices = await query(`SELECT id FROM invoices WHERE user_id = $1
     AND ${dateColumn} BETWEEN $2::date AND $3::date AND status IN ('sent', 'paid', 'overdue')
     ORDER BY issue_date, id LIMIT 501`, [userId, from, to]);
-  const expenses = await query(`SELECT e.id, e.expense_number, e.supplier_invoice_number, e.status, e.currency,
-    e.issue_date, e.due_date, e.delivery_date, e.amount, e.vat_rate, e.vat_amount, e.total,
+  const expenses = await query(`SELECT e.id, e.xmin::text AS row_version, e.expense_number, e.supplier_invoice_number, e.status, e.currency,
+    e.issue_date, e.due_date, e.delivery_date, e.amount, e.vat_rate, e.vat_amount, e.vat_breakdown, e.total,
     e.exchange_rate, e.total_czk, e.paid_at, e.description, e.notes, e.file_name,
     COALESCE(length(e.file_data), 0) AS file_size,
     c.company_name AS supplier_name, c.ico AS supplier_ico, c.dic AS supplier_dic
@@ -87,8 +87,10 @@ export async function generateAccountantExport(userId: string, period: ReturnTyp
   for (const e of expenses.rows) {
     let attachment = '';
     if (Number(e.file_size) > 0) {
-      const result = await query('SELECT file_data FROM expenses WHERE id = $1 AND user_id = $2', [e.id, userId]);
-      if (!result.rows[0]?.file_data) throw new ExportError('An expense attachment changed during export; try again', 409);
+      // xmin changes on every row update, including VAT edits that do not touch updated_at.
+      // Check it in the attachment query so totals and receipt cannot come from different revisions.
+      const result = await query('SELECT file_data FROM expenses WHERE id = $1 AND user_id = $2 AND xmin::text = $3', [e.id, userId, e.row_version]);
+      if (!result.rows[0]?.file_data) throw new ExportError('An expense changed during export; try again', 409);
       attachment = `received/${safeFilename(e.expense_number)}_${e.id}_${safeFilename(e.file_name || 'attachment')}`;
       add(attachment, Buffer.from(result.rows[0].file_data, 'base64'));
     }
@@ -101,7 +103,7 @@ export async function generateAccountantExport(userId: string, period: ReturnTyp
       counterparty: e.supplier_name, dic: e.supplier_dic, status: e.status, issueDate: e.issue_date, taxDate: e.delivery_date,
       currency: e.currency, exchangeRate: e.exchange_rate == null ? null : Number(e.exchange_rate), total: Number(e.total),
       totalCzk: e.total_czk == null ? null : Number(e.total_czk), source: attachment,
-      groups: [{ rate: Number(e.vat_rate), treatment: 'unclassified', lines: [{ base: Number(e.amount), vat: Number(e.vat_amount) }] }] });
+      groups: (e.vat_breakdown || [{rate:e.vat_rate,base:e.amount,tax:e.vat_amount}]).map((b: any) => ({ rate:Number(b.rate), treatment:'unclassified', lines:[{base:Number(b.base),vat:Number(b.tax)}] })) });
   }
   add('issued-invoices.csv', csv(invoiceCsv));
   add('issued-lines.csv', csv(lineCsv));
@@ -116,6 +118,6 @@ export async function generateAccountantExport(userId: string, period: ReturnTyp
     issuedInvoices: invoices.rows.length, receivedExpenses: expenses.rows.length,
     dphPreparation: { issueCount: dph.issueCount, excludedGroupCount: dph.excludedGroupCount, inputVatDeductibility: 'unreviewed', filingXml: false },
     includedInvoiceStatuses: ['sent', 'paid', 'overdue'], files: Object.keys(files) }, null, 2)));
-  add('README.txt', Buffer.from(`Essential Invoice - účetní podklady / accountant package\nPeriod: ${from} - ${to} (inclusive)\nDate basis: ${basis === 'tax' ? 'delivery_date, falling back to issue_date' : 'issue_date'}\n\nCSV: UTF-8 with BOM, semicolon delimiter, quoted cells, decimal point.\nText starting with spreadsheet formula characters is prefixed with an apostrophe.\nThe issued-* and received-expenses CSV amounts are in the document currency. Missing EUR conversions are empty, never treated as CZK.\nissued-vat.csv contains issued invoice VAT bases and taxes by rate/treatment, not a tax return.\nExpense VAT remains at document level; no input-VAT deductibility is inferred.\nDPH preparation: dph/summary.csv, dph/register.csv, dph/issues.csv and bilingual dph/README.txt.\nReceived VAT is recorded VAT only, not a confirmed deduction. No VAT payable is calculated.\nThe DPH pack uses this same selection and stored EUR/CZK rates; review incomplete totals and all flagged items.\nDraft/cancelled invoices and recurring templates are excluded. Paid and unpaid expenses are included.\nPDF and ISDOC parties use current company/client details. Free-form addresses are preserved without guessing structured address fields.\nISDOC is unsigned version 6.0.2, for ordinary invoices, including domestic reverse charge.\nThis package contains no VAT return or control-statement XML.\n`));
+  add('README.txt', Buffer.from(`Essential Invoice - účetní podklady / accountant package\nPeriod: ${from} - ${to} (inclusive)\nDate basis: ${basis === 'tax' ? 'delivery_date, falling back to issue_date' : 'issue_date'}\n\nCSV: UTF-8 with BOM, semicolon delimiter, quoted cells, decimal point.\nText starting with spreadsheet formula characters is prefixed with an apostrophe.\nThe issued-* and received-expenses CSV amounts are in the document currency. Missing EUR conversions are empty, never treated as CZK.\nissued-vat.csv contains issued invoice VAT bases and taxes by rate/treatment, not a tax return.\nExpense VAT retains supplier-recorded amounts; mixed rates are detailed in the DPH preparation register. No input-VAT deductibility is inferred.\nDPH preparation: dph/summary.csv, dph/register.csv, dph/issues.csv and bilingual dph/README.txt.\nReceived VAT is recorded VAT only, not a confirmed deduction. No VAT payable is calculated.\nThe DPH pack uses this same selection and stored EUR/CZK rates; review incomplete totals and all flagged items.\nDraft/cancelled invoices and recurring templates are excluded. Paid and unpaid expenses are included.\nPDF and ISDOC parties use current company/client details. Free-form addresses are preserved without guessing structured address fields.\nISDOC is unsigned version 6.0.2, for ordinary invoices, including domestic reverse charge.\nThis package contains no VAT return or control-statement XML.\n`));
   return Buffer.from(zipSync(files, { level: 1 }));
 }

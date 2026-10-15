@@ -1,6 +1,11 @@
 export type Locale = 'cs' | 'en';
 
 interface PdfTranslations {
+  previewNumber: string;
+  previewAssignedOnSave: string;
+  previewCustomer: string;
+  previewItem: string;
+  previewQr: string;
   invoice: string;
   invoiceNumberShort: string;
   supplier: string;
@@ -14,6 +19,7 @@ interface PdfTranslations {
   subtotal: string;
   vat: string;
   exempt: string;
+  euService: string;
   reverseCharge: string;
   reverseChargeNotice: string;
   taxBase: string;
@@ -51,6 +57,11 @@ interface Translations {
 const translations: Record<Locale, Translations> = {
   cs: {
     pdf: {
+      previewNumber: 'NÁVRH',
+      previewAssignedOnSave: 'Přiděleno při uložení',
+      previewCustomer: 'Vyberte odběratele',
+      previewItem: 'Popis položky',
+      previewQr: 'QR platba po uložení',
       invoice: 'FAKTURA',
       invoiceNumberShort: 'č.',
       supplier: 'DODAVATEL',
@@ -64,6 +75,7 @@ const translations: Record<Locale, Translations> = {
       subtotal: 'Základ daně:',
       vat: 'DPH',
       exempt: 'Osvobozeno od DPH',
+      euService: 'EU B2B služba – daň odvede zákazník',
       reverseCharge: 'Přenesená DPH',
       reverseChargeNotice: 'Daň odvede zákazník.',
       taxBase: 'Základ daně',
@@ -128,6 +140,11 @@ S pozdravem,
   },
   en: {
     pdf: {
+      previewNumber: 'DRAFT',
+      previewAssignedOnSave: 'Assigned on save',
+      previewCustomer: 'Select a customer',
+      previewItem: 'Item description',
+      previewQr: 'Payment QR after saving',
       invoice: 'INVOICE',
       invoiceNumberShort: 'No.',
       supplier: 'SUPPLIER',
@@ -141,6 +158,7 @@ S pozdravem,
       subtotal: 'Subtotal:',
       vat: 'VAT',
       exempt: 'VAT exempt',
+      euService: 'EU B2B service – reverse charge',
       reverseCharge: 'Reverse charge',
       reverseChargeNotice: 'Reverse charge - the customer accounts for VAT.',
       taxBase: 'Tax base',

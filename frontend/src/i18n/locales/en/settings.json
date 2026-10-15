@@ -133,6 +133,6 @@
   },
   "exports": {
     "heading": "Exports",
-    "description": "Accounting documents for a selected period."
+    "description": "VAT filing XML for EPO or a document package for your accountant."
   }
 }

@@ -24,7 +24,7 @@ interface InvoiceItemsEditorProps {
 const columnHeader = 'text-[11px] uppercase font-semibold tracking-[.04em] text-text-faint';
 
 /**
- * Wraps a field so it carries its own label below `md`, where the shared column
+ * Wraps a field so it carries its own label in narrow containers, where the shared column
  * headers are hidden: a bare grid of unlabelled boxes gives no clue which one is
  * the quantity and which the price.
  */
@@ -39,7 +39,7 @@ function ItemField({
 }) {
   return (
     <div className={className}>
-      <span className={`${columnHeader} md:hidden block mb-1`}>{label}</span>
+      <span className={`${columnHeader} @[700px]:hidden block mb-1`}>{label}</span>
       {children}
     </div>
   );
@@ -57,7 +57,7 @@ function ItemVat({ item, index, defaultRate, onChange }: {
   const isCustom = customRate || ![0, 12, 21].includes(Number(rate));
   function select(value: string) {
     setCustomRate(value === 'custom');
-    const nextTreatment = value === 'exempt' || value === 'reverse_charge' ? value : 'standard';
+    const nextTreatment = value === 'exempt' || value === 'reverse_charge' || value === 'eu_service' ? value : 'standard';
     onChange(index, 'vatTreatment', nextTreatment);
     // Remove metadata belonging to the previous treatment.
     if (nextTreatment !== treatment) {
@@ -68,7 +68,7 @@ function ItemVat({ item, index, defaultRate, onChange }: {
     if (nextTreatment === 'reverse_charge' && treatment === 'exempt') onChange(index, 'vatRate', defaultRate);
   }
   return <>
-    <ItemField label={t('tax.selector')} className="order-7 md:order-0 min-w-0">
+    <ItemField label={t('tax.selector')} className="order-7 @[700px]:order-0 min-w-0">
       <select className="input min-w-0 text-[13px] px-2" aria-label={t('tax.selector')}
         value={treatment === 'standard' ? (isCustom ? 'custom' : String(rate)) : treatment}
         onChange={e => select(e.target.value)}>
@@ -76,11 +76,12 @@ function ItemVat({ item, index, defaultRate, onChange }: {
         <option value="12">12 %</option>
         <option value="21">21 %</option>
         <option value="exempt">{t('tax.exemptShort')}</option>
+        <option value="eu_service">{t('tax.eu_service')}</option>
         <option value="reverse_charge">{t('tax.reverseShort')}</option>
         <option value="custom">{t('tax.customRate')}</option>
       </select>
     </ItemField>
-    {(treatment !== 'standard' || isCustom) && <div className="order-8 col-span-2 md:col-span-full grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 pb-2">
+    {(treatment !== 'standard' || isCustom) && <div className="order-8 col-span-2 @[700px]:col-span-full grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 pb-2">
       {(treatment === 'reverse_charge' || (treatment === 'standard' && isCustom)) && <label className="text-xs text-text-muted">
         {t('tax.rate')}
         <input type="number" className="input mt-1 tabular-nums" min="0" max="100" step="0.01"
@@ -122,8 +123,8 @@ export default function InvoiceItemsEditor({
   const vatVisible = showVat || vatRequested || items.some(item =>
     (item.vatTreatment && item.vatTreatment !== 'standard') || Number(item.vatRate ?? vatRate) > 0);
   const desktopColumns = vatVisible
-    ? 'md:grid-cols-[minmax(0,2fr)_minmax(0,0.7fr)_minmax(0,0.6fr)_minmax(0,1fr)_minmax(0,1.25fr)_minmax(0,1fr)_28px]'
-    : 'md:grid-cols-[minmax(0,2.4fr)_minmax(0,0.8fr)_minmax(0,0.6fr)_minmax(0,1fr)_minmax(0,1fr)_28px]';
+    ? '@[700px]:grid-cols-[minmax(0,2fr)_minmax(0,0.7fr)_minmax(0,0.6fr)_minmax(0,1fr)_minmax(0,1.25fr)_minmax(0,1fr)_28px]'
+    : '@[700px]:grid-cols-[minmax(0,2.4fr)_minmax(0,0.8fr)_minmax(0,0.6fr)_minmax(0,1fr)_minmax(0,1fr)_28px]';
 
   // Keyboard-first entry: Tab out of the last row's price field adds a row
   function handlePriceKeyDown(e: React.KeyboardEvent, index: number) {
@@ -133,7 +134,7 @@ export default function InvoiceItemsEditor({
   }
 
   return (
-    <div className="card">
+    <div className="card @container">
       <div className="flex items-center justify-between gap-3 mb-4">
         <h2 className="text-[15px] font-semibold text-text">{t('itemsSection')}</h2>
         {!vatVisible && <button type="button" className="text-xs text-accent hover:underline py-2" onClick={() => setVatRequested(true)}>
@@ -142,7 +143,7 @@ export default function InvoiceItemsEditor({
       </div>
 
       {/* Column headers (desktop) */}
-      <div className={`hidden md:grid ${desktopColumns} gap-x-3 pb-2 border-b border-hairline`}>
+      <div className={`hidden @[700px]:grid ${desktopColumns} gap-x-3 pb-2 border-b border-hairline`}>
         <span className={columnHeader}>{t('itemDescription')}</span>
         <span className={`${columnHeader} text-right`}>{t('itemQuantity')}</span>
         <span className={columnHeader}>{t('itemUnit')}</span>
@@ -152,22 +153,22 @@ export default function InvoiceItemsEditor({
         <span />
       </div>
 
-      {/* Below `md` each item is its own labelled card and the fields are
+      {/* Below 700px of container width each item is its own labelled card and the fields are
           re-ordered (title + remove, description, quantity/unit, price, total);
-          from `md` up they collapse back into one row under the headers. */}
-      <div className="space-y-3 md:space-y-0">
+          with more room they collapse back into one row under the headers. */}
+      <div className="space-y-3 @[700px]:space-y-0">
         {items.map((item, index) => (
           <div
             key={index}
-            className={`grid grid-cols-2 ${desktopColumns} gap-x-3 gap-y-2.5 rounded-[14px] border border-hairline bg-surface-sunken p-3 md:gap-y-0 md:items-center md:rounded-none md:border-0 md:bg-transparent md:p-0 md:py-2`}
+            className={`grid grid-cols-2 ${desktopColumns} gap-x-3 gap-y-2.5 rounded-[14px] border border-hairline bg-surface-sunken p-3 @[700px]:gap-y-0 @[700px]:items-center @[700px]:rounded-none @[700px]:border-0 @[700px]:bg-transparent @[700px]:p-0 @[700px]:py-2`}
           >
-            <span className={`${columnHeader} order-1 self-center md:hidden`}>
+            <span className={`${columnHeader} order-1 self-center @[700px]:hidden`}>
               {t('itemNumber', { number: index + 1 })}
             </span>
 
             <ItemField
               label={t('itemDescription')}
-              className="order-3 col-span-2 md:order-0 md:col-span-1"
+              className="order-3 col-span-2 @[700px]:order-0 @[700px]:col-span-1"
             >
               <input
                 type="text"
@@ -181,7 +182,7 @@ export default function InvoiceItemsEditor({
               />
             </ItemField>
 
-            <ItemField label={t('itemQuantity')} className="order-4 md:order-0">
+            <ItemField label={t('itemQuantity')} className="order-4 @[700px]:order-0">
               <input
                 type="number"
                 value={item.quantity}
@@ -196,7 +197,7 @@ export default function InvoiceItemsEditor({
               />
             </ItemField>
 
-            <ItemField label={t('itemUnit')} className="order-5 md:order-0">
+            <ItemField label={t('itemUnit')} className="order-5 @[700px]:order-0">
               <input
                 type="text"
                 value={item.unit}
@@ -209,7 +210,7 @@ export default function InvoiceItemsEditor({
 
             <ItemField
               label={t('itemUnitPrice')}
-              className={vatVisible ? "order-6 md:order-0" : "order-6 col-span-2 md:order-0 md:col-span-1"}
+              className={vatVisible ? "order-6 @[700px]:order-0" : "order-6 col-span-2 @[700px]:order-0 @[700px]:col-span-1"}
             >
               <input
                 type="number"
@@ -228,8 +229,8 @@ export default function InvoiceItemsEditor({
 
             {vatVisible && <ItemVat item={item} index={index} defaultRate={Number(vatRate)} onChange={onItemChange} />}
 
-            <div className="order-9 col-span-2 flex items-center justify-between border-t border-hairline pt-2.5 md:order-0 md:col-span-1 md:block md:border-0 md:pt-0 md:text-right">
-              <span className={`${columnHeader} md:hidden`}>{t('itemTotal')}</span>
+            <div className="order-9 col-span-2 flex items-center justify-between border-t border-hairline pt-2.5 @[700px]:order-0 @[700px]:col-span-1 @[700px]:block @[700px]:border-0 @[700px]:pt-0 @[700px]:text-right">
+              <span className={`${columnHeader} @[700px]:hidden`}>{t('itemTotal')}</span>
               <span className="text-sm font-semibold text-text tabular-nums">
                 {formatCurrency((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}
               </span>
@@ -239,7 +240,7 @@ export default function InvoiceItemsEditor({
               type="button"
               onClick={() => onRemoveItem(index)}
               disabled={items.length === 1}
-              className="order-2 justify-self-end self-center p-1.5 rounded-lg text-text-faint hover:text-danger hover:bg-nav-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed md:order-0"
+              className="order-2 justify-self-end self-center p-1.5 rounded-lg text-text-faint hover:text-danger hover:bg-nav-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed @[700px]:order-0"
               aria-label={t('removeItem')}
             >
               <X className="h-4 w-4" />
@@ -258,7 +259,7 @@ export default function InvoiceItemsEditor({
           <Plus className="h-4 w-4" />
           <span>{t('addItem')}</span>
         </button>
-        <span className="hidden md:block text-xs text-text-faint">{t('addItemHint')}</span>
+        <span className="hidden @[700px]:block text-xs text-text-faint">{t('addItemHint')}</span>
       </div>
 
       {showTotals && (

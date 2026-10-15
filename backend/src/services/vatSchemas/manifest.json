@@ -1,0 +1,72 @@
+{
+  "retrieved": "2026-09-08",
+  "supportedPeriods": {
+    "from": "2026-01-01",
+    "to": "2026-12-31"
+  },
+  "forms": {
+    "DPHDP3": {
+      "version": "03.01.03",
+      "published": "2026-03-09",
+      "file": "dphdp3_epo2.xsd",
+      "url": "https://adisspr.mfcr.cz/adis/jepo/schema/dphdp3_epo2.xsd",
+      "structureUrl": "https://adisspr.mfcr.cz/dpr/adis/idpr_pub/epo2_info/popis_struktury_detail.faces?zkratka=DPHDP3",
+      "sha256": "1373ad0c719123228b8bfe75f019338ba53ce12494c80dda9fc9e3682eb4fde7"
+    },
+    "DPHKH1": {
+      "version": "03.01.14",
+      "published": "2026-03-09",
+      "file": "dphkh1_epo2.xsd",
+      "url": "https://adisspr.mfcr.cz/adis/jepo/schema/dphkh1_epo2.xsd",
+      "structureUrl": "https://adisspr.mfcr.cz/dpr/adis/idpr_pub/epo2_info/popis_struktury_detail.faces?zkratka=DPHKH1",
+      "sha256": "addb0763b4d710120726751ebd2025949414842ac574982925183dfeee96f923"
+    },
+    "DPHSHV": {
+      "version": "02.01.04",
+      "published": "2024-10-29",
+      "file": "dphshv_epo2.xsd",
+      "url": "https://adisspr.mfcr.cz/adis/jepo/schema/dphshv_epo2.xsd",
+      "structureUrl": "https://adisspr.mfcr.cz/dpr/adis/idpr_pub/epo2_info/popis_struktury_detail.faces?zkratka=DPHSHV",
+      "sha256": "65636d2c2324e7e3787688b25c85e8266b29db6da65572864ebabab73197cfa5"
+    }
+  },
+  "codeLists": {
+    "ufo": {
+      "version": "50.2.00670",
+      "rows": 16,
+      "url": "https://mojedane.gov.cz/dpr/epo_ciselnik?C=ufo&M=10000&PL=2026-09-08"
+    },
+    "pracufo": {
+      "version": "50.2.00210",
+      "rows": 124,
+      "url": "https://mojedane.gov.cz/dpr/epo_ciselnik?C=pracufo&M=10000&PL=2026-09-08"
+    },
+    "okec": {
+      "version": "50.2.00019",
+      "rows": 1952,
+      "url": "https://mojedane.gov.cz/dpr/epo_ciselnik?C=okec"
+    },
+    "k_pred_pl": {
+      "version": "1",
+      "rows": 54,
+      "url": "https://mojedane.gov.cz/dpr/epo_ciselnik?C=k_pred_pl&M=10000"
+    },
+    "zeme": {
+      "version": "1",
+      "rows": 250,
+      "url": "https://mojedane.gov.cz/dpr/epo_ciselnik?C=zeme&M=10000&PL=2026-09-08"
+    }
+  },
+  "instructions": [
+    {
+      "form": "25 5412",
+      "version": "22",
+      "url": "https://financnisprava.gov.cz/assets/tiskopisy/5412_22.pdf"
+    },
+    {
+      "form": "25 5525",
+      "version": "7",
+      "url": "https://financnisprava.gov.cz/assets/tiskopisy/5525_7.pdf"
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import { documentDate } from '../services/invoiceDocument';
+import { expenseVatBreakdown, expenseVatTotals } from '../utils/expenseVat';
 import { Router, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { query } from '../db/init';
@@ -32,7 +34,7 @@ expenseRouter.get('/', async (req: AuthRequest, res: Response) => {
     let sql = `
       SELECT e.id, e.expense_number, e.supplier_invoice_number, e.status, e.currency,
              e.client_id, e.issue_date, e.due_date, e.delivery_date,
-             e.amount, e.vat_rate, e.vat_amount, e.total,
+             e.amount, e.vat_rate, e.vat_amount, e.total, e.vat_breakdown,
              e.exchange_rate, e.total_czk,
              e.description, e.notes, e.paid_at, e.created_at, e.updated_at,
              e.file_name, e.file_mime_type,
@@ -76,11 +78,12 @@ expenseRouter.get('/', async (req: AuthRequest, res: Response) => {
       currency: row.currency,
       clientId: row.client_id,
       clientName: row.client_name,
-      issueDate: row.issue_date,
-      dueDate: row.due_date,
-      deliveryDate: row.delivery_date,
+      issueDate: row.issue_date ? documentDate(row.issue_date) : row.issue_date,
+      dueDate: row.due_date ? documentDate(row.due_date) : row.due_date,
+      deliveryDate: row.delivery_date ? documentDate(row.delivery_date) : row.delivery_date,
       amount: parseFloat(row.amount),
       vatRate: parseFloat(row.vat_rate),
+      vatBreakdown: row.vat_breakdown,
       vatAmount: parseFloat(row.vat_amount),
       total: parseFloat(row.total),
       exchangeRate: row.exchange_rate ? parseFloat(row.exchange_rate) : null,
@@ -129,11 +132,12 @@ expenseRouter.get('/:id', async (req: AuthRequest, res: Response) => {
       clientIco: row.client_ico,
       clientDic: row.client_dic,
       clientEmail: row.client_email,
-      issueDate: row.issue_date,
-      dueDate: row.due_date,
-      deliveryDate: row.delivery_date,
+      issueDate: row.issue_date ? documentDate(row.issue_date) : row.issue_date,
+      dueDate: row.due_date ? documentDate(row.due_date) : row.due_date,
+      deliveryDate: row.delivery_date ? documentDate(row.delivery_date) : row.delivery_date,
       amount: parseFloat(row.amount),
       vatRate: parseFloat(row.vat_rate),
+      vatBreakdown: row.vat_breakdown,
       vatAmount: parseFloat(row.vat_amount),
       total: parseFloat(row.total),
       exchangeRate: row.exchange_rate ? parseFloat(row.exchange_rate) : null,
@@ -157,6 +161,7 @@ expenseRouter.get('/:id', async (req: AuthRequest, res: Response) => {
 
 // Create expense
 expenseRouter.post('/',
+  body('vatBreakdown').optional().custom(v => { expenseVatBreakdown(v); return true; }),
   body('issueDate').isISO8601(),
   body('dueDate').isISO8601(),
   body('amount').isNumeric().custom((value) => {
@@ -196,8 +201,11 @@ expenseRouter.post('/',
         }
       }
 
-      const vatAmount = parseFloat(amount) * (parseFloat(vatRate) / 100);
-      const total = parseFloat(amount) + vatAmount;
+      const breakdown = req.body.vatBreakdown ? expenseVatBreakdown(req.body.vatBreakdown) : null;
+      const recorded = breakdown ? expenseVatTotals(breakdown) : null;
+      if (recorded && recorded.amount !== Number(amount)) return res.status(400).json({error:'VAT breakdown base must equal amount'});
+      const vatAmount = recorded?.vatAmount ?? parseFloat(amount) * (parseFloat(vatRate) / 100);
+      const total = recorded?.total ?? parseFloat(amount) + vatAmount;
 
       // Fetch exchange rate for EUR expenses so dashboard totals can sum in CZK
       let exchangeRate: number | null = null;
@@ -222,15 +230,15 @@ expenseRouter.post('/',
              status, currency, issue_date, due_date, delivery_date,
              amount, vat_rate, vat_amount, total,
              description, notes, file_data, file_name, file_mime_type,
-             exchange_rate, total_czk)
-             VALUES ($1, $2, $3, $4, 'unpaid', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+             exchange_rate, total_czk, vat_breakdown)
+             VALUES ($1, $2, $3, $4, 'unpaid', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
              RETURNING *`,
             [req.userId, clientId || null, expenseNumber, supplierInvoiceNumber || null,
              currency, issueDate, dueDate, deliveryDate || null,
              amount, vatRate, vatAmount, total,
              description || null, notes || null,
              fileData || null, fileName || null, fileMimeType || null,
-             exchangeRate, totalCzk]
+             exchangeRate, totalCzk, JSON.stringify(breakdown || [{rate:Number(vatRate),base:Number(amount),tax:Math.round(vatAmount*100)/100}])]
           );
 
           row = result.rows[0];
@@ -259,6 +267,7 @@ expenseRouter.post('/',
 
 // Update expense
 expenseRouter.put('/:id',
+  body('vatBreakdown').optional().custom(v => { expenseVatBreakdown(v); return true; }),
   body('issueDate').optional().isISO8601(),
   body('dueDate').optional().isISO8601(),
   body('amount').optional().isNumeric().custom((value) => {
@@ -283,7 +292,7 @@ expenseRouter.put('/:id',
     try {
       // Check expense exists and is unpaid
       const expenseCheck = await query(
-        'SELECT status, currency, issue_date, total FROM expenses WHERE id = $1 AND user_id = $2',
+        'SELECT status, currency, issue_date, total, amount, vat_rate, vat_amount, vat_breakdown FROM expenses WHERE id = $1 AND user_id = $2',
         [req.params.id, req.userId]
       );
 
@@ -312,14 +321,18 @@ expenseRouter.put('/:id',
         }
       }
 
+      if (!req.body.vatBreakdown && expenseCheck.rows[0].vat_breakdown?.length > 1 && (amount !== undefined || vatRate !== undefined)) {
+        return res.status(400).json({error:'Supply the recorded VAT breakdown when editing mixed VAT amounts'});
+      }
+      let breakdown = req.body.vatBreakdown ? expenseVatBreakdown(req.body.vatBreakdown) : null;
       // Recalculate VAT if amount or rate changed
       let vatAmount = null;
       let total = null;
       if (amount !== undefined || vatRate !== undefined) {
         // Need to get current values for any not provided
         const current = await query(
-          'SELECT amount, vat_rate FROM expenses WHERE id = $1',
-          [req.params.id]
+          'SELECT amount, vat_rate FROM expenses WHERE id = $1 AND user_id = $2',
+          [req.params.id, req.userId]
         );
         const currentAmount = amount !== undefined ? parseFloat(amount) : parseFloat(current.rows[0].amount);
         const currentVatRate = vatRate !== undefined ? parseFloat(vatRate) : parseFloat(current.rows[0].vat_rate);
@@ -327,6 +340,13 @@ expenseRouter.put('/:id',
         total = currentAmount + vatAmount;
       }
 
+      if (breakdown) {
+        const recorded = expenseVatTotals(breakdown);
+        if (recorded.amount !== Number(amount ?? expenseCheck.rows[0].amount)) return res.status(400).json({error:'VAT breakdown base must equal amount'});
+        vatAmount = recorded.vatAmount; total = recorded.total;
+      } else if (total !== null) {
+        breakdown = [{rate:Number(vatRate ?? expenseCheck.rows[0].vat_rate),base:Number(amount ?? expenseCheck.rows[0].amount),tax:Math.round(vatAmount! * 100)/100}];
+      }
       // Re-derive the CZK equivalent whenever the total, currency or issue date
       // moves — any of the three changes what the conversion should be. Switching
       // back to CZK clears the stored rate instead of leaving a stale one behind.
@@ -369,6 +389,7 @@ expenseRouter.put('/:id',
           file_mime_type = COALESCE($15, file_mime_type),
           exchange_rate = CASE WHEN $16::boolean THEN $17::decimal ELSE exchange_rate END,
           total_czk = CASE WHEN $16::boolean THEN $18::decimal ELSE total_czk END,
+          vat_breakdown = COALESCE($21::jsonb, vat_breakdown),
           updated_at = CURRENT_TIMESTAMP
          WHERE id = $19 AND user_id = $20
          RETURNING *`,
@@ -379,7 +400,7 @@ expenseRouter.put('/:id',
           description, notes,
           fileData, fileName, fileMimeType,
           recalcCzk, exchangeRate, totalCzk,
-          req.params.id, req.userId
+          req.params.id, req.userId, breakdown ? JSON.stringify(breakdown) : null
         ]
       );
 

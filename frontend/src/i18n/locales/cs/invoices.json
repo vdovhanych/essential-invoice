@@ -82,7 +82,27 @@
     "vatDefaultBadge": "Výchozí",
     "tierImpact": "Letos se dostanete na {{amount}} — {{pct}} % limitu paušální daně.",
     "tierImpactCrosses": "Tato faktura vás dostane na {{amount}} — nad limit paušální daně.",
-    "previewSection": "Náhled"
+    "previewSection": "Náhled",
+    "livePreview": {
+      "title": "Náhled faktury",
+      "expand": "Zvětšit",
+      "close": "Zavřít",
+      "openPdf": "Otevřít PDF",
+      "draftHint": "Návrh · Číslo faktury a platební QR kód budou přiděleny při uložení.",
+      "editHint": "Náhled neuložených změn.",
+      "updating": "Aktualizuji náhled…",
+      "error": "Náhled se nepodařilo aktualizovat. Zobrazený dokument může být zastaralý.",
+      "retry": "Zkusit znovu",
+      "loading": "Připravuji náhled faktury…",
+      "unavailable": "Náhled není dostupný.",
+      "previousPage": "Předchozí stránka",
+      "nextPage": "Další stránka",
+      "pageCount": "{{page}} / {{count}}",
+      "zoomOut": "Oddálit",
+      "zoomIn": "Přiblížit",
+      "fitWidth": "Na šířku",
+      "renderError": "PDF se nepodařilo zobrazit. Pomocí Otevřít PDF jej zobrazíte na samostatné kartě."
+    }
   },
   "detail": {
     "title": "Faktura {{number}}",
@@ -342,7 +362,8 @@
     "customRate": "Jiná sazba…",
     "differentDate": "Jiné datum zdanitelného plnění",
     "reverseShort": "Přenesená DPH",
-    "exemptShort": "Osvobozeno"
+    "exemptShort": "Osvobozeno",
+    "eu_service": "Služba B2B do EU (§ 9 odst. 1)"
   },
   "export": {
     "title": "Export pro účetní",
@@ -362,6 +383,23 @@
     "scope": "Zahrnuje odeslané, uhrazené a neuhrazené faktury po splatnosti a všechny náklady za období. Koncepty a zrušené faktury se nezahrnují. Bez data plnění se použije datum vystavení. Nejvýše 500 dokladů / 100 MB. Neobsahuje XML daňových podání.",
     "success": "Podklady pro účetní byly staženy",
     "error": "Export se nezdařil",
-    "isdoc": "Stáhnout ISDOC"
+    "isdoc": "Stáhnout ISDOC",
+    "vatDescription": "Přiznání k DPH, kontrolní a souhrnné hlášení.",
+    "vatHint": "Zkontrolujte doklady, uložte verzi XML a importujte ji do EPO. Podporovaná období: 2026.",
+    "openVat": "Otevřít podání DPH",
+    "contents": "Obsah balíčku",
+    "invoiceFiles": "Faktury PDF a ISDOC",
+    "expenseFiles": "Přehledy CSV a přílohy",
+    "dphFiles": "Podklady pro DPH",
+    "period": "Období exportu",
+    "quickPeriods": "Rychlý výběr období",
+    "lastMonth": "Minulý měsíc",
+    "lastQuarter": "Minulé čtvrtletí",
+    "thisYear": "Letošní rok",
+    "details": "Co balíček obsahuje a jaká má omezení",
+    "invalidRange": "Vyplňte obě data. Datum „Od“ musí být před datem „Do“ nebo stejné.",
+    "limit": "Nejvýše 500 dokladů · 100 MB",
+    "retry": "Zkusit stáhnout znovu",
+    "preparingHint": "Připravujeme faktury a přílohy. U většího balíčku to může chvíli trvat."
   }
 }

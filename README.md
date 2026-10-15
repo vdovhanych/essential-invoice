@@ -15,6 +15,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 - **Recurring Invoices**: Monthly recurring invoice templates with optional auto-send
 - **Expense Tracking**: Track business expenses with PDF attachments and automatic numbering
 - **Client Management**: Store and manage client contacts with ARES API integration for Czech companies
+- **Live Invoice Preview**: See the actual PDF while editing, with a larger desktop preview and an expanded viewer on mobile. Draft previews do not save invoices or assign numbers.
 - **PDF Generation**: Professional Czech invoice templates with QR payment codes (SPAYD format), VAT/non-VAT payer support
 - **Email Integration**: Send invoices via SMTP, receive bank notifications via IMAP
 - **Bank Payment Matching**: Automatic matching of Air Bank payment notifications to invoices
@@ -30,13 +31,21 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 
 ### VAT and accounting workflow
 
+Expense VAT breakdown edits keep the single-rate summary in sync. AI extraction refreshes single-rate amounts together, preserving supplier rounding when amounts are unchanged. Existing mixed-rate amounts and currency stay intact, with a reminder to review them manually. Advance receipts for a later supply block VAT filing XML in the receipt period for accountant review.
+
+If an expense changes before its attachment is fetched for an accountant ZIP, the export stops with a retry message to keep its totals and receipt consistent.
+
 Set the VAT rate and treatment on each invoice line. Exempt lines require a reason/legal reference; domestic reverse-charge lines require the supply code and show “Daň odvede zákazník” on Czech PDFs. The default rate applies to lines without their own rate. Tax-point dates can be set separately from issue dates.
 
 The item VAT selector inherits your saved default; exemption and reverse-charge fields appear only when selected. The tax breakdown can be expanded, and the tax-point date follows the issue date unless overridden. New invoices for non-VAT payers start at 0% with VAT controls hidden.
 
-Open **Settings → Exports** to select a period by issue or tax-point date and download the ZIP. It includes issued invoices (sent, overdue, paid) and expenses, with a limit of 500 documents / 100 MB. Use **Download → PDF / ISDOC** on an invoice to download an individual file immediately. This release exports accounting records; it does not generate VAT return/control-statement XML or import ISDOC. See the [API reference](docs/api-reference.md#accountant-export) for package contents and format details.
+Open **Settings → Exports** for separate VAT filing XML and accountant ZIP cards. The ZIP form starts with the previous month; choose a completed-quarter or year-to-date shortcut, or enter a custom period by issue or tax-point date. Package details expand on demand, and failed downloads show an inline error with a retry action. It includes issued invoices (sent, overdue, paid) and expenses, with a limit of 500 documents / 100 MB. Use **Download → PDF / ISDOC** on an invoice to download an individual file immediately. The ZIP exports accounting records; filing XML is available in the separate VAT filing workspace. ISDOC import is not implemented. See the [API reference](docs/api-reference.md#accountant-export) for package contents and format details.
 
-Every accountant ZIP also includes **DPH preparation**: CZK summaries by VAT rate/treatment, a document register linked to supporting files, and a bilingual completeness/review report. Missing conversions remain blank and affected totals are marked incomplete. Received VAT is recorded VAT only, not a confirmed deduction; the pack does not calculate VAT payable. For DPH preparation, consider selecting by tax-point date and have your accountant confirm expense deduction periods and transaction classifications.
+**VAT filing XML:** Open **Settings → Exports → VAT filings** to review 2026 domestic transactions and supported EU B2B services, resolve validation blockers, and save immutable VAT return, control-statement and recapitulative-statement XML versions. The card is shown for VAT payers and configured identified persons; accountant ZIP exports remain available to everyone. Initial registration setup, including identified-person status, is available from **Profile → Company details**. Downloads are for manual EPO import; nothing is submitted automatically. Historical expenses retain recorded VAT and require explicit deduction review. See the [supported cases and workflow](docs/vat-filings.md). Taxpayer setup reuses existing profile details, and expense VAT breakdowns save together with their tax review.
+
+Every accountant ZIP also includes **DPH preparation**: CZK summaries by VAT rate/treatment, a document register linked to supporting files, and a bilingual completeness/review report. Mixed-rate expenses retain their recorded VAT breakdown and supplier rounding. Missing conversions remain blank and affected totals are marked incomplete. Received VAT is recorded VAT only, not a confirmed deduction; the pack does not calculate VAT payable. For DPH preparation, consider selecting by tax-point date and have your accountant confirm expense deduction periods and transaction classifications.
+
+**Filing support limits:** XML generation covers the documented 2026 cases for Czech resident individuals filing for themselves, using CZK/EUR documents. It is not a general tax filing system: advances, supplementary/subsequent filings, partial deductions, most special regimes and other excluded cases require accountant processing. Read the [supported-case matrix](docs/vat-filings.md#supported-case-matrix) and [explicit limitations](docs/vat-filings.md#corrections-and-explicit-limitations) before relying on an export. Some conditions depend on the user's confirmation and cannot be detected automatically.
 
 ## Quick Start
 

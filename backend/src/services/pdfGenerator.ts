@@ -11,15 +11,17 @@ pdfmake.addVirtualFileSystem(vfsFonts);
 
 import type { TDocumentDefinitions, Content, TableCell, Column } from 'pdfmake/interfaces';
 
-interface InvoiceData {
+export interface InvoiceData {
+  /** Unsaved invoices have no assigned number or usable payment QR yet. */
+  draftPreview?: boolean;
   id: string;
   invoiceNumber: string;
   variableSymbol: string;
   status: string;
   currency: string;
-  issueDate: Date;
-  dueDate: Date;
-  deliveryDate: Date;
+  issueDate: Date | null;
+  dueDate: Date | null;
+  deliveryDate: Date | null;
   subtotal: number;
   vatRate: number;
   vatAmount: number;
@@ -60,8 +62,8 @@ function formatCurrency(amount: number, currency: string, locale?: string): stri
   return formatCurrencyLocale(amount, currency, locale);
 }
 
-function formatDate(date: Date, locale?: string): string {
-  return formatDateLocale(date, locale);
+function formatDate(date: Date | null, locale?: string): string {
+  return date ? formatDateLocale(date, locale) : '—';
 }
 
 async function generateQRCodeDataURL(data: string): Promise<string> {
@@ -189,11 +191,12 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
 
   const itemRows: TableCell[][] = invoice.items.map(item => [
     { text: [item.description,
+      ...(item.vatTreatment === 'eu_service' ? [`\n${tr.euService}: ${item.vatReason || '§ 9(1)'}`] : []),
       ...(item.vatTreatment === 'exempt' ? [`\n${tr.exempt}: ${item.vatReason}`] : []),
       ...(item.vatTreatment === 'reverse_charge' ? [`\n${tr.reverseChargeNotice}${item.vatReason ? ` ${item.vatReason}` : ''}`] : [])].join('') },
     { text: `${item.quantity} ${item.unit}`, alignment: 'right' as const },
     { text: formatCurrency(item.unitPrice, invoice.currency, lang), alignment: 'right' as const },
-    ...(invoice.userVatPayer ? [{ text: item.vatTreatment === 'exempt' ? tr.exempt : item.vatTreatment === 'reverse_charge' ? tr.reverseCharge : `${item.vatRate ?? invoice.vatRate}%`, alignment: 'right' as const, fontSize: 8 }] : []),
+    ...(invoice.userVatPayer ? [{ text: item.vatTreatment === 'eu_service' ? tr.euService : item.vatTreatment === 'exempt' ? tr.exempt : item.vatTreatment === 'reverse_charge' ? tr.reverseCharge : `${item.vatRate ?? invoice.vatRate}%`, alignment: 'right' as const, fontSize: 8 }] : []),
     { text: formatCurrency(item.total, invoice.currency, lang), alignment: 'right' as const },
   ]);
 
@@ -226,7 +229,7 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
 
   if (invoice.userVatPayer) {
     for (const group of summarizeStoredTax(invoice.items, invoice.vatRate)) {
-      const label = group.vatTreatment === 'standard' ? `${tr.vat} (${group.vatRate}%)` : group.vatTreatment === 'exempt' ? tr.exempt : tr.reverseCharge;
+      const label = group.vatTreatment === 'standard' ? `${tr.vat} (${group.vatRate}%)` : group.vatTreatment === 'eu_service' ? tr.euService : group.vatTreatment === 'exempt' ? tr.exempt : tr.reverseCharge;
       totalsRows.push([
         { text: `${label} · ${tr.taxBase}: ${formatCurrency(group.base, invoice.currency, lang)}`, fontSize: 9 },
         { text: formatCurrency(group.vatAmount, invoice.currency, lang), alignment: 'right' as const },
@@ -316,6 +319,16 @@ function buildDocumentDefinition(invoice: InvoiceData, qrCodeDataUrl: string): T
       stack: [
         { image: qrCodeDataUrl, width: 100, alignment: 'center' as const },
         { text: tr.qrPayment, fontSize: 8, color: '#666', alignment: 'center' as const, margin: [0, 4, 0, 0] },
+      ],
+    });
+  }
+
+  if (invoice.draftPreview && invoice.currency === 'CZK' && invoice.userBankAccount && invoice.userBankCode) {
+    paymentColumns.push({
+      width: 100,
+      stack: [
+        { canvas: [{ type: 'rect', x: 0, y: 0, w: 100, h: 75, lineColor: GRAY_BORDER, color: '#f9fafb' }] },
+        { text: tr.previewQr, fontSize: 8, color: '#666', alignment: 'center', margin: [0, 4, 0, 0] },
       ],
     });
   }
@@ -505,6 +518,11 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
     }))
   };
 
+  return renderInvoicePDF(invoiceData);
+}
+
+/** Shared renderer for saved invoices and unsaved editor previews. */
+export async function renderInvoicePDF(invoiceData: InvoiceData): Promise<Buffer> {
   // Generate QR code for CZK invoices
   let qrCodeDataUrl = '';
   if (invoiceData.qrPaymentData && invoiceData.currency === 'CZK') {

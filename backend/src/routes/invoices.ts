@@ -10,10 +10,12 @@ import { t, formatDateLocale, formatCurrencyLocale } from '../i18n/translations'
 import { convertEurToCzk } from '../services/cnbExchangeRate';
 
 import { generateISDOC } from '../services/isdocGenerator';
-import { ExportError, safeFilename } from '../services/invoiceDocument';
+import { ExportError, safeFilename, documentDate } from '../services/invoiceDocument';
 import { vatValidation } from '../utils/vatValidation';
+import { invoicePreviewRouter } from './invoicePreview';
 
 export const invoiceRouter: ReturnType<typeof Router> = Router();
+invoiceRouter.use('/preview', invoicePreviewRouter);
 
 // Legal status transitions for PUT /:id. Status changes normally go through the
 // dedicated mark-sent/mark-paid/cancel endpoints; this guards direct API updates
@@ -109,9 +111,9 @@ invoiceRouter.get('/', async (req: AuthRequest, res: Response) => {
       clientId: row.client_id,
       clientName: row.client_name,
       clientEmail: row.client_email,
-      issueDate: row.issue_date,
-      dueDate: row.due_date,
-      deliveryDate: row.delivery_date,
+      issueDate: row.issue_date ? documentDate(row.issue_date) : row.issue_date,
+      dueDate: row.due_date ? documentDate(row.due_date) : row.due_date,
+      deliveryDate: row.delivery_date ? documentDate(row.delivery_date) : row.delivery_date,
       subtotal: parseFloat(row.subtotal),
       vatRate: parseFloat(row.vat_rate),
       vatAmount: parseFloat(row.vat_amount),
@@ -184,9 +186,9 @@ invoiceRouter.get('/:id', async (req: AuthRequest, res: Response) => {
       clientIco: row.client_ico,
       clientDic: row.client_dic,
       clientContact: row.client_contact,
-      issueDate: row.issue_date,
-      dueDate: row.due_date,
-      deliveryDate: row.delivery_date,
+      issueDate: row.issue_date ? documentDate(row.issue_date) : row.issue_date,
+      dueDate: row.due_date ? documentDate(row.due_date) : row.due_date,
+      deliveryDate: row.delivery_date ? documentDate(row.delivery_date) : row.delivery_date,
       subtotal: parseFloat(row.subtotal),
       vatRate: parseFloat(row.vat_rate),
       vatAmount: parseFloat(row.vat_amount),

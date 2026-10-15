@@ -275,7 +275,7 @@ describe('Expenses Routes', () => {
       expect(mockConvertEurToCzk).not.toHaveBeenCalled();
       const params = mockQuery.mock.calls[1][1];
       // exchange_rate and total_czk are the last two values before nothing else
-      expect(params.slice(-2)).toEqual([null, null]);
+      expect(params.slice(-3,-1)).toEqual([null, null]);
     });
   });
 
@@ -446,4 +446,10 @@ describe('Expenses Routes', () => {
       expect(response.status).toBe(404);
     });
   });
+});
+
+it('returns date-only expense fields without a UTC day shift', async () => {
+  mockQuery.mockResolvedValueOnce({rows:[{id:'e1',issue_date:new Date(2026,7,1),due_date:new Date(2026,7,15),delivery_date:new Date(2026,7,2),amount:'100',vat_rate:'21',vat_amount:'21',total:'121'}]});
+  const response=await request(app).get('/expenses/e1');
+  expect(response.body).toMatchObject({issueDate:'2026-08-01',dueDate:'2026-08-15',deliveryDate:'2026-08-02'});
 });

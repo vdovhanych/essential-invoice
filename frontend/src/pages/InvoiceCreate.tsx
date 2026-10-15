@@ -5,9 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
 import { ArrowLeft, QrCode, Info } from 'lucide-react';
-import { formatCurrency as formatCurrencyLocale, formatDate, getInitials } from '../utils/format';
+import { formatCurrency as formatCurrencyLocale, getInitials } from '../utils/format';
 import { useLineItems, LineItem } from '../hooks/useLineItems';
 import InvoiceItemsEditor from '../components/InvoiceItemsEditor';
+import InvoiceDraftPreview from '../components/InvoiceDraftPreview';
 import { PageLoader } from '../components/Spinner';
 import { useAuth } from '../context/AuthContext';
 
@@ -34,6 +35,7 @@ export default function InvoiceCreate() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [differentTaxDate, setDifferentTaxDate] = useState(false);
   const [tierInfo, setTierInfo] = useState<{ limit: number; invoiced: number } | null>(null);
 
@@ -172,7 +174,7 @@ export default function InvoiceCreate() {
           ...item,
           quantity: Number(item.quantity),
           unitPrice: Number(item.unitPrice),
-          vatRate: item.vatTreatment === 'exempt' ? 0 : Number(item.vatRate ?? formData.vatRate),
+          vatRate: (item.vatTreatment === 'exempt' || item.vatTreatment === 'eu_service') ? 0 : Number(item.vatRate ?? formData.vatRate),
         })),
       };
 
@@ -232,6 +234,9 @@ export default function InvoiceCreate() {
         <div className="h-4 w-px bg-border-strong" />
         <h1 className="text-base font-semibold text-text">{title}</h1>
         <div className="ml-auto flex items-center gap-2">
+          <button type="button" onClick={() => setPreviewOpen(true)} className="btn btn-secondary 2xl:hidden">
+            {t('create.previewSection')}
+          </button>
           <button type="button" onClick={() => navigate('/invoices')} className="btn btn-secondary">
             {t('create.cancel')}
           </button>
@@ -251,12 +256,15 @@ export default function InvoiceCreate() {
           {t('detail.back')}
         </button>
         <h1 className="text-lg font-bold tracking-[-0.02em] text-text">{title}</h1>
+        <button type="button" onClick={() => setPreviewOpen(true)} className="btn btn-secondary ml-auto">
+          {t('create.previewSection')}
+        </button>
       </div>
 
       <form id="invoice-form" onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_280px] gap-4 lg:gap-5">
+        <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,3fr)_minmax(420px,2fr)] gap-5 xl:gap-7 max-w-[1680px] mx-auto items-start">
           {/* Left column */}
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0">
             {/* Client */}
             <div className="card">
               <h2 className="text-[15px] font-semibold text-text mb-4">{t('create.contactSection')}</h2>
@@ -366,31 +374,6 @@ export default function InvoiceCreate() {
               showTotals={false}
             />
 
-            {/* Notes */}
-            <div className="card">
-              <h2 className="text-[15px] font-semibold text-text mb-3">{t('create.notesSection')}</h2>
-              <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                className="input"
-                rows={3}
-                maxLength={300}
-                placeholder={t('create.notesPlaceholder')}
-              />
-              <p className="text-xs text-text-faint mt-1">
-                {t('create.notesCharCount', { count: formData.notes.length })}
-              </p>
-              {/* A statement, not a control — QR is always on the PDF */}
-              <div className="mt-3 pt-3 border-t border-hairline flex items-center gap-2 text-xs text-text-faint">
-                <QrCode className="h-3.5 w-3.5 shrink-0" />
-                <span>{t('create.qrAlwaysIncluded')}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right column */}
-          <div className="space-y-4">
             {/* Totals */}
             <div className="card">
               <div className="space-y-3">
@@ -430,77 +413,42 @@ export default function InvoiceCreate() {
               )}
             </div>
 
-            {/* Preview — a document simulation, deliberately light in both themes */}
-            <div className="card hidden lg:block">
-              <h2 className="text-[15px] font-semibold text-text mb-4">{t('create.previewSection')}</h2>
-              <div className="bg-[#fdfdff] border border-hairline rounded-[12px] p-[22px] text-[#1b1d29]">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-[15px] font-bold">Faktura</p>
-                    <p className="text-[11px] text-[#7a7f99] tabular-nums">
-                      {formatDate(formData.issueDate)} · {formatDate(formData.dueDate)}
-                    </p>
-                  </div>
-                  <img src="/favicon.svg" alt="" className="h-6 w-6 rounded-[6px]" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-4 text-[11px] leading-[1.55]">
-                  <div>
-                    <p className="font-semibold text-[#7a7f99] uppercase text-[10px]">Dodavatel</p>
-                    <p className="font-medium">{user?.name || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-[#7a7f99] uppercase text-[10px]">Odběratel</p>
-                    <p className="font-medium">{selectedClient?.companyName || '—'}</p>
-                    {selectedClient?.address && (
-                      <p className="text-[#5c6079] whitespace-pre-line">{selectedClient.address}</p>
-                    )}
-                    {selectedClient?.ico && <p className="text-[#5c6079]">IČO {selectedClient.ico}</p>}
-                  </div>
-                </div>
-
-                <div className="mt-4 border-t border-[#eef0f6] pt-2">
-                  {items.filter(item => item.description).map((item, i) => (
-                    <div key={i} className="grid grid-cols-[2.4fr_0.6fr_1fr] gap-2 py-1 text-[11px]">
-                      <span className="truncate">{item.description}</span>
-                      <span className="text-right tabular-nums text-[#5c6079]">
-                        {item.quantity} {item.unit}
-                      </span>
-                      <span className="text-right tabular-nums">
-                        {formatCurrency((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}
-                      </span>
-                    </div>
-                  ))}
-                  {vatAmount > 0 && (
-                    <div className="grid grid-cols-[1fr_auto] gap-2 py-1 text-[11px] border-t border-[#eef0f6] mt-1 pt-1.5">
-                      <span className="text-[#5c6079]">{t('create.vat')}</span>
-                      <span className="text-right tabular-nums">{formatCurrency(vatAmount)}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-end justify-between mt-5">
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center justify-center h-[42px] w-[42px] rounded-[6px] bg-white border border-[#eef0f6]">
-                      <QrCode className="h-7 w-7 text-[#1b1d29]" />
-                    </span>
-                    <span className="text-[10px] text-[#8b90a8] leading-tight">
-                      QR platba
-                      <br />
-                      SPAYD
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] text-[#7a7f99]">K úhradě</p>
-                    <p className="text-[17px] font-bold tabular-nums">{formatCurrency(total)}</p>
-                  </div>
-                </div>
+            {/* Notes */}
+            <div className="card">
+              <h2 className="text-[15px] font-semibold text-text mb-3">{t('create.notesSection')}</h2>
+              <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                className="input"
+                rows={3}
+                maxLength={300}
+                placeholder={t('create.notesPlaceholder')}
+              />
+              <p className="text-xs text-text-faint mt-1">
+                {t('create.notesCharCount', { count: formData.notes.length })}
+              </p>
+              {/* A statement, not a control — QR is always on the PDF */}
+              <div className="mt-3 pt-3 border-t border-hairline flex items-center gap-2 text-xs text-text-faint">
+                <QrCode className="h-3.5 w-3.5 shrink-0" />
+                <span>{t('create.qrAlwaysIncluded')}</span>
               </div>
             </div>
-
-            {/* Desktop-only duplicate of submit for the column bottom is unnecessary;
-                mobile uses the sticky bar below */}
           </div>
+
+          <InvoiceDraftPreview
+            payload={JSON.stringify({
+              ...formData,
+              ...(id ? { invoiceId: id } : {}),
+              deliveryDate: differentTaxDate ? formData.deliveryDate : formData.issueDate,
+              vatRate: Number(formData.vatRate),
+              items: items.map(item => ({ ...item, quantity: Number(item.quantity), unitPrice: Number(item.unitPrice) })),
+            })}
+            open={previewOpen}
+            onOpen={() => setPreviewOpen(true)}
+            onClose={() => setPreviewOpen(false)}
+            isEdit={isEdit}
+          />
         </div>
       </form>
 

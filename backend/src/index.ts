@@ -1,3 +1,4 @@
+import { vatFilingRouter } from './routes/vatFilings';
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -80,6 +81,7 @@ app.use('/api/payments', authenticateToken, paymentRouter);
 app.use('/api/settings', authenticateToken, settingsRouter);
 app.use('/api/ares', authenticateToken, aresRouter);
 app.use('/api/ai', authenticateToken, aiRouter);
+app.use('/api/vat-filings', authenticateToken, vatFilingRouter);
 app.use('/api/exports', authenticateToken, exportRouter);
 app.use('/api/expenses', authenticateToken, expenseRouter);
 app.use('/api/recurring-invoices', authenticateToken, recurringRouter);

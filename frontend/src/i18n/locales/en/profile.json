@@ -22,6 +22,7 @@
     "dic": "Tax ID (DIC)",
     "dicNotRequired": "Tax ID is not required for non-VAT payers",
     "vatPayer": "I am a VAT payer",
+    "vatRegistration": "VAT registration and identified person settings",
     "vatPayerHelp": "If you are not a VAT payer, invoices will show \"Non-VAT payer\" instead of Tax ID",
     "address": "Address",
     "bankAccount": "Bank account number",

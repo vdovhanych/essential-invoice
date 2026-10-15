@@ -48,6 +48,12 @@ describe('Profile Component', () => {
     vi.clearAllMocks();
   });
 
+  it('keeps identified-person setup reachable for a nonpayer', () => {
+    renderAt('/profile/company');
+    expect(screen.getByRole('link', { name: 'Nastavení DPH a identifikované osoby' }))
+      .toHaveAttribute('href', '/vat-filings?section=profile');
+  });
+
   it('renders paušální daň section with "Používám paušální daň" checkbox', () => {
     renderAt('/profile/bank');
 
