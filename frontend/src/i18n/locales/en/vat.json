@@ -130,7 +130,7 @@
     "special_document": "Advances, corrective or other special documents are unsupported.",
     "tax_point": "Enter the correct tax point within the confirmed registration.",
     "advance_payment": "Payment precedes the tax point. Advance-payment accounting is required.",
-    "unpaid_adjustment": "An earlier deduction on an overdue unpaid invoice may require a § 74b adjustment. Accountant processing is required.",
+    "unpaid_adjustment": "An earlier deduction on an invoice unpaid by the § 74b deadline, or its later payment, requires accountant review. Check the payment date and deduction adjustments.",
     "unsupported_classification": "Classify the transaction. Unsupported cases must be processed with an accountant.",
     "counterparty": "Specify whether the counterparty is a business or consumer.",
     "eu_identity": "EU services require an explicit EU country and recipient/supplier VAT ID, with recipient liability under § 9(1). Verify VAT registration.",

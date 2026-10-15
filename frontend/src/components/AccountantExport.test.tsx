@@ -5,10 +5,13 @@ import AccountantExport from './AccountantExport';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
 
+const auth = vi.hoisted(() => ({ user: { vatPayer: false as boolean | undefined, vatFilingStatus: null as string | null } }));
+vi.mock('../context/AuthContext', () => ({ useAuth: () => auth }));
 vi.mock('../utils/api', () => ({ api: { download: vi.fn() } }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn() } }));
 beforeEach(() => {
   vi.resetAllMocks();
+  auth.user = { vatPayer: false, vatFilingStatus: null };
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date(2026, 8, 9, 12));
 });
@@ -16,6 +19,7 @@ afterEach(() => vi.useRealTimers());
 const renderExport = () => render(<MemoryRouter><AccountantExport /></MemoryRouter>);
 
 it('opens the dedicated VAT filing workspace from the Settings export entry', () => {
+  auth.user.vatPayer = true;
   render(<MemoryRouter initialEntries={['/settings/exports']}><Routes>
     <Route path="/settings/exports" element={<AccountantExport />} />
     <Route path="/vat-filings" element={<h1>Filing workspace</h1>} />
@@ -25,6 +29,33 @@ it('opens the dedicated VAT filing workspace from the Settings export entry', ()
   fireEvent.click(link);
   expect(screen.getByRole('heading', { name: 'Filing workspace' })).toBeVisible();
   expect(api.download).not.toHaveBeenCalled();
+});
+
+it.each([
+  [true, null, true],
+  [false, 'identified', true],
+  [false, 'nonpayer', false],
+  [false, null, false],
+  [undefined, null, false],
+  [false, 'payer', false],
+] as const)('shows VAT filings for vatPayer=%s, filing status=%s: %s', (vatPayer, vatFilingStatus, visible) => {
+  auth.user = { vatPayer, vatFilingStatus };
+  renderExport();
+  const link = screen.queryByRole('link', { name: 'Otevřít podání DPH' });
+  if (visible) expect(link).toBeVisible();
+  else expect(link).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Stáhnout ZIP' })).toBeEnabled();
+});
+
+it('updates VAT filing visibility when the authenticated profile changes', () => {
+  const view = renderExport();
+  expect(screen.queryByRole('link', { name: 'Otevřít podání DPH' })).not.toBeInTheDocument();
+  auth.user.vatFilingStatus = 'identified';
+  view.rerender(<MemoryRouter><AccountantExport /></MemoryRouter>);
+  expect(screen.getByRole('link', { name: 'Otevřít podání DPH' })).toBeVisible();
+  auth.user.vatFilingStatus = 'nonpayer';
+  view.rerender(<MemoryRouter><AccountantExport /></MemoryRouter>);
+  expect(screen.queryByRole('link', { name: 'Otevřít podání DPH' })).not.toBeInTheDocument();
 });
 
 it('downloads the chosen accounting period and basis through the authenticated API', async () => {

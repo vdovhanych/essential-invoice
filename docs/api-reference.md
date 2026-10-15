@@ -18,6 +18,8 @@ Requests share a limit of **1,000 requests per IP per 15 minutes**, except `/api
 - `POST /api/auth/me/logo` - Upload user logo (multipart form data)
 - `DELETE /api/auth/me/logo` - Delete user logo
 
+Both `GET /api/auth/me` and `PUT /api/auth/me` responses include read-only `vatFilingStatus` (`payer`, `identified`, `nonpayer`, or `null` before taxpayer setup), alongside `vatPayer`. This exposes only the saved registration status, not the taxpayer profile. Update that status through `/api/vat-filings/profile`; ordinary profile updates preserve it. The Settings VAT filing card is visible when `vatPayer` is true or `vatFilingStatus` is `identified`. Accountant ZIP exports remain available to all users.
+
 ## Clients
 
 - `GET /api/clients` - List all clients (each row also carries `invoiceCount`, `totalPaid`, `totalInvoiced` and `openBalance`, the latter two normalised to CZK for the contacts ranking)
@@ -78,11 +80,15 @@ The DPH preparation files use the same document selection and date basis as the 
 
 DPH CZK conversion uses the stored positive EUR/CZK rate (1 for CZK), rounding base and VAT separately per invoice line as in ISDOC, or per expense rate bucket. Summary amounts sum the rounded register amounts, preserving recorded VAT rather than recalculating tax from rates. Missing/invalid rates or malformed groups retain original data but leave CZK amounts blank and exclude the group from CZK sums. Affected summary rows have `czk_totals_status=incomplete` and an `excluded_group_count`; if no group was convertible, sums are blank, not zero. `complete` describes conversion coverage only, not filing readiness. Stored-total mismatches are flagged for review; the register still shows the recorded bases and VAT. Existing invoice/ISDOC validation continues to abort the ZIP on fatal errors, including missing issued-invoice EUR rates. DPH reports do not bypass it.
 
+Expense DPH rows use the stored `vat_breakdown` buckets, preserving mixed rates and supplier-recorded rounding. Only legacy expenses without a breakdown fall back to the document-level rate, base and VAT.
+
 The manifest is format version 2 and includes `dphPreparation.issueCount`, `excludedGroupCount`, `inputVatDeductibility: "unreviewed"`, and `filingXml: false`. Empty periods still include all DPH files with CSV headers and zero document counts. Review advances, corrective documents, foreign transactions and transactions outside the application separately; the pack does not model them as filing data.
 
 ISDOC uses the official [6.0.2 schema](https://isdoc.github.io/), ordinary invoice document type, CZK local amounts and EUR foreign amounts when applicable. It requires stored totals to reconcile and a valid exchange rate for EUR invoices; failure aborts the package with a specific error rather than silently omitting a document. The standard's supply-code field and VAT note carry domestic reverse charge and exemption reasons. Unknown structured address fields are left empty while preserving the existing free-form address; supplier/client details come from the current profiles, as in PDFs. Downloads do not alter invoice status or send email.
 
-Errors: `400` invalid dates/tax data, missing EUR rate or inconsistent invoice totals; `404` invoice absent/not owned; `409` attachment changed during export; `413` selection too large; `429` another export running. Standard authentication applies to every download; files are sent with `Cache-Control: no-store`.
+Expense attachments are fetched only if the expense's database row version still matches the selected summary. A concurrent edit or deletion aborts the export with `409`; retry to export the updated expense. This prevents combining old expense totals with a replacement receipt.
+
+Errors: `400` invalid dates/tax data, missing EUR rate or inconsistent invoice totals; `404` invoice absent/not owned; `409` expense changed before its attachment was fetched; `413` selection too large; `429` another export running. Standard authentication applies to every download; files are sent with `Cache-Control: no-store`.
 
 ## Recurring Invoices
 
@@ -165,6 +171,10 @@ Profile fields: `status` (`nonpayer`, `payer`, `identified`), `personType` (`ind
 Document review fields: `classification` (`domestic`, `domestic_reverse_charge`, `eu_service`, `nonpayer_domestic`, `unsupported`), `country`, `vatId`, `counterpartyType` (`business`, `consumer`), `documentKind` (`ordinary`, `advance`, `correction`, `other`), `taxPoint`, `receivedDate`, `reference`, `deduction` (`unknown`, `full`, `none`, `partial`), `deductibleTax` (CZK), `claimPeriod`, `reverseChargeCode`, `exchangeRate`, `exchangeRateDate`, `exchangeRateSource` (`cnb`, `recorded`) and current source `fingerprint`. Dates use `YYYY-MM-DD` or empty strings where inapplicable. The server sets `reviewedFingerprint`; it does not accept it as proof of review from the caller. Unsupported choices save successfully but produce actionable blockers.
 
 Malformed input returns 400, absent or other-user records 404, stale source/preview 409, and blocked filing or mismatched historical breakdown totals 422. Reviews distinguish `blocker` and `warning`, include document/field references, calculated return rows, statement sections and reconciliation checks. XML schema failures block generation. Saved validation identifies local XSD validation separately from `epoImportVerified: false`; it never asserts submission.
+
+The `unpaid_adjustment` blocker checks earlier domestic deductions against the §74b deadline and payment date, including historical periods and the later repayment period. Quarterly payers may settle through the applicable quarter end. Paid records without a valid payment date remain flagged; EU-service and domestic reverse-charge purchases are excluded from this check. See [the correction limitations](vat-filings.md#corrections-and-explicit-limitations).
+
+Issued invoices with payments before their tax point are included for review in the payment period, even if the supply is later. Reviewed ordinary invoices produce `advance_payment` blockers; unreviewed sources must first be reviewed. Unknown dates on positive linked payments also require review rather than being excluded by period selection. These payments are not converted into supported advance-tax rows.
 
 ### Expense recorded VAT
 

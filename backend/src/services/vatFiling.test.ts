@@ -384,3 +384,111 @@ it('blocks linked partial advance payments and payments with unknown dates', () 
     );
   }
 });
+
+describe('advance payment period selection', () => {
+  function futureSupply(patch: Partial<FilingDocument> = {}) {
+    const d = doc({ deliveryDate: '2026-10-01', ...patch });
+    if (d.metadata) d.metadata.taxPoint = '2026-10-01';
+    return d;
+  }
+
+  it.each(['DPHDP3', 'DPHKH1'] as const)('blocks %s in the receipt month for a future supply', (type) => {
+    const d = futureSupply({ paidAt: '2026-08-15', status: 'paid' });
+    const r = review([d], type);
+    expect(r.documents.map(d => d.id)).toEqual([d.id]);
+    expect(r.issues).toContainEqual(expect.objectContaining({ code: 'advance_payment', severity: 'blocker' }));
+    expect(r.rows[1]?.tax || 0).toBe(0);
+    expect(r.statement).toEqual([]);
+  });
+
+  it('includes a partial receipt even if final payment is in the supply month', () => {
+    const d = futureSupply({ paidAt: '2026-10-15', status: 'paid', payments: [{ date: '2026-08-15', amount: 100 }] });
+    expect(review([d]).issues).toContainEqual(expect.objectContaining({ code: 'advance_payment' }));
+  });
+
+  it('blocks the receipt quarter before a supply in the next quarter', () => {
+    const d = futureSupply({ payments: [{ date: '2026-09-30', amount: 100 }] });
+    const r = reviewFiling({ ...snapshot([d]), profile: { ...profile, frequency: 'quarterly' } }, '2026-Q3', 'DPHDP3');
+    expect(r.issues).toContainEqual(expect.objectContaining({ code: 'advance_payment' }));
+  });
+
+  it.each(['', 'invalid'])('requires review of a future invoice with an unknown payment date (%s)', (date) => {
+    const d = futureSupply({ payments: [{ date, amount: 100 }] });
+    expect(review([d]).issues).toContainEqual(expect.objectContaining({ code: 'advance_payment' }));
+  });
+
+  it.each([
+    { payments: [{ date: '2026-09-01', amount: 100 }] },
+    { payments: [{ date: '2026-08-15', amount: 0 }] },
+    { payments: [{ date: '2026-08-15', amount: -100 }] },
+    { direction: 'received' as const, paidAt: '2026-08-15' },
+  ])('does not pull unrelated future supplies into the period: %j', (patch) => {
+    expect(review([futureSupply(patch)]).documents).toEqual([]);
+  });
+
+  it('still requires source review when the future supply has not been classified', () => {
+    const d = futureSupply({ payments: [{ date: '2026-08-15', amount: 100 }], metadata: null });
+    expect(review([d]).issues).toContainEqual(expect.objectContaining({ code: 'review_document' }));
+  });
+});
+
+describe('overdue deduction payment timing', () => {
+  function expense() {
+    const d = doc({
+      direction: 'received', issueDate: '2026-01-01', deliveryDate: '2026-01-01',
+      dueDate: '2026-01-15', status: 'unpaid',
+    });
+    Object.assign(d.metadata!, {
+      taxPoint: '2026-01-01', receivedDate: '2026-01-01',
+      deduction: 'full', deductibleTax: 2100, claimPeriod: '2026-01',
+    });
+    return d;
+  }
+
+  it.each([
+    ['2026-06', 'unpaid', '', false],
+    ['2026-07', 'unpaid', '', true],
+    ['2026-07', 'paid', '2026-07-31', false],
+    ['2026-07', 'paid', '2026-08-10', true],
+    ['2026-08', 'paid', '2026-08-10', true],
+    ['2026-09', 'paid', '2026-08-10', false],
+    ['2026-07', 'paid', '', true],
+    ['2026-07', 'paid', 'invalid', true],
+    ['2026-Q2', 'unpaid', '', false],
+    ['2026-Q3', 'unpaid', '', true],
+    ['2026-Q3', 'paid', '2026-08-10', false],
+    ['2026-Q3', 'paid', '2026-09-30', false],
+    ['2026-Q3', 'paid', '2026-10-01', true],
+    ['2026-Q4', 'paid', '2026-10-01', true],
+  ] as const)('checks %s with status %s and payment date "%s"', (period, status, paidAt, blocked) => {
+    const d = expense();
+    Object.assign(d, { status, paidAt });
+    const s = snapshot([d]);
+    if (period.includes('Q')) {
+      s.profile!.frequency = 'quarterly';
+      d.metadata!.claimPeriod = '2026-Q1';
+    }
+    const r = reviewFiling(s, period, 'DPHDP3');
+    expect(r.issues.filter(i => i.severity === 'blocker').map(i => i.code))
+      .toEqual(blocked ? ['unpaid_adjustment'] : []);
+    if (blocked) expect(() => generateFilingXml(r, s.profile!, '2026-10-13')).toThrow('blocked');
+  });
+
+  it.each(['eu_service', 'domestic_reverse_charge'] as const)('excludes overdue %s purchases from §74b', classification => {
+    const d = expense();
+    Object.assign(d, { tax: 0, total: 10000, buckets: [{ rate: 21, base: 10000, tax: 0 }] });
+    Object.assign(d.metadata!, {
+      classification,
+      ...(classification === 'eu_service'
+        ? { country: 'DE', vatId: 'DE123456789' }
+        : { reverseChargeCode: '4' }),
+    });
+    const s = snapshot([d]);
+    const original = reviewFiling(s, '2026-01', 'DPHDP3');
+    expect(original.issues.filter(i => i.severity === 'blocker')).toEqual([]);
+    expect(original.rows[43].tax).toBe(2100);
+    const later = reviewFiling(s, '2026-07', 'DPHDP3');
+    expect(later.issues.filter(i => i.severity === 'blocker')).toEqual([]);
+    expect(later.documents).toEqual([]);
+  });
+});

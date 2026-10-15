@@ -59,6 +59,7 @@
       "aiExtract": "Fill form from document (AI)",
       "aiExtracting": "Reading document...",
       "aiExtractSuccess": "Form pre-filled from the document — please verify the values",
+      "aiExtractMixedVatPreserved": "Document details filled in. Amounts, currency and the mixed-rate VAT breakdown were preserved — please review them manually.",
       "aiExtractFailed": "Failed to extract data from the document",
       "remove": "Remove",
       "fileHint": "PDF, JPG or PNG · up to 5 MB"

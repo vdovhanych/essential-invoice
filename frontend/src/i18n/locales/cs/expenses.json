@@ -59,6 +59,7 @@
       "aiExtract": "Vyplnit formulář z dokladu (AI)",
       "aiExtracting": "Čtu doklad...",
       "aiExtractSuccess": "Formulář předvyplněn z dokladu — zkontrolujte prosím hodnoty",
+      "aiExtractMixedVatPreserved": "Údaje předvyplněny z dokladu. Částky, měna a rozpis více sazeb DPH zůstaly zachovány — zkontrolujte je prosím ručně.",
       "aiExtractFailed": "Nepodařilo se vytěžit data z dokladu",
       "remove": "Odebrat",
       "fileHint": "PDF, JPG nebo PNG · do 5 MB"

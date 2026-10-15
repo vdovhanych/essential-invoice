@@ -34,8 +34,8 @@ export async function generateAccountantExport(userId: string, period: ReturnTyp
   const invoices = await query(`SELECT id FROM invoices WHERE user_id = $1
     AND ${dateColumn} BETWEEN $2::date AND $3::date AND status IN ('sent', 'paid', 'overdue')
     ORDER BY issue_date, id LIMIT 501`, [userId, from, to]);
-  const expenses = await query(`SELECT e.id, e.expense_number, e.supplier_invoice_number, e.status, e.currency,
-    e.issue_date, e.due_date, e.delivery_date, e.amount, e.vat_rate, e.vat_amount, e.total,
+  const expenses = await query(`SELECT e.id, e.xmin::text AS row_version, e.expense_number, e.supplier_invoice_number, e.status, e.currency,
+    e.issue_date, e.due_date, e.delivery_date, e.amount, e.vat_rate, e.vat_amount, e.vat_breakdown, e.total,
     e.exchange_rate, e.total_czk, e.paid_at, e.description, e.notes, e.file_name,
     COALESCE(length(e.file_data), 0) AS file_size,
     c.company_name AS supplier_name, c.ico AS supplier_ico, c.dic AS supplier_dic
@@ -87,8 +87,10 @@ export async function generateAccountantExport(userId: string, period: ReturnTyp
   for (const e of expenses.rows) {
     let attachment = '';
     if (Number(e.file_size) > 0) {
-      const result = await query('SELECT file_data FROM expenses WHERE id = $1 AND user_id = $2', [e.id, userId]);
-      if (!result.rows[0]?.file_data) throw new ExportError('An expense attachment changed during export; try again', 409);
+      // xmin changes on every row update, including VAT edits that do not touch updated_at.
+      // Check it in the attachment query so totals and receipt cannot come from different revisions.
+      const result = await query('SELECT file_data FROM expenses WHERE id = $1 AND user_id = $2 AND xmin::text = $3', [e.id, userId, e.row_version]);
+      if (!result.rows[0]?.file_data) throw new ExportError('An expense changed during export; try again', 409);
       attachment = `received/${safeFilename(e.expense_number)}_${e.id}_${safeFilename(e.file_name || 'attachment')}`;
       add(attachment, Buffer.from(result.rows[0].file_data, 'base64'));
     }
