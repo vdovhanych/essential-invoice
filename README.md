@@ -45,6 +45,8 @@ Open **Settings → Exports** for separate VAT filing XML and accountant ZIP car
 
 Every accountant ZIP also includes **DPH preparation**: CZK summaries by VAT rate/treatment, a document register linked to supporting files, and a bilingual completeness/review report. Mixed-rate expenses retain their recorded VAT breakdown and supplier rounding. Missing conversions remain blank and affected totals are marked incomplete. Received VAT is recorded VAT only, not a confirmed deduction; the pack does not calculate VAT payable. For DPH preparation, consider selecting by tax-point date and have your accountant confirm expense deduction periods and transaction classifications.
 
+**Filing support limits:** XML generation covers the documented 2026 cases for Czech resident individuals filing for themselves, using CZK/EUR documents. It is not a general tax filing system: advances, supplementary/subsequent filings, partial deductions, most special regimes and other excluded cases require accountant processing. Read the [supported-case matrix](docs/vat-filings.md#supported-case-matrix) and [explicit limitations](docs/vat-filings.md#corrections-and-explicit-limitations) before relying on an export. Some conditions depend on the user's confirmation and cannot be detected automatically.
+
 ## Quick Start
 
 ### Prerequisites

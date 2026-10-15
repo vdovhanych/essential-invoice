@@ -38,7 +38,7 @@ Unmodified official XSDs, a source/version/SHA-256 manifest and code-list snapsh
 
 ## Supported-case matrix
 
-All cases require ordinary positive documents, explicit classification and registration unchanged throughout the selected period. Mixed **rates** are supported; mixed **tax regimes on one document** are blocked.
+All cases require ordinary positive documents, explicit classification and registration unchanged throughout the selected period. Mixed **rates** are supported; mixed **tax regimes on one document** are unsupported. Use the `unsupported` classification for such documents; validation also rejects issued line treatments that conflict with the selected classification. Only CZK and EUR documents are supported; EUR requires an explicitly reviewed conversion to CZK.
 
 | Case | Taxpayer | Return rows | KH | SH | Selection |
 | --- | --- | --- | --- | --- | --- |
@@ -76,7 +76,11 @@ The following require accountant processing and are not mapped to ordinary rows:
 
 Earlier domestic purchases with a full deduction are checked for the six-month overdue adjustment under §74b. This check excludes EU-service and domestic reverse-charge purchases. Payment is assessed against the end of the sixth month after the due-date month, or the containing quarter's end for quarterly payers. A later payment does not clear a historical blocker: the adjustment period through the repayment period remains blocked because both deduction reversal and subsequent restoration require accountant processing. Periods after repayment are not blocked by that expense. A paid expense with a missing/invalid payment date remains flagged for review. See [GFŘ guidance, pages 2–3](https://financnisprava.gov.cz/assets/cs/prilohy/d-seznam-dani/Informace_k_paragrafu_74b_ZDPH.pdf).
 
-Only Czech resident **individuals filing for themselves** are supported. Legal entities, groups, representatives, nonresident identities and registration changes inside a period are blocked. The taxpayer profile does not maintain a complete registration-history ledger. Nonpayer special liabilities are not implemented. Claims originating before 2026 and split claims across periods are unsupported. The app cannot detect transactions never entered into it: complete the ledger and disclose special cases rather than selecting an ordinary classification to bypass a blocker.
+Only Czech resident **individuals filing for themselves** are supported. Legal entities, groups, representatives, nonresident identities and registration changes inside a period are outside scope. Selecting a legal person or a registration effective date after the period starts produces a blocker. Residency, representation and complete registration history are not modeled, so the app cannot automatically detect every out-of-scope taxpayer situation. The user must confirm these conditions before using the workspace. Nonpayer special liabilities are not implemented. Claims originating before 2026 and split claims across periods are unsupported. The app cannot detect transactions never entered into it: complete the ledger and disclose special cases rather than selecting an ordinary classification to bypass a blocker.
+
+VAT ID checks validate format and applicable local checksum rules; they do not query VIES or confirm actual registration. A blocker-free review or successful XSD validation does not establish that the user's classification, deduction entitlement or ledger is complete and correct. Import and check the XML in EPO before submission, and use an accountant for cases outside the supported matrix.
+
+AI expense extraction returns a single rate, not a supplier-recorded mixed-rate breakdown. Existing mixed-rate amounts and currency are preserved with a notice; review them manually. Single-rate extraction refreshes the breakdown when amount or rate changes and preserves recorded rounding when both are unchanged. Extraction does not confirm tax classification or deduction eligibility.
 
 ## Persistence and security
 
