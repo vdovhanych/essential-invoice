@@ -236,3 +236,15 @@ Settings → Exports was also checked with a synthetic profile in Czech/English,
 Regression coverage now includes VAT-card visibility for payers/identified persons, mixed-rate expense data in accountant ZIPs, overdue deduction payment timing and reverse-charge exclusions, advance receipts before a later supply period, expense AI extraction and rate synchronization, and rejection of changed expense revisions before loading attachments. The concurrency tests simulate database query results; they are not live PostgreSQL concurrency tests.
 
 On 15 October, the full suites passed with 370 backend tests and 247 frontend tests. The optional PostgreSQL migration test was skipped. The frontend production build and staged diff checks passed, with existing font-resolution and Browserslist warnings. Earlier checks of these fixes exercised the actual export/profile and expense-editor components with synthetic API data in Czech/English, light/dark themes and desktop/mobile layouts, including keyboard interaction. These follow-up checks did not repeat the September EPO smoke tests or submit any filings.
+
+### Dashboard overdue regression
+
+The first dashboard request refreshes this user's sent invoices whose due date is
+before today, before reading both statistics and recent invoices. Due-today,
+future, draft, paid, cancelled and other users' invoices are not changed.
+
+The PostgreSQL regression runs in its own disposable CI service. To run locally,
+create a **new disposable localhost database** named `essential_dashboard_test`
+and run `DASHBOARD_TEST_DATABASE_URL=postgresql://USER:PASSWORD@127.0.0.1:PORT/essential_dashboard_test bun run test src/routes/dashboard.integration.test.ts`
+from `backend/`. It initializes the schema and removes only its own synthetic
+users afterwards. It is skipped without that variable; never use application data.

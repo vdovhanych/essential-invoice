@@ -30,6 +30,7 @@ describe('Dashboard Routes', () => {
 
   describe('GET /dashboard', () => {
     it('should read paušální daň from users table, not settings', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [] }); // Update overdue
       // Stats query
       mockQuery.mockResolvedValueOnce({
         rows: [{
@@ -46,8 +47,6 @@ describe('Dashboard Routes', () => {
       mockQuery.mockResolvedValueOnce({ rows: [] });
       // Yearly expenses
       mockQuery.mockResolvedValueOnce({ rows: [{ total_expenses: '0' }] });
-      // Update overdue
-      mockQuery.mockResolvedValueOnce({ rows: [] });
       // Unmatched payments
       mockQuery.mockResolvedValueOnce({ rows: [{ count: '0' }] });
       // Paušální daň from users table
@@ -80,6 +79,7 @@ describe('Dashboard Routes', () => {
     });
 
     it('should handle user without paušální daň enabled', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [] }); // Update overdue
       // Stats query
       mockQuery.mockResolvedValueOnce({
         rows: [{
@@ -96,8 +96,6 @@ describe('Dashboard Routes', () => {
       mockQuery.mockResolvedValueOnce({ rows: [] });
       // Yearly expenses
       mockQuery.mockResolvedValueOnce({ rows: [{ total_expenses: '0' }] });
-      // Update overdue
-      mockQuery.mockResolvedValueOnce({ rows: [] });
       // Unmatched payments
       mockQuery.mockResolvedValueOnce({ rows: [{ count: '0' }] });
       // Paušální daň - not enabled
@@ -121,6 +119,7 @@ describe('Dashboard Routes', () => {
     });
 
     it('buckets expenses by payment date in CZK, matching how revenue is aggregated', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [] }); // Update overdue
       mockQuery.mockResolvedValueOnce({
         rows: [{
           draft_count: '0', sent_count: '0', paid_count: '0',
@@ -132,7 +131,6 @@ describe('Dashboard Routes', () => {
       mockQuery.mockResolvedValueOnce({ rows: [] }); // Monthly revenue
       mockQuery.mockResolvedValueOnce({ rows: [] }); // Monthly expenses
       mockQuery.mockResolvedValueOnce({ rows: [{ total_expenses: '0' }] });
-      mockQuery.mockResolvedValueOnce({ rows: [] }); // Update overdue
       mockQuery.mockResolvedValueOnce({ rows: [{ count: '0' }] });
       mockQuery.mockResolvedValueOnce({
         rows: [{ pausalni_dan_enabled: false, pausalni_dan_tier: 1, pausalni_dan_limit: 1000000 }]
@@ -142,14 +140,14 @@ describe('Dashboard Routes', () => {
       const response = await request(app).get('/dashboard');
       expect(response.status).toBe(200);
 
-      const monthlyExpensesQuery = mockQuery.mock.calls[3][0];
+      const monthlyExpensesQuery = mockQuery.mock.calls[4][0];
       // Same date basis as revenue, so the two series sit on one timeline
       expect(monthlyExpensesQuery).toContain("date_trunc('month', COALESCE(paid_at, issue_date))");
       // EUR expenses are converted, like EUR invoices are
       expect(monthlyExpensesQuery).toContain('total_czk');
 
       // No rolling window on either series — the chart's year picker needs whole years
-      expect(mockQuery.mock.calls[2][0]).not.toContain('INTERVAL');
+      expect(mockQuery.mock.calls[3][0]).not.toContain('INTERVAL');
       expect(monthlyExpensesQuery).not.toContain('INTERVAL');
     });
   });
