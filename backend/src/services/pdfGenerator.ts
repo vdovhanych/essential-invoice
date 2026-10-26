@@ -3,11 +3,26 @@ import QRCode from 'qrcode';
 import { query } from '../db/init';
 import { t, formatDateLocale, formatCurrencyLocale } from '../i18n/translations';
 
-// pdfmake is a CJS module – require it
+// Use the server entry point: the browser bundle requires Web Workers for
+// PNG decoding in pdfmake 0.3.12 (including payment QR codes and logos).
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const pdfmake = require('pdfmake/build/pdfmake.js');
+const pdfmake = require('pdfmake');
 const vfsFonts = require('pdfmake/build/vfs_fonts.js');
-pdfmake.addVirtualFileSystem(vfsFonts);
+for (const [filename, data] of Object.entries(vfsFonts)) {
+  pdfmake.virtualfs.writeFileSync(filename, Buffer.from(data as string, 'base64'));
+}
+pdfmake.addFonts({
+  Roboto: {
+    normal: 'Roboto-Regular.ttf',
+    bold: 'Roboto-Medium.ttf',
+    italics: 'Roboto-Italic.ttf',
+    bolditalics: 'Roboto-MediumItalic.ttf',
+  },
+});
+// All resources are embedded. Switching to the server renderer must not
+// enable filesystem reads or external resource downloads from invoice data.
+pdfmake.setLocalAccessPolicy(() => false);
+pdfmake.setUrlAccessPolicy(() => false);
 
 import type { TDocumentDefinitions, Content, TableCell, Column } from 'pdfmake/interfaces';
 
