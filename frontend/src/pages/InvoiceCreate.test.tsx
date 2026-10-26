@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import InvoiceCreate from './InvoiceCreate';
+import { toast } from 'sonner';
 
 vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
@@ -64,6 +65,7 @@ function renderPage(path = '/invoices/new') {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
+        <Route path="/invoices" element={<h1>Saved invoices</h1>} />
         <Route path="/invoices/new" element={<InvoiceCreate />} />
         <Route path="/invoices/:id/edit" element={<InvoiceCreate />} />
       </Routes>
@@ -77,6 +79,7 @@ describe('InvoiceCreate', () => {
     authUser.vatPayer = true;
     mockGet.mockReset();
     mockPost.mockReset();
+    mockPost.mockResolvedValue({ id: 'created-invoice' });
     setupApi();
   });
 
@@ -101,9 +104,7 @@ describe('InvoiceCreate', () => {
     expect(screen.getByRole('combobox', { name: 'DPH' })).toHaveValue('0');
   });
 
-  it('uses the issue date unless a different tax-point date is enabled', async () => {
-    // Keep the form mounted while checking both payloads.
-    mockPost.mockImplementation(() => new Promise(() => {}));
+  it.each([true, false])('submits the selected tax-point date only while enabled (%s)', async (differentTaxDate) => {
     renderPage();
     await screen.findByLabelText('Popis *');
     const override = screen.getByRole('checkbox', { name: 'Jiné datum zdanitelného plnění' });
@@ -111,15 +112,46 @@ describe('InvoiceCreate', () => {
     fireEvent.change(screen.getByLabelText('Vyberte kontakt *'), { target: { value: 'client-1' } });
     fireEvent.change(screen.getByLabelText('Popis *'), { target: { value: 'Služby' } });
     fireEvent.change(screen.getByLabelText('Cena za jednotku *'), { target: { value: '100' } });
-    fireEvent.click(override);
-    const taxDate = screen.getByLabelText('Datum zdanitelného plnění');
-    fireEvent.change(taxDate, { target: { value: '2026-08-31' } });
-    fireEvent.submit(document.getElementById('invoice-form')!);
-    await waitFor(() => expect(mockPost).toHaveBeenLastCalledWith('/invoices', expect.objectContaining({ deliveryDate: '2026-08-31' })));
-    fireEvent.click(override);
     fireEvent.change(screen.getByLabelText('Datum vystavení *'), { target: { value: '2026-09-02' } });
-    fireEvent.submit(document.getElementById('invoice-form')!);
-    await waitFor(() => expect(mockPost).toHaveBeenLastCalledWith('/invoices', expect.objectContaining({ deliveryDate: '2026-09-02' })));
+    fireEvent.click(override);
+    fireEvent.change(screen.getByLabelText('Datum zdanitelného plnění'), { target: { value: '2026-08-31' } });
+    if (!differentTaxDate) fireEvent.click(override);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Vytvořit fakturu' })[0]);
+    expect(await screen.findByRole('heading', { name: 'Saved invoices' })).toBeInTheDocument();
+    expect(mockPost).toHaveBeenCalledExactlyOnceWith('/invoices', expect.objectContaining({
+      issueDate: '2026-09-02', deliveryDate: differentTaxDate ? '2026-08-31' : '2026-09-02',
+    }));
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('keeps edits after a failed save, prevents repeated clicks while pending, and retries once', async () => {
+    let rejectSave!: (error: Error) => void;
+    mockPost.mockImplementationOnce(() => new Promise((_, reject) => { rejectSave = reject; }));
+    renderPage();
+    await screen.findByLabelText('Popis *');
+    fireEvent.change(screen.getByLabelText('Vyberte kontakt *'), { target: { value: 'client-1' } });
+    fireEvent.change(screen.getByLabelText('Popis *'), { target: { value: 'Konzultace' } });
+    fireEvent.change(screen.getByLabelText('Cena za jednotku *'), { target: { value: '100' } });
+    const buttons = screen.getAllByRole('button', { name: 'Vytvořit fakturu' });
+    fireEvent.click(buttons[0]);
+    for (const button of buttons) {
+      expect(button).toBeDisabled();
+      fireEvent.click(button);
+    }
+    expect(mockPost).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('heading', { name: 'Saved invoices' })).not.toBeInTheDocument();
+    await act(async () => rejectSave(new Error('Save unavailable')));
+    expect(toast.error).toHaveBeenCalledWith('Save unavailable');
+    expect(screen.getByLabelText('Popis *')).toHaveValue('Konzultace');
+    expect(screen.getByLabelText('Cena za jednotku *')).toHaveValue(100);
+    expect(screen.queryByRole('heading', { name: 'Saved invoices' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Cena za jednotku *'), { target: { value: '250' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Vytvořit fakturu' })[0]);
+    expect(await screen.findByRole('heading', { name: 'Saved invoices' })).toBeInTheDocument();
+    expect(mockPost).toHaveBeenCalledTimes(2);
+    expect(mockPost).toHaveBeenLastCalledWith('/invoices', expect.objectContaining({
+      items: [expect.objectContaining({ description: 'Konzultace', unitPrice: 250, vatRate: 21 })],
+    }));
   });
 
   it('shows the tier impact note recomputed from the items', async () => {
@@ -170,6 +202,8 @@ describe('InvoiceCreate', () => {
     await waitFor(() => expect(mockPost).toHaveBeenCalledWith('/invoices', expect.objectContaining({
       items: [expect.objectContaining({ vatRate: 0, vatTreatment: 'exempt', vatReason: '§ 57', unitPrice: 300 })],
     })));
+    expect(await screen.findByRole('heading', { name: 'Saved invoices' })).toBeInTheDocument();
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it('keeps historical VAT and a different tax date visible when a non-VAT payer edits an invoice', async () => {
@@ -202,6 +236,8 @@ describe('InvoiceCreate', () => {
     await waitFor(() => expect(mockPost).toHaveBeenCalledWith('/invoices', expect.objectContaining({
       items: [expect.objectContaining({ vatRate: 19.5, vatTreatment: 'standard', vatCode: '', vatReason: '' })],
     })));
+    expect(await screen.findByRole('heading', { name: 'Saved invoices' })).toBeInTheDocument();
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it('renders the QR always-included statement, not a toggle', async () => {

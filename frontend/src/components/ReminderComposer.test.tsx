@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ReminderComposer from './ReminderComposer';
+import { toast } from 'sonner';
 
 vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
@@ -73,6 +74,30 @@ describe('ReminderComposer', () => {
     await waitFor(() =>
       expect(onSend).toHaveBeenCalledWith('Moje verze', 'Dobrý den…')
     );
+  });
+
+  it('recovers from a draft failure without sending and disables duplicate sends until completion', async () => {
+    mockDraftReminder.mockRejectedValueOnce(new Error('Draft unavailable'));
+    let finishSend!: () => void;
+    const onSend = vi.fn(() => new Promise<void>(resolve => { finishSend = resolve; }));
+    const { onClose } = renderComposer({ onSend });
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Draft unavailable'));
+    expect(screen.getByRole('button', { name: /Odeslat připomínku/ })).toBeDisabled();
+    expect(onSend).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Vytvořit jiný návrh' }));
+    const subject = await screen.findByDisplayValue('Připomínka');
+    fireEvent.change(subject, { target: { value: '   ' } });
+    expect(screen.getByRole('button', { name: /Odeslat připomínku/ })).toBeDisabled();
+    fireEvent.change(subject, { target: { value: 'Opravený předmět' } });
+    fireEvent.change(screen.getByDisplayValue('Dobrý den…'), { target: { value: 'Opravená zpráva' } });
+    const send = screen.getByRole('button', { name: /Odeslat připomínku/ });
+    fireEvent.click(send);
+    expect(send).toBeDisabled();
+    fireEvent.click(send);
+    expect(onSend).toHaveBeenCalledExactlyOnceWith('Opravený předmět', 'Opravená zpráva');
+    expect(onClose).not.toHaveBeenCalled();
+    await act(async () => finishSend());
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('never sends on its own — it only drafts', async () => {

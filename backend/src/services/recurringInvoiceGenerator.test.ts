@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock the database query function and pool
 const { mockQuery, mockClientQuery, mockClientRelease } = vi.hoisted(() => ({
@@ -56,6 +56,8 @@ describe('Recurring Invoice Generator', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+
+  afterEach(() => { vi.useRealTimers(); });
 
   const baseTemplate = {
     id: 'ri-1',
@@ -271,6 +273,8 @@ describe('Recurring Invoice Generator', () => {
   });
 
   it('should use fresh dates (today) for generated invoices', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-17T12:00:00Z'));
     mockIdempotencyCheckPass();
     mockQuery.mockResolvedValueOnce({
       rows: [{ description: 'Work', quantity: '1.00', unit: 'ks', unit_price: '100.00', sort_order: 0 }]
@@ -285,8 +289,7 @@ describe('Recurring Invoice Generator', () => {
     await generateInvoiceFromRecurring(baseTemplate);
 
     const insertParams = mockQuery.mock.calls[3][1];
-    const today = new Date().toISOString().split('T')[0];
-    // issueDate should be today
-    expect(insertParams).toContain(today);
+    // Fixed clock avoids a midnight race and a circular expectation from the live clock.
+    expect(insertParams[5]).toBe('2026-04-17');
   });
 });
