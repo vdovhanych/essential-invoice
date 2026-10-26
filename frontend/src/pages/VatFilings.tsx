@@ -5,7 +5,7 @@ import {
   filingPeriods,
 } from '../utils/vatFilingForm';
 import { useAuth } from '../context/AuthContext';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -141,7 +141,9 @@ export default function VatFilings() {
   useEffect(() => {
     void load().catch(reportError);
   }, []);
-  useEffect(() => {
+  // Initialize before the editor becomes interactive; a passive effect can
+  // overwrite a first edit made immediately after the document appears.
+  useLayoutEffect(() => {
     if (selected) {
       setMetadata({
         ...emptyMetadata,
