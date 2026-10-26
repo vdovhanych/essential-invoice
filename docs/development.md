@@ -3,6 +3,7 @@
 ## Prerequisites
 
 - [Bun](https://bun.sh/) runtime
+- Node.js 22.12+ on the 22.x line, 24.x, or 26+ for Vitest 5 ([supported engines](https://github.com/vitest-dev/vitest/blob/v5.0.0/packages/vitest/package.json)); Bun installs dependencies and invokes the test script, but the Vitest executable uses Node.js
 - Docker and Docker Compose (for PostgreSQL)
 - `xmllint` for ISDOC schema tests (included on macOS; `sudo apt-get install libxml2-utils` on Debian/Ubuntu)
 
