@@ -7,6 +7,14 @@ export const dashboardRouter: ReturnType<typeof Router> = Router();
 // Get dashboard statistics
 dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
   try {
+    // Refresh statuses before reading statistics and recent invoices.
+    // Only sent invoices owned by this user can become overdue.
+    await query(`
+      UPDATE invoices
+      SET status = 'overdue', updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = $1 AND status = 'sent' AND due_date < CURRENT_DATE
+    `, [req.userId]);
+
     // Get overall statistics
     const statsResult = await query(`
       SELECT
@@ -73,13 +81,6 @@ dashboardRouter.get('/', async (req: AuthRequest, res: Response) => {
       WHERE user_id = $1
         AND status = 'paid'
         AND COALESCE(paid_at, issue_date) >= date_trunc('year', CURRENT_DATE)
-    `, [req.userId]);
-
-    // Check for overdue invoices and update status
-    await query(`
-      UPDATE invoices
-      SET status = 'overdue', updated_at = CURRENT_TIMESTAMP
-      WHERE user_id = $1 AND status = 'sent' AND due_date < CURRENT_DATE
     `, [req.userId]);
 
     // Get unmatched payments
