@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import InvoiceDetail from './InvoiceDetail';
@@ -83,7 +83,11 @@ function renderPage(invoice: Record<string, unknown>) {
 describe('InvoiceDetail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-07-26T12:00:00Z'));
   });
+
+  afterEach(() => vi.useRealTimers());
 
   it.each([['desktop', 0], ['mobile', 1]] as const)('downloads the selected format from the %s menu', async (_layout, index) => {
     renderPage(baseInvoice);
@@ -131,7 +135,7 @@ describe('InvoiceDetail', () => {
   });
 
   it('shows the due-date-passed event and days-overdue pill for overdue invoices', async () => {
-    const dueDate = new Date(Date.now() - 11 * 86400000).toISOString().slice(0, 10);
+    const dueDate = '2026-07-15';
     renderPage({ ...baseInvoice, status: 'overdue', dueDate });
     expect(await screen.findByText('Uplynula splatnost')).toBeInTheDocument();
     expect(screen.getAllByText('11 dní po splatnosti').length).toBeGreaterThan(0);

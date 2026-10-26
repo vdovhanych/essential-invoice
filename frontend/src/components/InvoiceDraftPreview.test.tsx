@@ -13,7 +13,7 @@ describe('InvoiceDraftPreview', () => {
     vi.useFakeTimers();
     vi.clearAllMocks();
     vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() } as any);
-    vi.mocked(api.post).mockResolvedValue({ pdfBase64: 'first' });
+    vi.mocked(api.post).mockReset().mockResolvedValue({ pdfBase64: 'first' });
     HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
     HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); };
   });
@@ -38,9 +38,36 @@ describe('InvoiceDraftPreview', () => {
     expect(screen.getByTestId('pdf-page')).toHaveTextContent('first');
     await tick();
     expect(screen.getByText(/Zobrazený dokument může být zastaralý/)).toBeInTheDocument();
+    vi.mocked(api.post).mockResolvedValueOnce({ pdfBase64: 'recovered' });
     fireEvent.click(screen.getByRole('button', { name: 'Zkusit znovu' }));
     await tick();
     expect(api.post).toHaveBeenCalledTimes(3);
+    expect(screen.getByTestId('pdf-page')).toHaveTextContent('recovered');
+    expect(screen.queryByText(/Zobrazený dokument může být zastaralý/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Zkusit znovu' })).not.toBeInTheDocument();
+  });
+
+  it('cancels a mobile preview before debounce and restores focus and scrolling on dismissal', async () => {
+    vi.mocked(window.matchMedia).mockReturnValue({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() } as any);
+    const trigger = document.createElement('button');
+    document.body.append(trigger);
+    trigger.focus();
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'auto';
+    try {
+      const view = render(<InvoiceDraftPreview {...props} open />);
+      expect(screen.getByRole('button', { name: 'Zavřít' })).toHaveFocus();
+      expect(document.body.style.overflow).toBe('hidden');
+      view.rerender(<InvoiceDraftPreview {...props} />);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(document.body.style.overflow).toBe('auto');
+      expect(trigger).toHaveFocus();
+      await tick();
+      expect(api.post).not.toHaveBeenCalled();
+    } finally {
+      trigger.remove();
+      document.body.style.overflow = originalOverflow;
+    }
   });
 
   it('ignores an old response arriving after the newest PDF', async () => {

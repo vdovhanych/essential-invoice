@@ -229,13 +229,11 @@ describe('Expenses Routes', () => {
           vatRate: 21,
         });
 
-      // Check the INSERT call (second mock call)
-      const insertCall = mockQuery.mock.calls[1];
-      const params = insertCall[1];
-      // vatAmount should be 210 (1000 * 0.21)
-      expect(params).toContain(210);
-      // total should be 1210 (1000 + 210)
-      expect(params).toContain(1210);
+      // Assert the persisted columns, not values appearing anywhere in a mock response.
+      const [sql, params] = mockQuery.mock.calls[1];
+      expect(sql).toContain('INSERT INTO expenses');
+      expect(params.slice(8, 12)).toEqual([1000, 21, 210, 1210]);
+      expect(JSON.parse(params[19])).toEqual([{ rate: 21, base: 1000, tax: 210 }]);
     });
 
     it('stores a CZK equivalent for EUR expenses so dashboard totals stay in one currency', async () => {

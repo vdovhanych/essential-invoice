@@ -18,6 +18,7 @@ export async function sendInvoiceEmail(
   customMessage?: string,
   customSubject?: string
 ): Promise<SendResult> {
+  let currentRecipient = primaryEmail;
   try {
     // Get user settings
     const settingsResult = await query(
@@ -104,6 +105,7 @@ export async function sendInvoiceEmail(
 
     // Send to secondary email if provided
     if (secondaryEmail) {
+      currentRecipient = secondaryEmail;
       await transporter.sendMail({
         from: settings.smtp_from_name
           ? `"${settings.smtp_from_name}" <${settings.smtp_from_email}>`
@@ -138,7 +140,7 @@ export async function sendInvoiceEmail(
       await query(
         `INSERT INTO email_logs (user_id, invoice_id, email_type, recipient_email, status, error_message)
          VALUES ($1, $2, 'invoice_sent', $3, 'failed', $4)`,
-        [userId, invoiceId, primaryEmail, error.message]
+        [userId, invoiceId, currentRecipient, error.message]
       );
     } catch (logError) {
       console.error('Failed to log email error:', logError);

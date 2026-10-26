@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { roundMoney, calculateLineTotal, calculateInvoiceTotals, calculateInvoiceTax } from './money';
+import { roundMoney, calculateLineTotal, calculateInvoiceTotals, calculateInvoiceTax, summarizeStoredTax } from './money';
 
 describe('roundMoney', () => {
   it('rounds to 2 decimal places', () => {
@@ -39,11 +39,8 @@ describe('calculateInvoiceTotals', () => {
       ],
       21
     );
-    expect(totals.total).toBe(roundMoney(totals.subtotal + totals.vatAmount));
-    // every value has at most 2 decimals
-    for (const value of Object.values(totals)) {
-      expect(value).toBe(roundMoney(value));
-    }
+    // Independently calculated: 1000.00 + 209.87 + 0.30, then 21% VAT.
+    expect(totals).toEqual({ subtotal: 1210.17, vatAmount: 254.14, total: 1464.31 });
   });
 
   it('handles 0% VAT (non-VAT payer)', () => {
@@ -57,8 +54,8 @@ describe('calculateInvoiceTotals', () => {
       { quantity: 1, unitPrice: 0.015 }
     ];
     const totals = calculateInvoiceTotals(items, 0);
-    const summedLines = items.reduce((sum, item) => sum + calculateLineTotal(item), 0);
-    expect(totals.subtotal).toBe(roundMoney(summedLines));
+    // Each 0.015 line rounds to 0.02; rounding the unrounded sum would give 0.03.
+    expect(totals).toEqual({ subtotal: 0.04, vatAmount: 0, total: 0.04 });
   });
 });
 
@@ -85,5 +82,38 @@ describe('per-line VAT', () => {
   it('retains legacy invoice-level rounding for omitted per-line rates', () => {
     const items = [{ quantity: 1, unitPrice: 0.03 }, { quantity: 1, unitPrice: 0.03 }];
     expect(calculateInvoiceTotals(items, 21)).toEqual({ subtotal: 0.06, vatAmount: 0.01, total: 0.07 });
+  });
+});
+
+
+describe('stored invoice VAT', () => {
+  it('keeps recorded amounts, including explicit zero, instead of recalculating historical invoices', () => {
+    expect(summarizeStoredTax([
+      { quantity: 1, unitPrice: 100, vatRate: 21, total: 100, vatAmount: 21.01 },
+      { quantity: 1, unitPrice: 100, vatRate: 21, total: 0, vatAmount: 0 },
+      { quantity: 1, unitPrice: 200, vatRate: 12, total: 200, vatAmount: 24 },
+    ], 21)).toEqual([
+      { vatRate: 21, vatTreatment: 'standard', base: 100, vatAmount: 21.01 },
+      { vatRate: 12, vatTreatment: 'standard', base: 200, vatAmount: 24 },
+    ]);
+  });
+
+  it('allocates each interleaved rate independently and preserves non-taxable treatments', () => {
+    const result = calculateInvoiceTax([
+      { quantity: 1, unitPrice: 0.03, vatRate: 21 },
+      { quantity: 1, unitPrice: 0.03, vatRate: 12 },
+      { quantity: 1, unitPrice: 0.03, vatRate: 21 },
+      { quantity: 1, unitPrice: 0.03, vatRate: 12 },
+      { quantity: 1, unitPrice: 100, vatRate: 21, vatTreatment: 'eu_service' },
+      { quantity: 1, unitPrice: 100, vatRate: 21, vatTreatment: 'reverse_charge' },
+    ], 21);
+    expect(result.lines.map(line => line.vatAmount)).toEqual([0.01, 0, 0, 0.01, 0, 0]);
+    expect(result.breakdown).toEqual([
+      { vatRate: 21, vatTreatment: 'standard', base: 0.06, vatAmount: 0.01 },
+      { vatRate: 12, vatTreatment: 'standard', base: 0.06, vatAmount: 0.01 },
+      { vatRate: 0, vatTreatment: 'eu_service', base: 100, vatAmount: 0 },
+      { vatRate: 21, vatTreatment: 'reverse_charge', base: 100, vatAmount: 0 },
+    ]);
+    expect(result).toMatchObject({ subtotal: 200.12, vatAmount: 0.02, total: 200.14 });
   });
 });
