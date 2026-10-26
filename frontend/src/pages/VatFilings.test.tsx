@@ -232,7 +232,7 @@ it('opens first-time setup with existing user details and an enabled confirmatio
   expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
   expect(api.put).not.toHaveBeenCalled();
 });
-it('saves edited expense buckets and classification together without losing either', async () => {
+it.each([false, true])('saves edited expense buckets and classification together (immediate first edit: %s)', async (immediateFirstEdit) => {
   vi.mocked(api.get).mockImplementation(async (endpoint) =>
     endpoint.endsWith('/workspace')
       ? {
@@ -257,16 +257,34 @@ it('saves edited expense buckets and classification together without losing eith
         ? { offices: [], branches: [], countries: [] }
         : [],
   );
-  render(
-    <MemoryRouter
-      initialEntries={['/vat-filings?section=documents&document=e1']}
-    >
-      <VatFilings />
-    </MemoryRouter>,
-  );
-  fireEvent.change(await screen.findByLabelText('Transaction classification'), {
-    target: { value: 'domestic' },
+  // Exercise the first interactive DOM commit, before passive effects can reset
+  // editor state. The ordinary case below keeps the existing user-flow coverage.
+  const observer = new MutationObserver(() => {
+    const input = screen.queryByLabelText('Transaction classification');
+    if (input) {
+      observer.disconnect();
+      fireEvent.change(input, { target: { value: 'domestic' } });
+    }
   });
+  if (immediateFirstEdit) {
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  let classification: HTMLElement;
+  try {
+    render(
+      <MemoryRouter
+        initialEntries={['/vat-filings?section=documents&document=e1']}
+      >
+        <VatFilings />
+      </MemoryRouter>,
+    );
+    classification = await screen.findByLabelText('Transaction classification');
+  } finally {
+    observer.disconnect();
+  }
+  if (!immediateFirstEdit) {
+    fireEvent.change(classification, { target: { value: 'domestic' } });
+  }
   fireEvent.change(screen.getByLabelText('Rate % 1'), {
     target: { value: '12' },
   });
