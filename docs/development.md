@@ -82,13 +82,81 @@ On pull requests, `.github/workflows/test.yml` runs backend and/or frontend test
 
 ### Seed Test Data
 
-Seed a test user with clients, invoices, expenses, and payments for development:
+Use only a disposable local development database. The CLI refuses `NODE_ENV=production`,
+requires `SEED_CONFIRM_LOCAL=1`, an explicit `DB_NAME`, and a `DB_HOST` of `localhost`,
+`127.0.0.1`, `::1` or an absolute Unix-socket directory. These checks cannot detect a
+production database forwarded to localhost: verify the target yourself. The seeder
+never resets a database, deletes users, sends mail, calls CNB/ARES/AI, or starts jobs.
+
+From `backend/`, configure the local database credentials as described above, run
+`bun run migrate` to initialize its schema, then:
+
 ```bash
-cd backend
-bun run seed                           # Default: test@test.com / password123
-bun run seed user@example.com mypass   # Custom credentials
+# Example: a newly created disposable local database, not an existing deployment
+export DB_HOST=127.0.0.1 DB_NAME=essential_invoice_dev
+# Also set DB_PORT, DB_USER and DB_PASSWORD for that local database.
+bun run migrate
+SEED_CONFIRM_LOCAL=1 bun run seed
+SEED_CONFIRM_LOCAL=1 bun run seed developer@example.invalid --scenario all
+# Pin the lifecycle clock when reproducing a bug (default: today in Europe/Prague)
+SEED_CONFIRM_LOCAL=1 bun run seed another@example.invalid --scenario core --date 2026-10-26
 ```
-The script refuses to run if the user already exists. Use `bun run delete-user` to remove them first.
+
+Default credentials are `test@example.invalid` / `password123`. Emails use the same
+normalization as login (case folding and provider alias rules); scenario accounts use
+stable `vat_` / `identified_` prefixes. The CLI prints the exact login addresses. The optional second
+positional argument still sets a password; prefer `SEED_PASSWORD` to avoid putting a
+custom password in command history or Bun's command echo. The seeder itself does not
+print passwords or database error row details. The fixtures use synthetic identities, reserved contact addresses and an
+example bank account; do not send their invoices or submit their filings.
+
+| Scenario | Account | Representative data |
+| --- | --- | --- |
+| `core` (default) | supplied email | Nonpayer; paid CZK/EUR, last-year revenue, future/due-today sent, overdue, draft and cancelled invoices; fractional quantities and half-cent rounding; two matchable CZK/EUR payments plus an unrelated payment; clear supplier-linked paid/unpaid CZK/EUR expenses; PNG receipt; inactive recurring template |
+| `vat` | `vat_` supplied email | Monthly payer, August 2026: mixed 21/12% domestic sales; KH exactly/above CZK 10,000 and consumer cases; grouped haléř VAT; construction reverse charge code 4; EU B2B EUR service; mixed supplier-recorded tax with full deduction and a no-deduction expense |
+| `identified` | `identified_` supplied email | August 2026 EU services supplied/received, self-assessed liability with no deduction; domestic nonpayer activity; no KH |
+| `all` | all three accounts | Entire set is created atomically, including five locally validated saved filing versions |
+
+Invoice numbering follows `FVYYYYMM##`; `notes` / expense `description` contain stable
+`Seed: ...` labels. CZK invoices include SPAYD/QR data; EUR amounts use a fixed synthetic
+recorded rate of 25.125 (not a claim about the actual CNB rate). Current line VAT and
+expense breakdowns are populated immediately. SMTP/IMAP credentials are absent, AI
+is disabled, and the recurring template has both `active=false` and `auto_send=false`.
+The regular app can still access external services if you configure or invoke them.
+
+Lifecycle dates are relative to `--date`. Tax scenarios deliberately stay in **2026-08**,
+within the implementation's supported reporting year, so their history does not expire
+when the development clock moves. Their taxpayer/document review fingerprints and
+original DPHDP3/DPHKH1/DPHSHV versions are computed from the actual stored data and
+validated against bundled XSDs; identified persons have only DPHDP3/DPHSHV. No EPO
+submission or import is performed (`epoImportVerified=false`). Change a document to
+exercise stale-review/history behavior; do not edit immutable saved versions directly.
+
+**Repeated runs:** if any requested account already exists, the whole request fails
+without changing accounts. Any insertion or XML validation failure rolls back every
+requested scenario, including previously created scenarios in an `all` request. After
+fixing the cause, the same command can be retried. For a second independent dataset,
+choose a different email. Deleting disposable accounts is an explicit separate admin
+action; the seeder never does it automatically. Schema initialization is intentionally
+separate (`bun run migrate`), so seeding an existing schema does not rerun migrations.
+
+These are compact development examples, not exhaustive coverage. Quarterly profiles,
+replacement filings, intentionally blocked tax cases, logo/email histories and export
+size limits remain in focused tests or manual scenarios. See [VAT filing scope](vat-filings.md)
+before extending fixtures; do not mark unsupported tax cases as successfully reviewed.
+
+The seed PostgreSQL integration test runs in a dedicated disposable CI service. Locally,
+create a **new disposable localhost database** named `essential_seed_test` and run:
+
+```bash
+SEED_TEST_DATABASE_URL=postgresql://USER:PASSWORD@127.0.0.1:PORT/essential_seed_test bun run test src/db/developmentSeed.integration.test.ts
+```
+
+It initializes the schema, verifies actual stored totals, XML/PDF/ZIP output, matching,
+user isolation and immutable filing history. A temporary failure constraint checks
+rollback across scenarios and a successful retry; it is removed in `finally`, and only
+the test's synthetic users are deleted. Never use application data. Without the URL,
+this integration test is skipped; the safeguard/date unit tests still run normally.
 
 ### Delete User
 
