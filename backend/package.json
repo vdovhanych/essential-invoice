@@ -24,7 +24,7 @@
     "jsonwebtoken": "^9.0.2",
     "mailparser": "^3.12.4",
     "multer": "^2.5.0",
-    "nodemailer": "^10.0.3",
+    "nodemailer": "^10.2.1",
     "pdfmake": "^0.3.12",
     "pg": "^8.23.1",
     "qrcode": "^1.5.3",
