@@ -25,7 +25,7 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers w
   - `encryption.ts` - AES-256-GCM encryption/decryption for sensitive data at rest (SMTP/IMAP credentials)
   - `logger.ts` - Timestamped logging utility (info, warn, error)
 - **Scripts**: `scripts/delete-user.ts` - Admin CLI script to delete a user by email
-- **Seed**: `db/seed.ts` - Seeds test data (user, clients, invoices, expenses, payments) for development. Run with `bun run seed [email] [password]`
+- **Seed**: `db/seed.ts` / `db/developmentSeed.ts` - Atomically creates named `core`, `vat`, and `identified` development scenarios with invoices, expenses, payments and locally validated VAT history. Requires an explicit disposable local database and `SEED_CONFIRM_LOCAL=1`; see [safe seed commands and scenario coverage](development.md#seed-test-data).
 - **Middleware**: `middleware/auth.ts` - JWT authentication middleware
 - **Database**: PostgreSQL with `pg` driver. Schema managed in `db/init.ts` using idempotent CREATE TABLE IF NOT EXISTS and inline ALTER TABLE migrations (no separate migration files). `db/migrate.ts` is the migration runner script. Users table includes `vat_payer` (BOOLEAN, default false) for VAT payer status, `onboarding_completed` (BOOLEAN, default false) to track new-user onboarding, `language` (VARCHAR(5), default 'cs') for locale preference, and `pausalni_dan_enabled`/`pausalni_dan_tier`/`pausalni_dan_limit` for paušální daň settings. `password_reset_tokens` table stores hashed tokens for password reset flow. Invoices and expenses tables both include `exchange_rate` (DECIMAL) and `total_czk` (DECIMAL) for EUR→CZK conversion. `exchange_rates` table caches fetched CNB rates by date and currency.
 

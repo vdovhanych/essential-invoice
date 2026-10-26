@@ -41,13 +41,13 @@ Other commands, from the repository root:
 ```bash
 (cd backend && bun run start)           # Run TypeScript directly; no backend build script
 (cd backend && bun run migrate)         # Apply schema initialization/migrations
-(cd backend && bun run seed)            # Development data: test@test.com / password123
+(cd backend && SEED_CONFIRM_LOCAL=1 bun run seed) # Local DB only; test@example.invalid / password123
 
 docker compose up -d                    # Full stack; frontend defaults to port 8080
 docker compose logs backend
 ```
 
-Custom seed credentials and the destructive `delete-user` admin command are documented in [development](docs/development.md). Deployment commands belong in [deployment](docs/deployment.md) and the [chart README](helm-chart/README.md).
+Set explicit local `DB_HOST` and disposable `DB_NAME` before seeding. Named seed scenarios, custom credentials and the destructive `delete-user` admin command are documented in [development](docs/development.md). Deployment commands belong in [deployment](docs/deployment.md) and the [chart README](helm-chart/README.md).
 
 ## Implementation conventions
 
