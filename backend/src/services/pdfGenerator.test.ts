@@ -17,7 +17,7 @@ vi.mock('qrcode', () => ({
 
 // Observe the renderer boundary without replacing document construction or PDF
 // generation. Inspect a copy before pdfmake mutates its input during layout.
-const pdfmake: { createPdf: (definition: TDocumentDefinitions) => { getBuffer: () => Promise<Uint8Array> } } = require('pdfmake/build/pdfmake.js');
+const pdfmake: { createPdf: (definition: TDocumentDefinitions) => { getBuffer: () => Promise<Uint8Array> } } = require('pdfmake');
 // Select the promise overload (qrcode also exposes a callback overload).
 const mockQRCode = vi.mocked(QRCode.toDataURL as (text: string, options: object) => Promise<string>);
 let renderedContent: unknown;
@@ -234,4 +234,40 @@ describe('generateInvoicePDF', () => {
     expect(pdfmake.createPdf).not.toHaveBeenCalled();
     expect(QRCode.toDataURL).not.toHaveBeenCalled();
   });
+});
+
+describe('server invoice renderer compatibility', () => {
+  const fixture = {
+    id: 'synthetic', invoiceNumber: 'TEST-000123', variableSymbol: '000123', status: 'draft',
+    currency: 'CZK', issueDate: new Date(2026, 9, 26), dueDate: new Date(2026, 10, 9),
+    deliveryDate: new Date(2026, 9, 26), subtotal: 1500, vatRate: 21, vatAmount: 270, total: 1770,
+    notes: 'Žluťoučký kůň — testovací faktura', qrPaymentData: 'SPD*1.0*ACC:CZ6508000000192000145399*AM:1770.00*CC:CZK',
+    exchangeRate: null, totalCzk: null, clientName: 'Příjemce Test', clientAddress: 'Praha',
+    clientIco: '', clientDic: '', userName: 'Dodavatel Test', userCompanyName: 'Test s.r.o.',
+    userAddress: 'Brno', userIco: '', userDic: '', userVatPayer: true,
+    userBankAccount: '192000145399', userBankCode: '0800', userLogoDataUrl: null, language: 'cs',
+    items: [
+      { description: 'Služba základní', quantity: 1, unit: 'ks', unitPrice: 1000, total: 1000, vatRate: 21, vatAmount: 210 },
+      { description: 'Služba snížená', quantity: 1, unit: 'ks', unitPrice: 500, total: 500, vatRate: 12, vatAmount: 60 },
+    ],
+  };
+
+  it('renders embedded fonts and QR images without a Web Worker', async () => {
+    const { renderInvoicePDF } = await import('./pdfGenerator.js');
+    vi.stubGlobal('Worker', undefined);
+    try {
+      const buffer = await renderInvoicePDF(fixture);
+      expect(buffer.subarray(0, 5).toString()).toBe('%PDF-');
+      expect(buffer.length).toBeGreaterThan(1000);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it.each(['/synthetic-denied-logo.png', 'https://example.invalid/synthetic-logo.png'])(
+    'rejects non-embedded logo resource %s', async userLogoDataUrl => {
+      const { renderInvoicePDF } = await import('./pdfGenerator.js');
+      await expect(renderInvoicePDF({ ...fixture, userLogoDataUrl })).rejects.toThrow(/denied by resource access policy/);
+    },
+  );
 });
