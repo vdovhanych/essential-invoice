@@ -13,6 +13,8 @@ Essential Invoice is a self-hosted invoicing application for Czech freelancers.
 - `helm-chart/`: application chart with a built-in PostgreSQL StatefulSet and optional external database. Docker Compose files support local and production deployments.
 - `.github/workflows/test.yml`: path-filtered frontend/backend Vitest jobs with a combined `Tests` check. It does not run the frontend production build.
 
+- `.github/workflows/integration.yml`: shared PostgreSQL matrix for available VAT migration, dashboard and seed suites, with isolated disposable databases and a stable `Integration tests` check.
+
 Use each package's `package.json` and configuration files for current dependency versions and commands.
 
 ## Commands and local setup

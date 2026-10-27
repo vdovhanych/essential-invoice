@@ -1,0 +1,103 @@
+name: PostgreSQL integration tests
+
+# Keep a stable aggregate check even for changes that do not need PostgreSQL.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  prepare:
+    name: Select PostgreSQL suites
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.paths.outputs.backend }}
+      matrix: ${{ steps.suites.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: paths
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/integration.yml'
+      - name: Discover available suites
+        id: suites
+        if: steps.paths.outputs.backend == 'true'
+        shell: bash
+        run: |
+          node <<'JS'
+          const { existsSync, appendFileSync } = require('node:fs');
+          // Explicit database/env names match each test's disposable-DB safeguard.
+          // Availability allows independently reviewed feature PRs to share this file.
+          const suites = [
+            { suite: 'VAT migrations', file: 'src/db/vatMigration.test.ts', database: 'essential_vat_test', variable: 'VAT_TEST_DATABASE_URL' },
+            { suite: 'Dashboard', file: 'src/routes/dashboard.integration.test.ts', database: 'essential_dashboard_test', variable: 'DASHBOARD_TEST_DATABASE_URL' },
+            { suite: 'Development seed', file: 'src/db/developmentSeed.integration.test.ts', database: 'essential_seed_test', variable: 'SEED_TEST_DATABASE_URL' },
+          ];
+          const include = suites.filter(suite => existsSync(`backend/${suite.file}`));
+          if (!include.length) throw new Error('No PostgreSQL integration suites found');
+          appendFileSync(process.env.GITHUB_OUTPUT, `matrix=${JSON.stringify({ include })}\n`);
+          console.log('Selected:', include.map(suite => suite.suite).join(', '));
+          JS
+
+  postgres:
+    name: PostgreSQL (${{ matrix.suite }})
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: scratch-only
+          POSTGRES_DB: ${{ matrix.database }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Install offline XSD validator
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - name: Run isolated PostgreSQL suite
+        env:
+          TEST_FILE: ${{ matrix.file }}
+          DATABASE_VARIABLE: ${{ matrix.variable }}
+          DATABASE_URL: postgresql://postgres:scratch-only@127.0.0.1:5432/${{ matrix.database }}
+        run: env "$DATABASE_VARIABLE=$DATABASE_URL" bun run test "$TEST_FILE"
+
+  integration-tests:
+    name: Integration tests
+    needs: [prepare, postgres]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        env:
+          PREPARE: ${{ needs.prepare.result }}
+          CHANGED: ${{ needs.prepare.outputs.changed }}
+          POSTGRES: ${{ needs.postgres.result }}
+        run: |
+          test "$PREPARE" = success
+          if [ "$CHANGED" = true ]; then
+            test "$POSTGRES" = success
+          else
+            test "$CHANGED" = false && test "$POSTGRES" = skipped
+          fi
