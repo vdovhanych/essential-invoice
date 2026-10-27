@@ -281,6 +281,27 @@ docker stop essential-vat-validation
 
 No persistent volume is attached. The test initializes a fresh schema, simulates the previous schema, inserts a supplier-rounded legacy expense, migrates twice, checks unchanged historical totals and unknown deduction metadata, and verifies the database rejects updates to saved XML. Recreate the disposable database/container before running this test again. The ordinary full suite skips this integration test when its environment variable is absent.
 
+### Shared PostgreSQL integration CI
+
+`.github/workflows/integration.yml` runs a matrix of the available PostgreSQL suites:
+VAT migrations (`essential_vat_test`), dashboard (`essential_dashboard_test`) and
+development seed (`essential_seed_test`). Each matrix job gets its own disposable
+PostgreSQL 18 service and enables only its selected test's database URL. The destructive
+legacy-migration fixture therefore cannot touch the seed/dashboard database. Bun installs
+are frozen and the offline XSD validator is installed in every job.
+
+The shared file is identical in the independently reviewed dashboard and seed PRs;
+only suites present in the checkout are selected. Either PR can land first. Adding a
+suite means adding its guarded database name, environment variable and file to the
+small matrix catalogue, not creating another workflow. Test files remain beside their
+respective application modules.
+
+All backend changes and edits to this workflow run the matrix. Other PRs skip the
+expensive jobs but still finish the stable `Integration tests` aggregate check. A failed
+selection, failed/cancelled suite or unexpected skip fails that check. The existing
+unit-test `Tests` check is unchanged; repository branch-protection settings are not
+modified by this workflow.
+
 ### Initial implementation checks (8 September 2026)
 
 - Complete backend (309 tests) and frontend (213 tests) Vitest suites passed, along with the frontend production bundle and backend TypeScript check. The PostgreSQL migration test was also run against a disposable PostgreSQL 17 instance.
