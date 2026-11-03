@@ -1,3 +1,4 @@
+import { storedLogo } from '../utils/logo';
 import { summarizeStoredTax, LineItem } from '../utils/money';
 import QRCode from 'qrcode';
 import { query } from '../db/init';
@@ -94,9 +95,9 @@ async function generateQRCodeDataURL(data: string): Promise<string> {
   }
 }
 
-function getLogoDataUrl(logoData: string | null, logoMimeType: string | null): string | null {
-  if (!logoData || !logoMimeType) return null;
-  return `data:${logoMimeType};base64,${logoData}`;
+async function getLogoDataUrl(logoData: string | null, logoMimeType: string | null): Promise<string | null> {
+  const logo = await storedLogo(logoData, logoMimeType);
+  return logo ? `data:image/png;base64,${logo.toString('base64')}` : null;
 }
 
 const BLUE = '#2563eb';
@@ -487,7 +488,7 @@ export async function generateInvoicePDF(invoiceId: string, userId: string): Pro
   );
 
   // Get logo as data URL if exists
-  const userLogoDataUrl = getLogoDataUrl(row.user_logo_data, row.user_logo_mime_type);
+  const userLogoDataUrl = await getLogoDataUrl(row.user_logo_data, row.user_logo_mime_type);
 
   const invoiceData: InvoiceData = {
     id: row.id,

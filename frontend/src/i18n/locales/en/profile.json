@@ -78,7 +78,7 @@
 
   "logo": {
     "heading": "Company Logo",
-    "description": "The logo will appear on your invoices instead of company details in the header. Supported formats: PNG, JPG, SVG. Max size: 2 MB.",
+    "description": "The logo will appear on your invoices instead of company details in the header. Supported formats: PNG, JPG. Max size: 2 MB.",
     "altText": "Company logo",
     "noLogo": "No logo",
     "uploading": "Uploading...",
@@ -86,7 +86,7 @@
     "uploadLogo": "Upload logo",
     "deleteLogo": "Delete",
     "recommendedSize": "Recommended size: 200x80 pixels",
-    "allowedTypes": "Only PNG, JPG, and SVG files are allowed",
+    "allowedTypes": "Only PNG and JPG files are allowed",
     "maxSize": "Maximum file size is 2 MB",
     "deleteConfirm": "Are you sure you want to delete the logo?"
   },

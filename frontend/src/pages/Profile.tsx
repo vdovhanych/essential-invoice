@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -26,10 +26,22 @@ export default function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoKey, setLogoKey] = useState(() => Date.now());
 
-  const logoUrl = useMemo(() => {
-    if (!token) return '';
-    return `/api/auth/me/logo?token=${encodeURIComponent(token)}&v=${logoKey}`;
-  }, [token, logoKey]);
+  const [logoUrl, setLogoUrl] = useState('');
+  useEffect(() => {
+    setLogoUrl('');
+    if (!token || !user?.hasLogo) return;
+    const controller = new AbortController();
+    let objectUrl = '';
+    api.blob('/auth/me/logo', controller.signal).then(blob => {
+      if (controller.signal.aborted) return;
+      objectUrl = URL.createObjectURL(blob);
+      setLogoUrl(objectUrl);
+    }).catch(() => { /* Missing legacy logos can be replaced in this form. */ });
+    return () => {
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [token, user?.hasLogo, logoKey]);
 
   const initialFormData = {
     name: user?.name || '',
@@ -125,7 +137,7 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
       toast.error(t('logo.allowedTypes'));
       return;
@@ -291,7 +303,7 @@ export default function Profile() {
             <SettingsRow
               label={t('index.rows.companyLogo')}
               value={
-                user?.hasLogo ? (
+                user?.hasLogo && logoUrl ? (
                   <img src={logoUrl} alt={t('logo.altText')} className="w-[52px] h-6 object-contain border border-border rounded-[6px] bg-surface" />
                 ) : (
                   t('index.status.none')
@@ -603,7 +615,7 @@ export default function Profile() {
         <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
           {/* Logo preview */}
           <div className="shrink-0">
-            {user?.hasLogo ? (
+            {user?.hasLogo && logoUrl ? (
               <div className="relative">
                 <img
                   src={logoUrl}
@@ -623,7 +635,7 @@ export default function Profile() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+              accept="image/png,image/jpeg,image/jpg"
               onChange={handleLogoUpload}
               className="hidden"
               id="logo-upload"

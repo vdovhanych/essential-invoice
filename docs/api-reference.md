@@ -14,8 +14,8 @@ Requests share a limit of **1,000 requests per IP per 15 minutes**, except `/api
 - `POST /api/auth/forgot-password` - Request password reset email
 - `POST /api/auth/reset-password` - Reset password with token
 - `DELETE /api/auth/me` - Delete account (requires password confirmation)
-- `GET /api/auth/me/logo` - Get user logo image
-- `POST /api/auth/me/logo` - Upload user logo (multipart form data)
+- `GET /api/auth/me/logo` - Get user logo image (Bearer header required; query tokens are not accepted)
+- `POST /api/auth/me/logo` - Upload user logo (multipart form data; PNG/JPEG, at most 2 MB and 16 megapixels; decoded and normalized to PNG)
 - `DELETE /api/auth/me/logo` - Delete user logo
 
 Both `GET /api/auth/me` and `PUT /api/auth/me` responses include read-only `vatFilingStatus` (`payer`, `identified`, `nonpayer`, or `null` before taxpayer setup), alongside `vatPayer`. This exposes only the saved registration status, not the taxpayer profile. Update that status through `/api/vat-filings/profile`; ordinary profile updates preserve it. The Settings VAT filing card is visible when `vatPayer` is true or `vatFilingStatus` is `identified`. Accountant ZIP exports remain available to all users.

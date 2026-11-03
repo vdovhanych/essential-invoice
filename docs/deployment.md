@@ -141,3 +141,7 @@ docker run --rm -v essential-invoice_postgres_data:/data -v $(pwd):/backup alpin
 # Restore volume
 docker run --rm -v essential-invoice_postgres_data:/data -v $(pwd):/backup alpine tar xzf /backup/db-backup.tar.gz -C /data
 ```
+
+### Logo security update
+
+Deploy frontend and backend together. Logo URLs no longer accept session tokens; clients must send the Authorization header. Existing PNG/JPEG logos are validated and normalized on read. Existing SVG or corrupt logos are retained in storage but are no longer served or embedded in PDFs; upload a PNG/JPEG replacement in Profile. PDF generation continues without rejected logos. If a proxy has cached old logo responses, purge that cache when deploying.

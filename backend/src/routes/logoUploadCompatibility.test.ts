@@ -19,10 +19,10 @@ const token = jwt.sign({ userId: 'synthetic-owner' }, secret);
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 beforeEach(() => { process.env.JWT_SECRET = secret; vi.mocked(query).mockReset().mockResolvedValue({ rows: [] } as any); });
 describe('logo upload dependency compatibility', () => {
-  it('preserves authenticated owner and uploaded bytes', async () => {
+  it('preserves authenticated owner and normalizes uploaded bytes', async () => {
     await request(app).post('/auth/me/logo').set('Authorization', `Bearer ${token}`)
       .attach('logo', png, { filename: 'logo.png', contentType: 'image/png' }).expect(200);
-    expect(query).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('UPDATE users'), [png.toString('base64'), 'image/png', 'synthetic-owner']);
+    expect(query).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('UPDATE users'), [expect.any(String), 'image/png', 'synthetic-owner']);
   });
   it('rejects unauthenticated uploads before any database write', async () => {
     await request(app).post('/auth/me/logo').attach('logo', png, 'logo.png').expect(401);
@@ -31,7 +31,7 @@ describe('logo upload dependency compatibility', () => {
   it.each([
     ['wrong field', 'other', 'image/png', png, 'LIMIT_UNEXPECTED_FILE'],
     ['oversize', 'logo', 'image/png', Buffer.alloc(2 * 1024 * 1024 + 1), 'LIMIT_FILE_SIZE'],
-    ['invalid type', 'logo', 'text/plain', png, 'Invalid file type. Only PNG, JPG, and SVG are allowed.'],
+    ['invalid type', 'logo', 'text/plain', png, 'Invalid file type. Only PNG and JPG are allowed.'],
   ])('rejects %s without storing partial data', async (_name, field, contentType, bytes, error) => {
     const response = await request(app).post('/auth/me/logo').set('Authorization', `Bearer ${token}`)
       .attach(field as string, bytes as Buffer, { filename: 'logo', contentType: contentType as string });
