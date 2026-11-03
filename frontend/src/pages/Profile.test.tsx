@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import Profile from './Profile';
+import { api } from '../utils/api';
 
 const mockUpdateProfile = vi.fn();
 const mockRefreshUser = vi.fn();
@@ -87,6 +88,16 @@ describe('Profile Component', () => {
     expect((document.querySelector('input[name="companyName"]') as HTMLInputElement).value).toBe('');
     expect(screen.queryByRole('button', { name: /uložit změny/i })).not.toBeInTheDocument();
     expect(mockUpdateProfile).not.toHaveBeenCalled();
+  });
+
+  it('signs out the current browser after a successful password change', async () => {
+    vi.mocked(api.post).mockResolvedValue({ message: 'ok' });
+    renderAt('/profile/password');
+    for (const [name, value] of Object.entries({ currentPassword: 'old-password', newPassword: 'new-password', confirmPassword: 'new-password' })) {
+      fireEvent.change(document.querySelector(`input[name="${name}"]`)!, { target: { value } });
+    }
+    fireEvent.click(screen.getByRole('button', { name: /^Změnit heslo$/ }));
+    await waitFor(() => expect(mockLogout).toHaveBeenCalledOnce());
   });
 
   it('shows the password save bar only once a password field is typed into', () => {

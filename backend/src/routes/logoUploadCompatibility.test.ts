@@ -1,3 +1,7 @@
+// Route unit tests isolate session storage; real revocation is exercised by session.integration.test.ts.
+vi.mock('../utils/session', () => ({
+  verifySessionToken: async (token: string) => jwt.verify(token, process.env.JWT_SECRET!)
+}));
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';

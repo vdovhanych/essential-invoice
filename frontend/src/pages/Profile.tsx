@@ -125,6 +125,7 @@ export default function Profile() {
       });
       toast.success(t('toast.passwordChanged'));
       setPasswordData(EMPTY_PASSWORDS);
+      logout();
     } catch (err: unknown) {
       const error = err as Error;
       toast.error(error.message || t('toast.passwordChangeFailed'));

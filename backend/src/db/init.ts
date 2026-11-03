@@ -375,6 +375,7 @@ export async function initializeDatabase() {
       ALTER TABLE recurring_invoice_items ADD CONSTRAINT recurring_invoice_items_vat_treatment_check
         CHECK (vat_treatment IN ('standard', 'exempt', 'reverse_charge', 'eu_service'));
       -- Filing metadata is reviewed explicitly. No inference from VAT rates, names or currency.
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS vat_filing_profile JSONB;
       ALTER TABLE invoices ADD COLUMN IF NOT EXISTS vat_filing JSONB;
       ALTER TABLE expenses ADD COLUMN IF NOT EXISTS vat_filing JSONB;

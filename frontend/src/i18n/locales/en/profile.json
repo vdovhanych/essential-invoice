@@ -1,19 +1,16 @@
 {
   "title": "My Profile",
-
   "language": {
     "label": "Jazyk / Language",
     "cs": "Čeština",
     "en": "English"
   },
-
   "personal": {
     "heading": "Personal Information",
     "name": "Name *",
     "email": "Email",
     "emailReadonly": "Email cannot be changed"
   },
-
   "company": {
     "heading": "Company Details",
     "description": "This information will appear on your invoices.",
@@ -30,11 +27,9 @@
     "bankCode": "Bank code",
     "bankCodePlaceholder": "0100"
   },
-
   "bank": {
     "heading": "Bank & flat-rate tax"
   },
-
   "index": {
     "groups": {
       "personal": "Personal",
@@ -56,7 +51,6 @@
       "tier": "Tier {{tier}}"
     }
   },
-
   "pausalniDan": {
     "heading": "Flat-rate Tax (Pausalni dan)",
     "description": "Track how much you can still invoice within the flat-rate tax limit. The limit depends on the tier and type of income (expense lump sum).",
@@ -75,7 +69,6 @@
     "limit2m": "2,000,000 CZK",
     "limitHelp": "Higher limits apply if at least 75% of income comes from self-employment with the applicable expense lump sum."
   },
-
   "logo": {
     "heading": "Company Logo",
     "description": "The logo will appear on your invoices instead of company details in the header. Supported formats: PNG, JPG. Max size: 2 MB.",
@@ -90,7 +83,6 @@
     "maxSize": "Maximum file size is 2 MB",
     "deleteConfirm": "Are you sure you want to delete the logo?"
   },
-
   "password": {
     "heading": "Change Password",
     "currentPassword": "Current password",
@@ -99,7 +91,6 @@
     "changing": "Changing password...",
     "change": "Change password"
   },
-
   "dangerZone": {
     "heading": "Danger Zone",
     "description": "Deleting your account is irreversible. All your data (invoices, clients, expenses, payments, settings) will be permanently removed.",
@@ -116,11 +107,10 @@
     "deleteModalDeleting": "Deleting account...",
     "deleteModalConfirm": "Permanently delete account"
   },
-
   "toast": {
     "profileUpdated": "Profile updated successfully",
     "profileUpdateFailed": "Failed to update profile",
-    "passwordChanged": "Password changed successfully",
+    "passwordChanged": "Password changed. Please sign in again.",
     "passwordChangeFailed": "Failed to change password",
     "passwordsDoNotMatch": "Passwords do not match",
     "passwordTooShort": "Password must be at least 8 characters",
@@ -130,7 +120,6 @@
     "logoDeleteFailed": "Failed to delete logo",
     "accountDeleteFailed": "Failed to delete account"
   },
-
   "actions": {
     "saving": "Saving...",
     "save": "Save changes",

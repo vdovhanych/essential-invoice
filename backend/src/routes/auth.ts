@@ -55,7 +55,7 @@ authRouter.post('/register',
       const result = await query(
         `INSERT INTO users (email, password_hash, name, language)
          VALUES ($1, $2, $3, $4)
-         RETURNING id, email, name`,
+         RETURNING id, email, name, session_version`,
         [email, passwordHash, name, userLanguage]
       );
 
@@ -68,7 +68,7 @@ authRouter.post('/register',
       );
 
       // Generate token
-      const token = jwt.sign({ userId: user.id, email: user.email }, getJwtSecret(), { expiresIn: '7d' });
+      const token = jwt.sign({ userId: user.id, email: user.email, sessionVersion: user.session_version }, getJwtSecret(), { expiresIn: '7d' });
 
       // Send welcome email (fire-and-forget)
       if (isGlobalSmtpConfigured()) {
@@ -110,7 +110,7 @@ authRouter.post('/login',
 
     try {
       const result = await query(
-        'SELECT id, email, name, password_hash FROM users WHERE email = $1',
+        'SELECT id, email, name, password_hash, session_version FROM users WHERE email = $1',
         [email]
       );
 
@@ -125,7 +125,7 @@ authRouter.post('/login',
         return res.status(401).json({ error: 'Invalid email or password' });
       }
 
-      const token = jwt.sign({ userId: user.id, email: user.email }, getJwtSecret(), { expiresIn: '7d' });
+      const token = jwt.sign({ userId: user.id, email: user.email, sessionVersion: user.session_version }, getJwtSecret(), { expiresIn: '7d' });
 
       res.json({
         user: { id: user.id, email: user.email, name: user.name },
@@ -258,7 +258,15 @@ authRouter.post('/change-password', authenticateToken,
       }
 
       const newHash = await bcrypt.hash(newPassword, 12);
-      await query('UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [newHash, req.userId]);
+      const changed = await query(`
+        WITH changed AS (
+          UPDATE users SET password_hash = $1, session_version = session_version + 1, updated_at = CURRENT_TIMESTAMP
+          WHERE id = $2 AND password_hash = $3 RETURNING id
+        ), revoked AS (
+          UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP
+          WHERE user_id IN (SELECT id FROM changed) AND used_at IS NULL
+        ) SELECT id FROM changed`, [newHash, req.userId, result.rows[0].password_hash]);
+      if (!changed.rows.length) return res.status(401).json({ error: 'Password changed; sign in again' });
 
       res.json({ message: 'Password changed successfully' });
     } catch (error) {
@@ -362,21 +370,17 @@ authRouter.post('/reset-password',
         return res.status(400).json({ error: 'RESET_LINK_EXPIRED' });
       }
 
-      // Hash new password and update
       const passwordHash = await bcrypt.hash(password, 12);
-      await query(
-        'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-        [passwordHash, resetToken.user_id]
-      );
-
-      // Mark token as used
-      await query(
-        'UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1',
-        [resetToken.id]
-      );
-
-      // Clean up expired tokens
-      await query('DELETE FROM password_reset_tokens WHERE expires_at < CURRENT_TIMESTAMP');
+      // Claim the reset token and revoke sessions atomically, including concurrent retries.
+      const changed = await query(`
+        WITH claimed AS (
+          UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP
+          WHERE id = $1 AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP
+          RETURNING user_id
+        )
+        UPDATE users SET password_hash = $2, session_version = session_version + 1, updated_at = CURRENT_TIMESTAMP
+        WHERE id IN (SELECT user_id FROM claimed) RETURNING id`, [resetToken.id, passwordHash]);
+      if (!changed.rows.length) return res.status(400).json({ error: 'RESET_LINK_INVALID' });
 
       res.json({ message: 'PASSWORD_RESET_SUCCESS' });
     } catch (error) {

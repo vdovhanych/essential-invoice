@@ -34,6 +34,7 @@ jobs:
           // Explicit database/env names match each test's disposable-DB safeguard.
           // Availability allows independently reviewed feature PRs to share this file.
           const suites = [
+            { suite: 'Session revocation', file: 'src/routes/session.integration.test.ts', database: 'essential_session_test', variable: 'SESSION_TEST_DATABASE_URL' },
             { suite: 'VAT migrations', file: 'src/db/vatMigration.test.ts', database: 'essential_vat_test', variable: 'VAT_TEST_DATABASE_URL' },
             { suite: 'Dashboard', file: 'src/routes/dashboard.integration.test.ts', database: 'essential_dashboard_test', variable: 'DASHBOARD_TEST_DATABASE_URL' },
             { suite: 'Development seed', file: 'src/db/developmentSeed.integration.test.ts', database: 'essential_seed_test', variable: 'SEED_TEST_DATABASE_URL' },

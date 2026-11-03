@@ -145,3 +145,6 @@ docker run --rm -v essential-invoice_postgres_data:/data -v $(pwd):/backup alpin
 ### Logo security update
 
 Deploy frontend and backend together. Logo URLs no longer accept session tokens; clients must send the Authorization header. Existing PNG/JPEG logos are validated and normalized on read. Existing SVG or corrupt logos are retained in storage but are no longer served or embedded in PDFs; upload a PNG/JPEG replacement in Profile. PDF generation continues without rejected logos. If a proxy has cached old logo responses, purge that cache when deploying.
+### Session revocation migration
+
+Startup adds `users.session_version INTEGER NOT NULL DEFAULT 0` idempotently. Existing signed JWTs without a version are treated as version zero so deployment does not force a global logout. Every authenticated request checks the database, fails closed on database errors, and rejects deleted accounts. Password changes and successful resets atomically increment the version, immediately invalidating all previous JWTs, including legacy tokens. A password change also invalidates outstanding reset links and signs out the current browser. Users must sign in again with the new password. Deploy all backend instances together: old backend instances do not enforce revocation.
