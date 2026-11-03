@@ -234,3 +234,9 @@ serviceAccount:
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::123456789:role/essential-invoice
 ```
+
+### AI provider destinations
+
+By default only `https://openrouter.ai/api/v1` and `https://api.openai.com/v1` are allowed. All AI requests reject HTTP redirects. To enable a custom/local OpenAI-compatible model, the deployment operator must set `AI_ALLOWED_BASE_URLS` to its exact base URL (comma-separated for multiple destinations), for example `http://ollama:11434/v1`. For Helm use `backend.env.AI_ALLOWED_BASE_URLS`. The same explicit opt-in is required in development. Never add untrusted hosts: each listed destination is reachable from the backend and receives the user's API key and prompt. This is an exact endpoint allowlist, not a private-network blocker.
+
+Existing custom settings are retained but cannot make requests until the operator allows that endpoint or the user selects a built-in provider. There is no automatic fallback that would send the old provider's key or documents to a different provider. Deploy frontend and backend together; Settings exposes only the operator-approved choices.

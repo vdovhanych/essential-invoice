@@ -47,9 +47,10 @@
     "apiKeyHelp": "Získejte OpenRouter API klíč na",
     "apiKeyLink": "openrouter.ai/settings/keys",
     "apiUrlLabel": "API base URL",
-    "apiUrlHelp": "Jakýkoli OpenAI-kompatibilní endpoint. Ponechte prázdné pro OpenRouter.",
+    "apiUrlHelp": "Vyberte poskytovatele povoleného správcem nasazení. Pro vlastní nebo lokální model požádejte správce o jeho povolení.",
     "modelLabel": "Model",
-    "modelHelp": "Ponechte prázdné pro openai/gpt-5.6-luna. Na OpenRouteru daňový poradce automaticky používá vyhledávání na webu."
+    "modelHelp": "Ponechte prázdné pro openai/gpt-5.6-luna. Na OpenRouteru daňový poradce automaticky používá vyhledávání na webu.",
+    "endpointUnavailable": "Dříve nastavený poskytovatel není povolen"
   },
   "invoiceDefaults": {
     "heading": "Výchozí hodnoty faktur",

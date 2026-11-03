@@ -34,6 +34,13 @@ describe('Settings Routes', () => {
     vi.clearAllMocks();
   });
 
+  it('rejects an unapproved AI destination before writing settings', async () => {
+    const response = await request(app).put('/settings').send({ aiApiUrl: 'http://127.0.0.1:9999/v1' });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('AI_ENDPOINT_NOT_ALLOWED');
+    expect(mockQuery).not.toHaveBeenCalled();
+  });
+
   describe('PUT /settings', () => {
     it('should update defaultVatRate to 0', async () => {
       // Mock successful update

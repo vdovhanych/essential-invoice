@@ -1,3 +1,4 @@
+import { allowedAIBaseUrls, resolveAIBaseUrl } from '../utils/aiDestinations';
 import { Router, Response } from 'express';
 import { query } from '../db/init';
 import { AuthRequest } from '../middleware/auth';
@@ -38,6 +39,7 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
         aiEnabled: true,
         aiApiKeySet: false,
         aiApiUrl: null,
+        aiAllowedBaseUrls: allowedAIBaseUrls(),
         aiModel: null
       });
     }
@@ -67,6 +69,7 @@ settingsRouter.get('/', async (req: AuthRequest, res: Response) => {
       aiEnabled: settings.ai_enabled ?? true,
       aiApiKeySet: !!settings.ai_api_key,
       aiApiUrl: settings.ai_api_url,
+      aiAllowedBaseUrls: allowedAIBaseUrls(),
       aiModel: settings.ai_model
     });
   } catch (error) {
@@ -91,6 +94,11 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     aiModel
   } = req.body;
 
+  let checkedAIUrl = aiApiUrl;
+  if (aiApiUrl !== undefined && aiApiUrl !== null && aiApiUrl !== '') {
+    try { checkedAIUrl = resolveAIBaseUrl(aiApiUrl); }
+    catch { return res.status(400).json({ error: 'AI_ENDPOINT_NOT_ALLOWED' }); }
+  }
   try {
     // Build update query dynamically to only update provided fields
     const updates: string[] = [];
@@ -126,7 +134,7 @@ settingsRouter.put('/', async (req: AuthRequest, res: Response) => {
     addUpdate('calculator_enabled', calculatorEnabled);
     addUpdate('ai_enabled', aiEnabled);
     if (aiApiKey) addUpdate('ai_api_key', encrypt(aiApiKey)); // Only update if provided
-    addUpdate('ai_api_url', aiApiUrl);
+    addUpdate('ai_api_url', checkedAIUrl);
     addUpdate('ai_model', aiModel);
 
     if (updates.length === 0) {

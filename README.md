@@ -8,7 +8,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 
 ## Features
 
-- **AI Features**: Personalized Czech tax advisor with live web search, expense extraction from uploaded receipts/invoices, and AI-drafted payment reminders (via OpenRouter or any OpenAI-compatible API)
+- **AI Features**: Personalized Czech tax advisor with live web search, expense extraction from uploaded receipts/invoices, and AI-drafted payment reminders (via OpenAI/OpenRouter or an operator-approved OpenAI-compatible API)
 - **Invoice Management**: Create, edit, duplicate, and send invoices with automatic numbering
 - **Per-line VAT**: Mixed VAT rates, exemption reasons and domestic reverse charge, with consistent totals in invoices, recurring templates and PDFs
 - **Accountant Exports**: Period ZIP packages with CSV summaries, invoice PDFs, expense attachments and ISDOC 6.0.2 files; individual ISDOC downloads

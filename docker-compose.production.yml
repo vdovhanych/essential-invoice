@@ -29,6 +29,7 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
+      AI_ALLOWED_BASE_URLS: ${AI_ALLOWED_BASE_URLS:-}
       PORT: ${BACKEND_PORT:-3001}
       DB_HOST: ${DB_HOST:-db}
       DB_PORT: ${DB_PORT:-5432}

@@ -47,9 +47,10 @@
     "apiKeyHelp": "Get your OpenRouter API key at",
     "apiKeyLink": "openrouter.ai/settings/keys",
     "apiUrlLabel": "API base URL",
-    "apiUrlHelp": "Any OpenAI-compatible endpoint. Leave empty to use OpenRouter.",
+    "apiUrlHelp": "Select a provider enabled by the deployment operator. Ask the operator to enable a custom or local model.",
     "modelLabel": "Model",
-    "modelHelp": "Leave empty to use openai/gpt-5.6-luna. On OpenRouter, the tax advisor automatically adds web search."
+    "modelHelp": "Leave empty to use openai/gpt-5.6-luna. On OpenRouter, the tax advisor automatically adds web search.",
+    "endpointUnavailable": "Previously configured provider is not allowed"
   },
   "invoiceDefaults": {
     "heading": "Invoice Defaults",

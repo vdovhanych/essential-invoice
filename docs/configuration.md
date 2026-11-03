@@ -67,7 +67,7 @@ Configure bank notification receiving in Settings > Email (IMAP):
 
 ## AI Features (Optional)
 
-AI features work with [OpenRouter](https://openrouter.ai) by default, but any OpenAI-compatible chat completions API can be used. Each user configures their own API key:
+AI features work with [OpenRouter](https://openrouter.ai) by default, and OpenAI is also allowed; other OpenAI-compatible endpoints require explicit deployment approval. Each user configures their own API key:
 
 1. Get an API key from [https://openrouter.ai/settings/keys](https://openrouter.ai/settings/keys)
 2. Log in to Essential Invoice
@@ -76,7 +76,7 @@ AI features work with [OpenRouter](https://openrouter.ai) by default, but any Op
 5. Enter your API key and save
 
 Optional fields:
-- **API base URL** — any OpenAI-compatible endpoint (e.g. `https://api.openai.com/v1`). Leave empty to use OpenRouter (`https://openrouter.ai/api/v1`).
+- **API base URL** — choose an operator-approved endpoint (OpenAI and OpenRouter are enabled by default). Leave empty to use OpenRouter (`https://openrouter.ai/api/v1`).
 - **Model** — model identifier at your provider. Leave empty to use `openai/gpt-5.6-luna`. When using OpenRouter, the tax advisor automatically appends the `:online` suffix so answers use live web search; on other providers no web search is added.
 
 Once configured, AI features become available:
@@ -89,3 +89,9 @@ Once configured, AI features become available:
 No additional runtime environment variables, tax-authority credentials or background jobs are required. Configure the registered individual taxpayer identity, VAT status, effective date, office/branch and filing frequency in **Settings → Exports → VAT filings → Taxpayer**. Per-document classification, receipt dates, deduction decisions and reviewed tax conversion rates are configured in that workspace. These are separate from SMTP/IMAP/AI settings. The existing company VAT-payer flag stays synchronized when this taxpayer status is saved.
 
 Official XSD/code-list versions are bundled, not fetched at export time. Updating their supported period requires a reviewed application release. The existing CNB service can supply a daily EUR rate on demand. XML, personal tax identifiers and snapshots live in PostgreSQL: protect backups, restrict database access and keep request bodies/parser diagnostics out of logs. [Supported scope](vat-filings.md).
+
+### AI provider destinations
+
+By default only `https://openrouter.ai/api/v1` and `https://api.openai.com/v1` are allowed. All AI requests reject HTTP redirects. To enable a custom/local OpenAI-compatible model, the deployment operator must set `AI_ALLOWED_BASE_URLS` to its exact base URL (comma-separated for multiple destinations), for example `http://ollama:11434/v1`. For Helm use `backend.env.AI_ALLOWED_BASE_URLS`. The same explicit opt-in is required in development. Never add untrusted hosts: each listed destination is reachable from the backend and receives the user's API key and prompt. This is an exact endpoint allowlist, not a private-network blocker.
+
+Existing custom settings are retained but cannot make requests until the operator allows that endpoint or the user selects a built-in provider. There is no automatic fallback that would send the old provider's key or documents to a different provider. Deploy frontend and backend together; Settings exposes only the operator-approved choices.

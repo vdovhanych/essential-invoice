@@ -39,6 +39,7 @@ interface Settings {
   aiEnabled: boolean;
   aiApiKeySet: boolean;
   aiApiUrl: string | null;
+  aiAllowedBaseUrls?: string[];
   aiModel: string | null;
 }
 
@@ -663,14 +664,21 @@ export default function Settings() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="label">{t('ai.apiUrlLabel')}</label>
-                      <input
-                        type="text"
+                      <select
                         name="aiApiUrl"
                         value={formData.aiApiUrl}
                         onChange={handleChange}
                         className="input font-mono"
-                        placeholder="https://openrouter.ai/api/v1"
-                      />
+                        aria-label={t('ai.apiUrlLabel')}
+                      >
+                        <option value="">OpenRouter</option>
+                        {(settings?.aiAllowedBaseUrls ?? ['https://openrouter.ai/api/v1', 'https://api.openai.com/v1']).map(url => (
+                          <option key={url} value={url}>{url}</option>
+                        ))}
+                        {formData.aiApiUrl && !(settings?.aiAllowedBaseUrls ?? ['https://openrouter.ai/api/v1', 'https://api.openai.com/v1']).includes(formData.aiApiUrl) && (
+                          <option value={formData.aiApiUrl} disabled>{t('ai.endpointUnavailable')}</option>
+                        )}
+                      </select>
                       <p className="text-xs text-text-faint mt-1">{t('ai.apiUrlHelp')}</p>
                     </div>
                     <div>

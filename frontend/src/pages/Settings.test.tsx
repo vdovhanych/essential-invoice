@@ -92,6 +92,16 @@ describe('Settings Component', () => {
     vi.clearAllMocks();
   });
 
+  it('offers only deployment-approved AI destinations and flags an old custom selection', async () => {
+    mockGet.mockResolvedValue({ ...defaultSettings, aiApiUrl: 'https://old.example.invalid/v1', aiAllowedBaseUrls: ['https://api.openai.com/v1'] });
+    renderAt('/settings/ai');
+    await waitFor(() => expect(document.querySelector('select[name="aiApiUrl"]')).not.toBeNull());
+    const select = document.querySelector('select[name="aiApiUrl"]') as HTMLSelectElement;
+    expect(Array.from(select.options).filter(option => !option.disabled).map(option => option.value)).toEqual(['', 'https://api.openai.com/v1']);
+    expect(Array.from(select.options).find(option => option.value === 'https://old.example.invalid/v1')?.disabled).toBe(true);
+    expect(document.querySelector('input[name="aiApiUrl"]')).toBeNull();
+  });
+
   it('should load and display defaultVatRate: 0 correctly', async () => {
     mockGet.mockResolvedValueOnce({ ...defaultSettings, defaultVatRate: 0 });
 
