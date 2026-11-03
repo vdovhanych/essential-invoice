@@ -1,3 +1,7 @@
+// Route unit tests isolate session storage; real revocation is exercised by session.integration.test.ts.
+vi.mock('../utils/session', () => ({
+  verifySessionToken: async (token: string) => jwt.verify(token, process.env.JWT_SECRET!)
+}));
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
@@ -241,7 +245,7 @@ describe('Auth Routes', () => {
         .get('/auth/me')
         .set('Authorization', 'Bearer invalid-token');
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(401);
     });
 
     it('should return user profile with valid token', async () => {
@@ -770,12 +774,8 @@ describe('Auth Routes', () => {
           used_at: null
         }]
       } as any);
-      // Update password
-      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
-      // Mark token as used
-      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
-      // Clean up expired tokens
-      mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
+      // Atomic token claim, password update and session revocation
+      mockedQuery.mockResolvedValueOnce({ rows: [{ id: 'user-id' }] } as any);
 
       const response = await request(app)
         .post('/auth/reset-password')
@@ -789,7 +789,7 @@ describe('Auth Routes', () => {
       expect(updateCall[0]).toContain('UPDATE users SET password_hash');
 
       // Verify token was marked as used
-      const markUsedCall = mockedQuery.mock.calls[2];
+      const markUsedCall = mockedQuery.mock.calls[1];
       expect(markUsedCall[0]).toContain('UPDATE password_reset_tokens SET used_at');
     });
   });
