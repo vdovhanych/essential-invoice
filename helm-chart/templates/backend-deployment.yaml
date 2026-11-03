@@ -67,6 +67,8 @@ spec:
           env:
             - name: PORT
               value: {{ .Values.backend.port | quote }}
+            - name: AI_ALLOWED_BASE_URLS
+              value: {{ .Values.backend.env.AI_ALLOWED_BASE_URLS | default "" | quote }}
             - name: NODE_ENV
               value: {{ .Values.backend.env.NODE_ENV | quote }}
             - name: EMAIL_POLLING_INTERVAL

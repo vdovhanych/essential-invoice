@@ -183,3 +183,4 @@ Expense POST/PUT accepts optional `vatBreakdown: [{ rate, base, tax }]`. Values 
 Invoice and expense list/detail responses return `issueDate`, `dueDate`, and `deliveryDate` as date-only `YYYY-MM-DD` values (nullable where applicable), preserving the PostgreSQL calendar date rather than serializing a local-midnight timestamp into the previous UTC day. Lifecycle timestamps such as `paidAt` retain their timestamp representation.
 
 Password changes and successful resets revoke all existing login tokens. A password change requires signing in again. Invalid, expired, revoked and deleted-account sessions return HTTP 401.
+Settings responses include `aiAllowedBaseUrls`. Saving an unapproved AI base URL returns 400 (`AI_ENDPOINT_NOT_ALLOWED`). The same check runs before every AI request, including legacy stored settings.

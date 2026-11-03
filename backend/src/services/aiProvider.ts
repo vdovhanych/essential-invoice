@@ -1,9 +1,9 @@
+import { DEFAULT_AI_API_URL, resolveAIBaseUrl } from '../utils/aiDestinations';
+export { DEFAULT_AI_API_URL } from '../utils/aiDestinations';
 import { query } from '../db/init';
 import { decrypt } from '../utils/encryption';
 
-// Default provider is OpenRouter, but any OpenAI-compatible chat completions
-// API works (the base URL and model are user-configurable in Settings)
-export const DEFAULT_AI_API_URL = 'https://openrouter.ai/api/v1';
+// Additional providers require an explicit deployment allowlist.
 export const DEFAULT_AI_MODEL = 'openai/gpt-5.6-luna';
 
 export interface AIConfig {
@@ -87,13 +87,15 @@ export async function callAI(
     throw new Error('AI API key is not configured');
   }
 
+  const apiUrl = resolveAIBaseUrl(config.apiUrl);
   let model = config.model;
-  if (webSearch && config.apiUrl.includes('openrouter.ai') && !model.endsWith(':online')) {
+  if (webSearch && apiUrl === DEFAULT_AI_API_URL && !model.endsWith(':online')) {
     model = `${model}:online`;
   }
 
-  const response = await fetch(`${config.apiUrl.replace(/\/+$/, '')}/chat/completions`, {
+  const response = await fetch(`${apiUrl}/chat/completions`, {
     method: 'POST',
+    redirect: 'error',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${config.apiKey}`,

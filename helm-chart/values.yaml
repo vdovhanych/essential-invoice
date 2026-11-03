@@ -65,6 +65,8 @@ backend:
   # -- Environment variables for the backend
   env:
     NODE_ENV: production
+    # Additional exact AI base URLs, comma-separated; empty allows only OpenAI/OpenRouter.
+    AI_ALLOWED_BASE_URLS: ""
     # -- Email polling interval in seconds (default: 10 minutes)
     EMAIL_POLLING_INTERVAL: "600"
     # -- Hard timeout for a single user's IMAP fetch in seconds (default: 2 minutes)
