@@ -69,6 +69,23 @@ describe('Register Component', () => {
     expect(screen.queryByText('DIČ')).not.toBeInTheDocument();
   });
 
+  it('trims pasted email whitespace while preserving the password', async () => {
+    renderRegister();
+
+    fireEvent.change(screen.getByLabelText(/Jméno/), { target: { value: 'Test User' } });
+    fireEvent.change(screen.getByLabelText(/Email/), { target: { value: '\u00a0test@example.com\u00a0' } });
+    fireEvent.change(screen.getByLabelText(/^Heslo/), { target: { value: ' password123 ' } });
+    fireEvent.change(screen.getByLabelText(/Potvrzení hesla/), { target: { value: ' password123 ' } });
+
+    expect(screen.getByLabelText(/Email/)).toHaveValue('test@example.com');
+    expect(screen.getByLabelText(/Email/)).toBeValid();
+    fireEvent.click(screen.getByRole('button', { name: /Registrovat se/i }));
+
+    await waitFor(() => expect(mockRegister).toHaveBeenCalledWith({
+      email: 'test@example.com', password: ' password123 ', name: 'Test User', language: 'cs',
+    }));
+  });
+
   it('shows error when passwords do not match', async () => {
     renderRegister();
 

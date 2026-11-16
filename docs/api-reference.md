@@ -6,6 +6,8 @@ Requests share a limit of **1,000 requests per IP per 15 minutes**, except `/api
 
 ## Authentication
 
+Registration, login, and password reset requests trim surrounding email whitespace before validation and the existing email normalization. Existing email validation still applies after trimming.
+
 - `POST /api/auth/register` - Register new user (sends welcome email if global SMTP configured)
 - `POST /api/auth/login` - Login
 - `GET /api/auth/me` - Get current user

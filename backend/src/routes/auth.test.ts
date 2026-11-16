@@ -49,7 +49,7 @@ describe('Auth Routes', () => {
       const response = await request(app)
         .post('/auth/register')
         .send({
-          email: 'invalid-email',
+          email: ' test @example.com ',
           password: 'password123',
           name: 'Test User'
         });
@@ -99,7 +99,7 @@ describe('Auth Routes', () => {
       expect(response.body.error).toBe('User with this email already exists');
     });
 
-    it('should register user successfully', async () => {
+    it('trims surrounding whitespace before registering a user', async () => {
       const userId = 'new-user-id';
       // Check if user exists
       mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
@@ -113,12 +113,14 @@ describe('Auth Routes', () => {
       const response = await request(app)
         .post('/auth/register')
         .send({
-          email: 'new@example.com',
+          email: ' \t\u00a0New@Example.com\u00a0\n ',
           password: 'password123',
           name: 'New User'
         });
 
       expect(response.status).toBe(201);
+      expect(mockedQuery).toHaveBeenNthCalledWith(1, expect.any(String), ['new@example.com']);
+      expect(mockedQuery.mock.calls[1][1]?.[0]).toBe('new@example.com');
       expect(response.body.user).toBeDefined();
       expect(response.body.user.email).toBe('new@example.com');
       expect(response.body.token).toBeDefined();
@@ -196,7 +198,7 @@ describe('Auth Routes', () => {
       const response = await request(app)
         .post('/auth/login')
         .send({
-          email: 'invalid',
+          email: ' test @example.com ',
           password: 'password123'
         });
 
@@ -214,18 +216,19 @@ describe('Auth Routes', () => {
       expect(response.status).toBe(400);
     });
 
-    it('should return 401 if user not found', async () => {
+    it('trims surrounding whitespace before looking up a login email', async () => {
       mockedQuery.mockResolvedValueOnce({ rows: [] } as any);
 
       const response = await request(app)
         .post('/auth/login')
         .send({
-          email: 'notfound@example.com',
+          email: ' \t\u00a0NotFound@Example.com\u00a0\n ',
           password: 'password123'
         });
 
       expect(response.status).toBe(401);
       expect(response.body.error).toBe('Invalid email or password');
+      expect(mockedQuery).toHaveBeenCalledWith(expect.any(String), ['notfound@example.com']);
     });
   });
 
@@ -655,12 +658,12 @@ describe('Auth Routes', () => {
     it('should return 400 for invalid email format', async () => {
       const response = await request(app)
         .post('/auth/forgot-password')
-        .send({ email: 'not-an-email' });
+        .send({ email: ' test @example.com ' });
 
       expect(response.status).toBe(400);
     });
 
-    it('should create token and send email when user exists', async () => {
+    it('trims surrounding whitespace before requesting a password reset', async () => {
       mockedIsGlobalSmtpConfigured.mockReturnValue(true);
       // User lookup
       mockedQuery.mockResolvedValueOnce({
@@ -673,9 +676,10 @@ describe('Auth Routes', () => {
 
       const response = await request(app)
         .post('/auth/forgot-password')
-        .send({ email: 'test@example.com' });
+        .send({ email: ' \t\u00a0Test@Example.com\u00a0\n ' });
 
       expect(response.status).toBe(200);
+      expect(mockedQuery).toHaveBeenNthCalledWith(1, expect.any(String), ['test@example.com']);
       expect(mockedSendPasswordResetEmail).toHaveBeenCalledWith(
         'test@example.com',
         'Test User',

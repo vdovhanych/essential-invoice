@@ -65,7 +65,7 @@ export default function ForgotPassword() {
                     type="email"
                     id="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value.trim())}
                     className="input-auth"
                     required
                   />

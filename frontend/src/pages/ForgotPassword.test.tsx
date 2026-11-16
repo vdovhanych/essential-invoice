@@ -59,11 +59,13 @@ describe('ForgotPassword Component', () => {
     expect(screen.getByText(/Zpět na přihlášení/)).toBeInTheDocument();
   });
 
-  it('shows success message after submitting', async () => {
+  it('trims pasted email whitespace before browser validation and submission', async () => {
     mockPost.mockResolvedValueOnce({ message: 'OK' });
     renderForgotPassword();
 
-    fireEvent.change(screen.getByLabelText(/Email/), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByLabelText(/Email/), { target: { value: '\u00a0test@example.com\u00a0' } });
+    expect(screen.getByLabelText(/Email/)).toHaveValue('test@example.com');
+    expect(screen.getByLabelText(/Email/)).toBeValid();
     fireEvent.click(screen.getByRole('button', { name: /Odeslat odkaz pro obnovení/ }));
 
     await waitFor(() => {
