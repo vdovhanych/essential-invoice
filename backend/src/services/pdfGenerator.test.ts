@@ -172,6 +172,15 @@ describe('generateInvoicePDF', () => {
     expect(buffer.subarray(0, 5).toString()).toBe('%PDF-');
   });
 
+  it('omits legacy SVG logos while still generating an invoice', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [makeInvoiceRow({ qr_payment_data: null, user_logo_data: Buffer.from('<svg/>').toString('base64'), user_logo_mime_type: 'image/svg+xml' })] } as any);
+    mockQuery.mockResolvedValueOnce({ rows: [] } as any);
+    const { generateInvoicePDF } = await import('./pdfGenerator');
+    const buffer = await generateInvoicePDF('inv-1', 'user-1');
+    expect(valuesForKey(renderedContent, 'image')).toEqual([]);
+    expect(buffer.subarray(0, 4).toString()).toBe('%PDF');
+  });
+
   it('should generate PDF with logo', async () => {
     // 1x1 transparent PNG as base64
     const logoPng = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
@@ -186,7 +195,7 @@ describe('generateInvoicePDF', () => {
     const { generateInvoicePDF } = await import('./pdfGenerator.js');
     const buffer = await generateInvoicePDF('inv-1', 'user-1');
 
-    expect(valuesForKey(renderedContent, 'image')).toEqual([`data:image/png;base64,${logoPng}`]);
+    expect(valuesForKey(renderedContent, 'image')).toEqual([expect.stringMatching(/^data:image\/png;base64,/)]);
     expect(buffer.toString('latin1')).toContain('/Subtype /Image');
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.subarray(0, 5).toString()).toBe('%PDF-');

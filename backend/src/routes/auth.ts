@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import multer from 'multer';
 import rateLimit from 'express-rate-limit';
+import { normalizeLogo, storedLogo } from '../utils/logo';
 import { query } from '../db/init';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { getJwtSecret } from '../utils/jwt';
@@ -15,11 +16,11 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
   fileFilter: (_req, file, cb) => {
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only PNG, JPG, and SVG are allowed.'));
+      cb(new Error('Invalid file type. Only PNG and JPG are allowed.'));
     }
   }
 });
@@ -385,29 +386,15 @@ authRouter.post('/reset-password',
   }
 );
 
-// Get logo image (supports token via query param for img src usage)
-authRouter.get('/me/logo', async (req: Request, res: Response) => {
+// Logo requests use the same header authentication as other API requests.
+authRouter.get('/me/logo', authenticateToken, async (req: AuthRequest, res: Response) => {
+  res.set('Cache-Control', 'no-store');
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.set('Content-Security-Policy', "default-src 'none'; sandbox");
   try {
-    // Accept token from header or query parameter
-    const authHeader = req.headers.authorization;
-    const queryToken = req.query.token as string;
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : queryToken;
-
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, getJwtSecret()) as { userId: string };
-      userId = decoded.userId;
-    } catch {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-
     const result = await query(
       'SELECT logo_data, logo_mime_type FROM users WHERE id = $1',
-      [userId]
+      [req.userId]
     );
 
     if (result.rows.length === 0 || !result.rows[0].logo_data) {
@@ -415,10 +402,10 @@ authRouter.get('/me/logo', async (req: Request, res: Response) => {
     }
 
     const { logo_data, logo_mime_type } = result.rows[0];
-    const logoBuffer = Buffer.from(logo_data, 'base64');
+    const logoBuffer = await storedLogo(logo_data, logo_mime_type);
+    if (!logoBuffer) return res.status(404).json({ error: 'Please upload a PNG or JPG logo' });
 
-    res.set('Content-Type', logo_mime_type);
-    res.set('Cache-Control', 'private, max-age=3600');
+    res.set('Content-Type', 'image/png');
     res.send(logoBuffer);
   } catch (error) {
     console.error('Get logo error:', error);
@@ -433,8 +420,11 @@ authRouter.post('/me/logo', authenticateToken, upload.single('logo'), async (req
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const logoData = req.file.buffer.toString('base64');
-    const logoMimeType = req.file.mimetype;
+    let normalized: Buffer;
+    try { normalized = await normalizeLogo(req.file.buffer, req.file.mimetype); }
+    catch { return res.status(400).json({ error: 'Invalid logo. Upload a PNG or JPG image up to 2 MB and 16 megapixels.' }); }
+    const logoData = normalized.toString('base64');
+    const logoMimeType = 'image/png';
 
     await query(
       'UPDATE users SET logo_data = $1, logo_mime_type = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',

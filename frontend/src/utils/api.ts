@@ -50,6 +50,17 @@ async function request(endpoint: string, options: RequestInit = {}) {
 }
 
 export const api = {
+  blob: async (endpoint: string, signal?: AbortSignal): Promise<Blob> => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}, signal, cache: 'no-store',
+    });
+    if (!response.ok) {
+      handleUnauthorized(response.status, endpoint);
+      throw new ApiError('Image unavailable', response.status);
+    }
+    return response.blob();
+  },
   get: (endpoint: string) => request(endpoint),
 
   post: (endpoint: string, data?: unknown, options?: { signal?: AbortSignal }) => request(endpoint, {
