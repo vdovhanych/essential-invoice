@@ -19,6 +19,7 @@ A lightweight, self-hosted invoicing web application designed for Czech freelanc
 - **PDF Generation**: Professional Czech invoice templates with QR payment codes (SPAYD format), VAT/non-VAT payer support
 - **Email Integration**: Send invoices via SMTP, receive bank notifications via IMAP
 - **Bank Payment Matching**: Automatic matching of Air Bank payment notifications to invoices
+- **Email Sign-in**: Registration, login, and password recovery trim surrounding whitespace from pasted email addresses
 - **Password Reset**: Email-based password recovery with secure token flow
 - **Welcome Emails**: Automatic welcome email on registration (when global SMTP configured)
 - **Onboarding Wizard**: Guided 2-step setup after registration to collect company and bank details

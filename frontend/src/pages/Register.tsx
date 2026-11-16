@@ -18,7 +18,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.name === 'email' ? e.target.value.trim() : e.target.value });
   }
 
   async function handleSubmit(e: React.FormEvent) {

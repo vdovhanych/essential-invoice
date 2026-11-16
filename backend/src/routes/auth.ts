@@ -28,7 +28,7 @@ export const authRouter: ReturnType<typeof Router> = Router();
 
 // Register
 authRouter.post('/register',
-  body('email').isEmail().normalizeEmail(),
+  body('email').trim().isEmail().normalizeEmail(),
   body('password').isLength({ min: 8 }),
   body('name').trim().notEmpty(),
   async (req: Request, res: Response) => {
@@ -97,7 +97,7 @@ const loginLimiter = rateLimit({
 // Login
 authRouter.post('/login',
   loginLimiter,
-  body('email').isEmail().normalizeEmail(),
+  body('email').trim().isEmail().normalizeEmail(),
   body('password').notEmpty(),
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
@@ -277,7 +277,7 @@ const forgotPasswordLimiter = rateLimit({
 // Forgot password
 authRouter.post('/forgot-password',
   forgotPasswordLimiter,
-  body('email').isEmail().normalizeEmail(),
+  body('email').trim().isEmail().normalizeEmail(),
   async (req: Request, res: Response) => {
     const genericResponse = { message: 'RESET_EMAIL_SENT' };
 
